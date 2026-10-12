@@ -217,6 +217,7 @@ const recentTests = computed(() => {
         subject.label,
         formatDate(attempt.finishedAt),
         `${attempt.questionCount} savol`,
+        ...(attempt.expired ? ['Vaqt tugadi'] : []),
         percent === null
           ? 'Natija hisoblanmoqda'
           : hasCertificateGrade(percent)

@@ -564,6 +564,19 @@ const messages = {
       leaveConfirmTitle: 'Test hali davom etmoqda',
       leaveConfirmStay: 'Testga qaytish',
       leaveConfirmLeave: 'Chiqish',
+      // Pause: the server freezes the clock and refuses answers until the
+      // student continues (TestPauseOverlay).
+      pause: {
+        button: 'Pauza',
+        title: 'Test pauzada',
+        description: 'Vaqt to‘xtatildi. Davom ettirganingizda savollar yana ochiladi.',
+        timeLeft: 'Qolgan vaqt',
+        resume: 'Davom ettirish',
+        resuming: 'Davom ettirilmoqda…',
+        expiryHint: 'Test boshlanganidan 7 kun o‘tgach, urinish yakunlanadi — pauzada bo‘lsa ham.',
+        pauseFailed: 'Testni pauza qilib bo‘lmadi. Qayta urinib ko‘ring.',
+        resumeFailed: 'Testni davom ettirib bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.'
+      },
       essay: {
         modeTitle: 'Insho javobini qanday topshirasiz?',
         modeHint: 'Matn sifatida yozing yoki qo‘lyozmangiz rasmlarini yuklang.',
@@ -1224,6 +1237,17 @@ const messages = {
       leaveConfirmTitle: 'Тест ещё продолжается',
       leaveConfirmStay: 'Вернуться к тесту',
       leaveConfirmLeave: 'Выйти',
+      pause: {
+        button: 'Пауза',
+        title: 'Тест на паузе',
+        description: 'Время остановлено. Вопросы снова откроются, когда вы продолжите.',
+        timeLeft: 'Осталось времени',
+        resume: 'Продолжить',
+        resuming: 'Продолжаем…',
+        expiryHint: 'Через 7 дней после начала теста попытка будет завершена — даже если она на паузе.',
+        pauseFailed: 'Не удалось поставить тест на паузу. Попробуйте ещё раз.',
+        resumeFailed: 'Не удалось продолжить тест. Проверьте интернет и попробуйте ещё раз.'
+      },
       essay: {
         modeTitle: 'Как вы сдадите ответ на эссе?',
         modeHint: 'Напишите текст или загрузите фото рукописи.',

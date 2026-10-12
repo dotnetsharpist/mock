@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { useAuthStore } from './auth'
 import { apiFetch, getTestApiBaseUrl } from '@/utils/api'
 import { AI_REVIEW_MODES, isBiologyOpenResponseGroup } from '@/utils/aiReview'
+import { ATTEMPT_STATUS, normalizeRemainingSeconds } from '@/utils/attemptStatus'
 
 const OPTION_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 
@@ -131,13 +132,32 @@ function normalizeTest(test, apiBaseUrl) {
   }
 }
 
+// The server's view of an attempt's clock, stamped with when we heard it so the
+// page can count down from that moment (a card starts the attempt a beat before
+// the test page mounts). Every timer-bearing response goes through here.
+function toTimerState(data, fallbackStatus = ATTEMPT_STATUS.inProgress) {
+  return {
+    attemptStatus: data?.attemptStatus || fallbackStatus,
+    remainingSeconds: normalizeRemainingSeconds(data?.remainingSeconds),
+    receivedAt: Date.now(),
+  }
+}
+
+// 409 from an attempt-scoped write: the attempt is paused, or its time is up
+// (the server allows a 5 s grace). Callers ask the timer endpoint which.
+function isAttemptConflict(response, payload) {
+  return response.status === 409 || payload?.code === 409
+}
+
 export const useTestStore = defineStore('test', () => {
   const currentTest = ref(null)
+  // { id, attemptStatus, remainingSeconds, receivedAt, opened } — the attempt on
+  // screen and the latest clock reading the server gave for it. `opened` is set
+  // once the test page has taken it over (see markAttemptOpened).
   const currentAttempt = ref(null)
   const lastSubmission = ref(null)
   // Set by resumeAttempt right before currentTest changes; read once by the test
-  // page to re-fill saved answers and start the clock from the server's remaining
-  // time. Null on a fresh start so that path begins from the full duration.
+  // page to re-fill saved answers. Null on a fresh start (nothing to re-fill).
   const lastResume = ref(null)
   const isLoading = ref(false)
   const errorMessage = ref('')
@@ -229,9 +249,9 @@ export const useTestStore = defineStore('test', () => {
         throw error
       }
 
-      // Fresh attempt: no resume state, so the page starts from the full duration
-      // with no pre-filled answers. Clear before currentTest changes (the page's
-      // watcher reads lastResume when the attempt first initializes).
+      // Fresh attempt: no saved answers to re-fill. Clear before currentTest
+      // changes (the page's watcher reads lastResume when the attempt first
+      // initializes).
       lastResume.value = null
 
       // start-test returns the same content shape as the old detail endpoint
@@ -243,7 +263,8 @@ export const useTestStore = defineStore('test', () => {
       // tolerantly so a backend field rename doesn't silently disable syncing.
       const attemptId =
         payload.data.testAttemptId ?? payload.data.attemptId ?? payload.data.id
-      currentAttempt.value = { id: Number(attemptId) }
+      // A fresh attempt is running; remainingSeconds is null for an untimed test.
+      currentAttempt.value = { id: Number(attemptId), ...toTimerState(payload.data) }
 
       // Resolve subject in the background so it never delays test start.
       void enrichSubject(testId, apiBaseUrl)
@@ -258,11 +279,11 @@ export const useTestStore = defineStore('test', () => {
     }
   }
 
-  // Resume an in-progress attempt by id (page refresh / direct link / "continue"
-  // card). Returns the answer-less exam content plus the answers already saved
-  // for this attempt and the server's remaining time — no new attempt, no charge.
-  // If the window has elapsed the backend finishes the attempt and returns
-  // isCompleted; the caller then routes to the graded result instead of resuming.
+  // Resume an attempt by id (page refresh / direct link / "continue" card).
+  // Returns the answer-less exam content plus the answers already saved for this
+  // attempt and the server's clock — no new attempt, no charge. attemptStatus
+  // says what to do: Completed / Expired → the caller routes to the result;
+  // Paused → the exam renders behind the pause overlay; InProgress → carry on.
   async function resumeAttempt(attemptId) {
     const apiBaseUrl = getTestApiBaseUrl()
 
@@ -290,9 +311,9 @@ export const useTestStore = defineStore('test', () => {
       }
 
       const data = payload.data
+      const timerState = toTimerState(data)
       const resumeState = {
-        isCompleted: Boolean(data.isCompleted),
-        remainingSeconds: Number(data.remainingSeconds) || 0,
+        ...timerState,
         userAnswers: Array.isArray(data.userAnswers) ? data.userAnswers : [],
         // Solution photos already stored for this attempt's biology groups, so a
         // refresh shows what was handed in instead of an empty dropzone.
@@ -303,7 +324,7 @@ export const useTestStore = defineStore('test', () => {
       // when the attempt first initializes) sees it on this same change.
       lastResume.value = resumeState
       currentTest.value = normalizeTest({ ...data, id: Number(data.testId) }, apiBaseUrl)
-      currentAttempt.value = { id: Number(data.testAttemptId) }
+      currentAttempt.value = { id: Number(data.testAttemptId), ...timerState }
 
       void enrichSubject(data.testId, apiBaseUrl)
 
@@ -341,10 +362,13 @@ export const useTestStore = defineStore('test', () => {
         },
       )
 
-      const payload = await response.json()
+      const payload = await response.json().catch(() => null)
 
       if (!response.ok || payload?.code !== 200 || !payload?.data) {
-        throw new Error(payload?.message || 'Could not load the results.')
+        const error = new Error(payload?.message || 'Could not load the results.')
+        // 409: the attempt is still running (or paused) — there is no result yet.
+        error.attemptRunning = isAttemptConflict(response, payload)
+        throw error
       }
 
       const data = payload.data
@@ -418,11 +442,12 @@ export const useTestStore = defineStore('test', () => {
     return Array.isArray(payload?.data) ? payload.data : []
   }
 
-  // Lean finalize: grade + mark the attempt completed server-side. The graded
-  // review payload (questions, groups, answers, score) is read separately via
-  // fetchAttemptResults (get-results), so we don't consume this response for
-  // rendering — it just confirms the submit succeeded.
-  async function submitTestAttempt(testId, testAttemptId) {
+  // Lean finalize: mark the attempt finished server-side. Returns
+  // { testAttemptId, attemptStatus } — Completed, or Expired when the time ran
+  // out first; either way the result is read via fetchAttemptResults
+  // (get-results). Submitting an attempt that already finished is a 200 with its
+  // status, so the time-up path and a second tab can't fail on it.
+  async function submitTestAttempt(testAttemptId) {
     const apiBaseUrl = getTestApiBaseUrl()
 
     if (!apiBaseUrl) {
@@ -432,7 +457,7 @@ export const useTestStore = defineStore('test', () => {
     ensureAuth()
 
     const response = await apiFetch(
-      `${apiBaseUrl}/user-test-attempt/submit?testId=${Number(testId)}&testAttemptId=${Number(testAttemptId)}`,
+      `${apiBaseUrl}/user-test-attempt/submit?testAttemptId=${Number(testAttemptId)}`,
       {
         method: 'POST',
         headers: buildAuthHeaders(),
@@ -447,6 +472,54 @@ export const useTestStore = defineStore('test', () => {
 
     return payload?.data ?? null
   }
+
+  // The three clock calls share one response shape:
+  //   { testAttemptId, attemptStatus, remainingSeconds }
+  // timer reads it; pause freezes it (Paused); unpause restarts it (InProgress).
+  // pause/unpause are idempotent, and any of them can answer Expired (time ran
+  // out, or 7 days have passed since the attempt started — paused or not).
+  async function requestAttemptClock(path, method, testAttemptId) {
+    const apiBaseUrl = getTestApiBaseUrl()
+
+    if (!apiBaseUrl) {
+      throw new Error('Test API base URL is missing.')
+    }
+
+    ensureAuth()
+
+    const response = await apiFetch(
+      `${apiBaseUrl}/user-test-attempt/${path}?testAttemptId=${Number(testAttemptId)}`,
+      {
+        method,
+        headers: buildAuthHeaders(),
+      },
+    )
+
+    const payload = await response.json().catch(() => null)
+
+    if (!response.ok || payload?.code !== 200 || !payload?.data) {
+      throw new Error(payload?.message || 'Could not read the test timer.')
+    }
+
+    const timerState = toTimerState(payload.data)
+
+    // Keep the stored snapshot current, so a remount of the test page (same
+    // live session) starts from this reading rather than the start-test one.
+    if (Number(currentAttempt.value?.id) === Number(testAttemptId)) {
+      currentAttempt.value = { ...currentAttempt.value, ...timerState }
+    }
+
+    return timerState
+  }
+
+  const fetchAttemptTimer = (testAttemptId) =>
+    requestAttemptClock('timer', 'GET', testAttemptId)
+
+  const pauseAttempt = (testAttemptId) =>
+    requestAttemptClock('pause', 'POST', testAttemptId)
+
+  const unpauseAttempt = (testAttemptId) =>
+    requestAttemptClock('unpause', 'POST', testAttemptId)
 
   async function fetchQuestionExplanation(questionId) {
     const apiBaseUrl = getTestApiBaseUrl()
@@ -502,7 +575,9 @@ export const useTestStore = defineStore('test', () => {
     const payload = await response.json().catch(() => null)
 
     if (!response.ok || payload?.code !== 200 || !payload?.data) {
-      throw new Error(payload?.message || 'Could not transcribe the essay.')
+      const error = new Error(payload?.message || 'Could not transcribe the essay.')
+      error.attemptConflict = isAttemptConflict(response, payload)
+      throw error
     }
 
     const transcription = payload.data.transcription ?? payload.data.Transcription
@@ -516,8 +591,9 @@ export const useTestStore = defineStore('test', () => {
   //
   // This SETS the group's image list, so callers post the full current selection
   // rather than a delta. At most 3 images, each <= 10 MB. Accepted only while the
-  // attempt is in progress; the attempt is finished with the usual submit, and
-  // the AI review runs over these photos per group.
+  // attempt is in progress (409 while paused or once time is up); the attempt is
+  // finished with the usual submit, and the AI review runs over these photos per
+  // group.
   async function setGroupAnswerImages(testAttemptId, questionGroupId, imageFiles) {
     const apiBaseUrl = getTestApiBaseUrl()
 
@@ -545,7 +621,9 @@ export const useTestStore = defineStore('test', () => {
     const payload = await response.json().catch(() => null)
 
     if (!response.ok || (payload && payload.code !== 200)) {
-      throw new Error(payload?.message || 'Could not save the answer images.')
+      const error = new Error(payload?.message || 'Could not save the answer images.')
+      error.attemptConflict = isAttemptConflict(response, payload)
+      throw error
     }
 
     return payload?.data ?? null
@@ -566,10 +644,13 @@ export const useTestStore = defineStore('test', () => {
       body: JSON.stringify(answerPayload),
     })
 
-    const payload = await response.json()
+    const payload = await response.json().catch(() => null)
 
     if (!response.ok || payload?.code !== 200) {
-      throw new Error(payload?.message || 'Could not save the answer.')
+      const error = new Error(payload?.message || 'Could not save the answer.')
+      // 409: paused, or time is up — the page asks the timer endpoint which.
+      error.attemptConflict = isAttemptConflict(response, payload)
+      throw error
     }
 
     return payload.data
@@ -581,6 +662,16 @@ export const useTestStore = defineStore('test', () => {
 
   async function updateUserAnswer(answerPayload) {
     return requestUserAnswer('PUT', answerPayload)
+  }
+
+  // The test page took this attempt over. A card starts the attempt and hands it
+  // to the page through the store; that handoff is good once. Coming back later,
+  // the stored copy is stale (answers given since exist only on the server), so
+  // the page resumes instead of adopting it again.
+  function markAttemptOpened() {
+    if (currentAttempt.value) {
+      currentAttempt.value = { ...currentAttempt.value, opened: true }
+    }
   }
 
   function clearCurrentTest() {
@@ -606,11 +697,15 @@ export const useTestStore = defineStore('test', () => {
     startTest,
     resumeAttempt,
     submitTestAttempt,
+    fetchAttemptTimer,
+    pauseAttempt,
+    unpauseAttempt,
     transcribeEssay,
     fetchQuestionExplanation,
     createUserAnswer,
     updateUserAnswer,
     setGroupAnswerImages,
+    markAttemptOpened,
     clearCurrentTest,
     clearError,
   }

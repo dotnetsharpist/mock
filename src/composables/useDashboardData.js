@@ -23,6 +23,7 @@ import { computed, ref } from 'vue'
 import { useTestStore } from '@/stores/test'
 import { isNetworkError } from '@/utils/api'
 import { fetchAttemptScore } from '@/utils/attemptResults'
+import { attemptListState } from '@/utils/attemptStatus'
 import { subjectKeyFromApi } from '@/components/app/subjects.js'
 import { loadEssayCheckings } from '@/utils/essayCheckingStorage'
 
@@ -90,11 +91,12 @@ export function useDashboardData() {
 
   // ——— Derived ————————————————————————————————————————————————————————————
 
-  // Finished attempts, newest first. An attempt with no real finishedAt was
-  // started and abandoned; it is not a result.
+  // Finished attempts, newest first — submitted, or Expired (the time ran out;
+  // get-results grades those too). Running, paused and abandoned attempts are
+  // not results.
   const finishedAttempts = computed(() =>
     attempts.value
-      .filter((a) => isRealDate(a?.finishedAt))
+      .filter((a) => attemptListState(a).state === 'done')
       .map((a) => {
         const test = a.test || {}
         return {
@@ -104,7 +106,8 @@ export function useDashboardData() {
           subjectKey: subjectKeyFromApi(test.subject),
           subjectRaw: test.subject || '',
           questionCount: Number(test.questionCount) || 0,
-          finishedAt: parseDate(a.finishedAt),
+          finishedAt: parseDate(a.finishedAt) ?? parseDate(a.startedAt),
+          expired: attemptListState(a).expired,
         }
       })
       .sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0)),

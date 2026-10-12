@@ -30,6 +30,7 @@ import { useTestCatalogStore } from '@/stores/testCatalog'
 import { useTestLauncher } from '@/composables/useTestLauncher'
 import { isNetworkError } from '@/utils/api'
 import { fetchAttemptScore } from '@/utils/attemptResults'
+import { attemptListState } from '@/utils/attemptStatus'
 import { SUBJECT_FILTER_OPTIONS, subjectMatches } from '@/utils/subjects'
 import { loadEssayCheckings, removeEssayChecking } from '@/utils/essayCheckingStorage'
 
@@ -136,10 +137,15 @@ const results = computed(() => {
     const testId = Number(test?.id ?? attempt?.testId)
     if (!testId) continue
 
+    // Abandoned attempts have neither a result nor anything to continue.
+    const { state, expired } = attemptListState(attempt)
+    if (!state) continue
+
     const candidate = {
       attemptId: Number(attempt.id),
       attemptTime: attemptTimestamp(attempt),
-      finished: isRealDate(attempt?.finishedAt),
+      finished: state === 'done',
+      expired,
       test,
     }
 
@@ -175,6 +181,8 @@ const results = computed(() => {
       attemptId: entry.attemptId,
       attemptTime: entry.attemptTime,
       state: entry.finished ? 'done' : 'progress',
+      // The time ran out before it was submitted — the card says so.
+      expired: entry.expired,
     }
   })
 

@@ -11,16 +11,13 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { apiFetch, getTestApiBaseUrl, isNetworkError } from '@/utils/api'
 import { useAuthStore } from '@/stores/auth'
+import { attemptListState } from '@/utils/attemptStatus'
 import {
   SUBJECTS,
   SUBJECT_ORDER,
   subjectKeyFromApi,
   unknownSubject,
 } from '@/components/app/subjects.js'
-
-// The backend leaves unset dates as the .NET sentinel rather than null, so
-// "is this a real timestamp" needs more than a truthiness check.
-const isRealDate = (value) => Boolean(value) && !String(value).startsWith('0001-01-01')
 
 // TEMP: subjects held back from the platform. Their tests are dropped from the
 // catalogue here, which is the single place the Fanlar grid, the subject lists
@@ -98,18 +95,22 @@ export const useTestCatalogStore = defineStore('testCatalog', () => {
     return inFlight
   }
 
-  // testId → the user's state for it. An unfinished attempt outranks a finished
-  // one: a test you are part-way through is "in progress" even if you completed
-  // it last month.
+  // testId → the user's state for it. An unfinished attempt (running or
+  // paused) outranks a finished one: a test you are part-way through is "in
+  // progress" even if you completed it last month. Abandoned attempts carry
+  // neither, so they are skipped.
   const attemptByTest = computed(() => {
     const map = new Map()
     for (const attempt of attempts.value) {
       const testId = Number(attempt?.testId ?? attempt?.test?.id)
       if (!Number.isFinite(testId)) continue
 
-      const finished = isRealDate(attempt?.finishedAt)
+      const { state, expired } = attemptListState(attempt)
+      if (!state) continue
+
+      const finished = state === 'done'
       const current = map.get(testId)
-      const candidate = { id: Number(attempt.id), finished }
+      const candidate = { id: Number(attempt.id), finished, expired }
 
       if (!current) {
         map.set(testId, candidate)
@@ -160,6 +161,8 @@ export const useTestCatalogStore = defineStore('testCatalog', () => {
           durationMinutes: Number(test.durationMinutes) || 0,
           // No attempt → new. Unfinished → progress. Finished → done.
           state: !attempt ? 'new' : attempt.finished ? 'done' : 'progress',
+          // Done because the time ran out rather than by submitting.
+          expired: Boolean(attempt?.finished && attempt.expired),
           attemptId: attempt?.id ?? null,
         }
       }),

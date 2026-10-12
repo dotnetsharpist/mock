@@ -47,7 +47,11 @@ watch(
       }
       return
     }
-    if (!authStore.userInfo) void authStore.getUserInfo().catch(() => {})
+    // Every time, not only when missing: /user carries `activeAttempt`, which
+    // changes whenever a test is started, paused, left or finished — and /test
+    // and /explanation live outside this shell, so coming back from one mounts
+    // it afresh.
+    void authStore.getUserInfo().catch(() => {})
     balanceStore.refresh().catch(() => {})
   },
   { immediate: true },

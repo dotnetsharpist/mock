@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import { NCard, NModal, NSpin } from 'naive-ui'
+import { NCard, NModal, NSpin, useMessage } from 'naive-ui'
 import referenceImage1 from '@/assets/image1.png'
 import referenceImage2 from '@/assets/image2.png'
 import referenceImage3 from '@/assets/image3.png'
@@ -14,6 +14,7 @@ import EssayProcessingOverlay from '@/components/test/EssayProcessingOverlay.vue
 import TestErrorState from '@/components/test/TestErrorState.vue'
 import TestEssayQuestion from '@/components/test/TestEssayQuestion.vue'
 import TestFloatingTools from '@/components/test/TestFloatingTools.vue'
+import TestPauseOverlay from '@/components/test/TestPauseOverlay.vue'
 import TestQuestionBlock from '@/components/test/TestQuestionBlock.vue'
 import TestQuestionGroup from '@/components/test/TestQuestionGroup.vue'
 import ProfileGateModal from '@/components/ProfileGateModal.vue'
@@ -23,10 +24,12 @@ import { useTestProgressStore } from '@/stores/testProgress'
 import { useProfileGate } from '@/composables/useProfileGate'
 import { getTestApiBaseUrl } from '@/utils/api'
 import { COMPLETE_PROFILE_PATH, PHONE_VERIFY_REDIRECTS_ENABLED } from '@/utils/postAuth'
+import { ATTEMPT_STATUS, isAttemptEnded } from '@/utils/attemptStatus'
 
 const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
+const message = useMessage()
 const authStore = useAuthStore()
 const testStore = useTestStore()
 const testProgressStore = useTestProgressStore()
@@ -35,7 +38,17 @@ const { showProfileGate, ensureProfileComplete, onProfileCompleted, onProfileCan
 const answers = reactive({})
 const freeAnswers = reactive({})
 const pageErrorKey = ref('')
-const remainingSeconds = ref(0)
+// The server owns the clock. This is a display-only countdown, restarted from
+// every server reading (start-test, resume, timer, pause, unpause); null means
+// the test is untimed and no timer is shown.
+const remainingSeconds = ref(null)
+// AttemptStatus from the latest reading: InProgress | Paused | Completed | Expired.
+const attemptStatus = ref('')
+const isPaused = computed(() => attemptStatus.value === ATTEMPT_STATUS.paused)
+// A pause / unpause request is on the wire.
+const isPauseBusy = ref(false)
+// Shown on the pause overlay when continuing fails.
+const unpauseErrorMessage = ref('')
 const isReferenceOpen = ref(false)
 const showSubmitModal = ref(false)
 // Shown inside the submit modal when finishing fails (essay transcription /
@@ -50,10 +63,20 @@ let pendingNavigationCallback = null
 const isSubmittingTest = ref(false)
 const shouldPersistProgress = ref(true)
 const activeAttemptId = ref(null)
-let timerIntervalId = null
-// Absolute wall-clock deadline (ms). Persisted so a reload/close resumes from
-// real elapsed time instead of freezing the countdown.
-let testDeadlineAt = null
+let countdownIntervalId = null
+// Re-read the server's clock this often while the exam is open, and whenever
+// the page is shown again — a sleeping laptop or a throttled background tab
+// must not drift the countdown away from the server's.
+const TIMER_SYNC_INTERVAL_MS = 60000
+let timerSyncIntervalId = null
+let activeTimerSyncPromise = null
+// Bumped by every clock request (timer / pause / unpause). A reading is applied
+// only if no newer request went out since, so a slow /timer read can't undo a
+// pause that landed after it.
+let timerRequestVersion = 0
+// Cleared on unmount: a clock reading that lands after the student left must
+// not steer the router.
+let isPageActive = true
 
 // Single-flight sync: `activeSyncPromise` is the run currently on the wire;
 // callers arriving mid-run share one queued follow-up run, so awaiting
@@ -329,13 +352,12 @@ const totalQuestions = computed(() => {
   return maxOrder || renderedQuestions.value.length
 })
 
-// The countdown length comes from the test's configured duration (start-test and
-// resume both return durationMinutes); falls back to 60 if the backend omits it.
+// The test's configured length, for the header line only — the countdown runs
+// off the server's remainingSeconds, never this.
 const totalDurationMinutes = computed(() => {
   const minutes = Number(currentTest.value?.durationMinutes)
-  return Number.isFinite(minutes) && minutes > 0 ? minutes : 60
+  return Number.isFinite(minutes) && minutes > 0 ? minutes : null
 })
-const totalDurationSeconds = computed(() => totalDurationMinutes.value * 60)
 
 // Essay (insho) questions answer with text like FreeAnswer — the typed essay
 // rides the same /user-answer textAnswer flow. Read the type tolerantly so a
@@ -821,44 +843,201 @@ const clearRestartQuery = async () => {
 }
 
 const stopTimer = () => {
-  if (timerIntervalId) {
-    clearInterval(timerIntervalId)
-    timerIntervalId = null
+  if (countdownIntervalId) {
+    clearInterval(countdownIntervalId)
+    countdownIntervalId = null
   }
 }
 
-const startTimer = (_questionCount, initialRemainingSeconds = null) => {
+// Count down from a server reading taken at `receivedAt`. Reaching 0 submits;
+// the server answers Completed or Expired, and either way the result follows.
+const startCountdown = (seconds, receivedAt) => {
   stopTimer()
 
-  const resumeSeconds = Number(initialRemainingSeconds)
-  const canResume = Number.isFinite(resumeSeconds) && resumeSeconds > 0
-  const durationInSeconds = canResume ? resumeSeconds : totalDurationSeconds.value
-  const durationInMilliseconds = Math.max(durationInSeconds, 0) * 1000
-  const startedAt = Date.now()
-  testDeadlineAt = startedAt + durationInMilliseconds
-
-  remainingSeconds.value = Math.max(Math.ceil(durationInMilliseconds / 1000), 0)
-
-  if (durationInMilliseconds <= 0) {
-    return durationInMilliseconds
-  }
+  const deadlineAt = receivedAt + seconds * 1000
 
   const tick = () => {
-    const elapsedMilliseconds = Date.now() - startedAt
-    const nextDurationMs = Math.max(durationInMilliseconds - elapsedMilliseconds, 0)
+    const leftMilliseconds = Math.max(deadlineAt - Date.now(), 0)
 
-    remainingSeconds.value = Math.max(Math.ceil(nextDurationMs / 1000), 0)
+    remainingSeconds.value = Math.ceil(leftMilliseconds / 1000)
 
-    if (nextDurationMs <= 0) {
+    if (leftMilliseconds <= 0) {
       stopTimer()
       void autoSubmitOnTimeUp()
     }
   }
 
-  timerIntervalId = window.setInterval(tick, 1000)
+  countdownIntervalId = window.setInterval(tick, 1000)
   tick()
+}
 
-  return durationInMilliseconds
+// The attempt finished without this page submitting it — time ran out (the
+// laptop slept, the tab was in the background) or another tab finished it.
+// Nothing can be saved any more, so skip the finish flow and show the result.
+// A finish already under way navigates by itself.
+const goToResultsOfEndedAttempt = async () => {
+  if (isCompletingTest.value || !currentTest.value?.id || !activeAttemptId.value) {
+    return
+  }
+
+  isCompletingTest.value = true
+  stopTimer()
+  showSubmitModal.value = false
+  finishOverlayState.value = ''
+  shouldPersistProgress.value = false
+  testProgressStore.clearProgress(currentTest.value.id)
+
+  await router.replace({
+    name: 'explanation',
+    query: {
+      testId: currentTest.value.id,
+      attemptId: activeAttemptId.value,
+      // Opens the result popup, as finishing normally would.
+      submitted: '1',
+    },
+  })
+}
+
+// Bring the page in line with a server clock reading:
+//   Completed / Expired → the result
+//   Paused              → clock frozen, questions behind the pause overlay
+//   InProgress          → count down from remainingSeconds
+// remainingSeconds null = untimed: no countdown and no timer at all.
+const applyTimerState = (timerState) => {
+  if (!timerState || !isPageActive) {
+    return
+  }
+
+  attemptStatus.value = timerState.attemptStatus
+
+  if (isAttemptEnded(timerState.attemptStatus)) {
+    stopTimer()
+    void goToResultsOfEndedAttempt()
+    return
+  }
+
+  const isPausedReading = timerState.attemptStatus === ATTEMPT_STATUS.paused
+
+  if (isPausedReading) {
+    closeReferenceWindow()
+  }
+
+  if (timerState.remainingSeconds === null || isPausedReading) {
+    stopTimer()
+    remainingSeconds.value = timerState.remainingSeconds
+    return
+  }
+
+  startCountdown(timerState.remainingSeconds, timerState.receivedAt)
+}
+
+// GET /timer and restart the countdown from it. Single-flight; failures keep
+// the local countdown running. Skipped while a pause/unpause is on the wire —
+// that response is the fresher reading.
+const syncTimer = () => {
+  if (activeTimerSyncPromise) {
+    return activeTimerSyncPromise
+  }
+
+  const attemptId = activeAttemptId.value
+
+  if (!attemptId || !isPageActive || isPauseBusy.value || isCompletingTest.value) {
+    return Promise.resolve()
+  }
+
+  const version = ++timerRequestVersion
+
+  activeTimerSyncPromise = (async () => {
+    try {
+      const timerState = await testStore.fetchAttemptTimer(attemptId)
+
+      if (version === timerRequestVersion && attemptId === activeAttemptId.value) {
+        applyTimerState(timerState)
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      activeTimerSyncPromise = null
+    }
+  })()
+
+  return activeTimerSyncPromise
+}
+
+const handleVisibilityChange = () => {
+  if (document.visibilityState === 'visible') {
+    void syncTimer()
+  }
+}
+
+// A save bounced with 409: the attempt is paused, or its time is up. The timer
+// says which (and routes an ended attempt to its result). A finish under way
+// sorts this out itself — see confirmSubmitTest.
+const handleSaveConflict = () => {
+  if (isSubmittingTest.value) {
+    return
+  }
+
+  void syncTimer()
+}
+
+const pauseTest = async () => {
+  const attemptId = activeAttemptId.value
+
+  if (
+    !attemptId ||
+    isPaused.value ||
+    isPauseBusy.value ||
+    isSubmittingTest.value ||
+    isCompletingTest.value
+  ) {
+    return
+  }
+
+  isPauseBusy.value = true
+  unpauseErrorMessage.value = ''
+
+  try {
+    // Saves are refused while paused — push the pending answers first.
+    await syncDirtyAnswers()
+
+    const version = ++timerRequestVersion
+    const timerState = await testStore.pauseAttempt(attemptId)
+
+    if (version === timerRequestVersion) {
+      applyTimerState(timerState)
+    }
+  } catch (error) {
+    console.error(error)
+    message.error(t('testPage.pause.pauseFailed'))
+  } finally {
+    isPauseBusy.value = false
+  }
+}
+
+const unpauseTest = async () => {
+  const attemptId = activeAttemptId.value
+
+  if (!attemptId || isPauseBusy.value) {
+    return
+  }
+
+  isPauseBusy.value = true
+  unpauseErrorMessage.value = ''
+
+  try {
+    const version = ++timerRequestVersion
+    const timerState = await testStore.unpauseAttempt(attemptId)
+
+    if (version === timerRequestVersion) {
+      applyTimerState(timerState)
+    }
+  } catch (error) {
+    console.error(error)
+    unpauseErrorMessage.value = t('testPage.pause.resumeFailed')
+  } finally {
+    isPauseBusy.value = false
+  }
 }
 
 const persistCurrentProgress = () => {
@@ -887,7 +1066,6 @@ const persistCurrentProgress = () => {
     answers: savedAnswers,
     freeAnswers: { ...freeAnswers },
     remainingSeconds: remainingSeconds.value,
-    deadlineAt: testDeadlineAt,
     completed: false,
   })
 }
@@ -1032,6 +1210,13 @@ const performAnswerSyncPass = async () => {
     } catch (error) {
       dirtyQuestionIds.add(String(action.questionId))
       console.error(error)
+
+      // Paused or out of time: every other save would bounce the same way.
+      // The answers stay pending, so they go out again after an unpause.
+      if (error?.attemptConflict) {
+        handleSaveConflict()
+        break
+      }
     }
   }
 
@@ -1105,24 +1290,33 @@ const loadTest = async (testId) => {
 
   // The card starts the attempt (and, for premium, pays) before navigating, so
   // the test + attempt are normally already in the store. If they're not — a
-  // direct link or a page refresh — we either RESUME the attempt named in the URL
-  // (no new attempt, no charge) or, with no attempt id, start a fresh one.
+  // direct link, a page refresh, or a return to a test this page already had
+  // open (whose stored copy is stale) — we either RESUME the attempt named in
+  // the URL (no new attempt, no charge) or, with no attempt id, start a fresh one.
   const hasLiveSession =
-    Number(currentTest.value?.id) === Number(testId) && testStore.currentAttempt != null
+    Number(currentTest.value?.id) === Number(testId) &&
+    testStore.currentAttempt != null &&
+    !testStore.currentAttempt.opened
 
   if (!hasLiveSession) {
+    // Drop the stale copy before anything else, so the page initializes from
+    // what the server returns rather than from it.
+    testStore.clearCurrentTest()
     clearAnswers()
     activeAttemptId.value = null
     dirtyQuestionIds.clear()
 
     if (requestedAttemptId.value) {
       // Resume path (refresh / continue). The server returns the saved answers and
-      // the remaining time; the currentTest watcher applies them. If the window
-      // already elapsed the attempt is finished server-side — go straight to the
-      // graded result rather than resuming an expired test.
+      // its clock; the currentTest watcher applies them (a Paused attempt opens
+      // behind the pause overlay). A Completed or Expired attempt has nothing
+      // left to answer — go straight to its result.
       try {
-        const { isCompleted } = await testStore.resumeAttempt(requestedAttemptId.value)
-        if (isCompleted) {
+        const resumed = await testStore.resumeAttempt(requestedAttemptId.value)
+        if (isAttemptEnded(resumed.attemptStatus)) {
+          // Lifts the leave guard: currentTest is already set by resume, so
+          // without this the redirect stalls on "Test hali davom etmoqda".
+          isCompletingTest.value = true
           shouldPersistProgress.value = false
           testProgressStore.clearProgress(testId)
           await router.replace({
@@ -1239,6 +1433,11 @@ const performGroupImageSyncPass = async () => {
     } catch (error) {
       console.error(error)
       failedGroupIds.push(groupId)
+
+      if (error?.attemptConflict) {
+        handleSaveConflict()
+        break
+      }
     }
   }
 
@@ -1365,9 +1564,14 @@ const finishTestAndGoToExplanation = async ({ tolerateTranscribeFailure = false 
 // True whenever the test is loaded and the user has not finished it. We do
 // NOT require an active attempt id — the API call that creates it can be
 // in-flight when the user hits refresh, and we still want the browser's
-// native "Leave site?" dialog to appear in that window.
+// native "Leave site?" dialog to appear in that window. A paused attempt is
+// safe to leave: its clock is frozen and "continue" brings it back.
 const shouldBlockNavigation = computed(
-  () => Boolean(currentTest.value) && !isCompletingTest.value && !isSubmittingTest.value,
+  () =>
+    Boolean(currentTest.value) &&
+    !isPaused.value &&
+    !isCompletingTest.value &&
+    !isSubmittingTest.value,
 )
 
 const handleBeforeUnload = (event) => {
@@ -1430,7 +1634,8 @@ watch(
     if (!test) {
       closeReferenceWindow()
       stopTimer()
-      remainingSeconds.value = 0
+      remainingSeconds.value = null
+      attemptStatus.value = ''
       activeAttemptId.value = null
       initializedAttemptId = null
       return
@@ -1450,9 +1655,13 @@ watch(
     }
     initializedAttemptId = attemptId
 
-    // The window already elapsed: loadTest is redirecting to the graded result,
-    // so don't arm a timer for an attempt we're leaving.
-    if (testStore.lastResume?.isCompleted) {
+    // The server's clock for this attempt, from start-test or resume.
+    const attemptClock = testStore.currentAttempt
+    testStore.markAttemptOpened()
+
+    // Already finished: loadTest is redirecting to the result, so don't arm a
+    // timer for an attempt we're leaving.
+    if (isAttemptEnded(attemptClock?.attemptStatus)) {
       return
     }
 
@@ -1460,19 +1669,22 @@ watch(
     dirtyQuestionIds.clear()
     clearAnswerActionsForTest(test.id)
 
-    const questionCount = totalQuestions.value || Number(test.questions?.length || 0)
-
-    // Resume payload (refresh / continue): re-fill the saved answers and run the
-    // clock down from the server's remaining time. On a fresh start there is no
-    // resume state, so the timer begins from the test's full duration.
+    // Resume payload (refresh / continue): re-fill the saved answers. A fresh
+    // start has none.
     const resume = testStore.lastResume
 
     if (resume) {
       applyServerAnswers(resume.userAnswers)
       applyServerGroupImages(resume.groupAnswers)
-      startTimer(questionCount, resume.remainingSeconds)
-    } else {
-      startTimer(questionCount, null)
+    }
+
+    applyTimerState(attemptClock)
+
+    // The page came back to a session the store kept (navigated away and back):
+    // that reading is old, and the attempt may have been paused or finished
+    // since. Ask again.
+    if (attemptClock?.receivedAt && Date.now() - attemptClock.receivedAt > 5000) {
+      void syncTimer()
     }
 
     void clearRestartQuery()
@@ -1525,6 +1737,15 @@ const confirmSubmitTest = async () => {
   } catch (error) {
     console.error(error)
     isCompletingTest.value = false
+
+    // A save that bounced may mean the server already ended the attempt (its
+    // time ran out). Then the result is all that's left — the timer reading
+    // routes there instead of offering a retry that can only fail again.
+    await syncTimer()
+    if (isCompletingTest.value) {
+      return
+    }
+
     // Two things can fail a finish: the photo answers of AI-reviewed questions,
     // and the handwritten-essay transcription. Name the right one.
     const isImageUploadFailure = /answer images/i.test(error?.message || '')
@@ -1635,7 +1856,14 @@ onMounted(() => {
   lockZoom()
   if (typeof window !== 'undefined') {
     window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('focus', syncTimer)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    timerSyncIntervalId = window.setInterval(syncTimer, TIMER_SYNC_INTERVAL_MS)
     answerSyncIntervalId = window.setInterval(() => {
+      // Saves are refused while paused; pending ones go out after an unpause.
+      if (isPaused.value) {
+        return
+      }
       if (hasPendingAnswerActions()) {
         void syncDirtyAnswers()
       }
@@ -1647,9 +1875,14 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  isPageActive = false
   if (answerSyncIntervalId) {
     clearInterval(answerSyncIntervalId)
     answerSyncIntervalId = null
+  }
+  if (timerSyncIntervalId) {
+    clearInterval(timerSyncIntervalId)
+    timerSyncIntervalId = null
   }
   // Final flush so up to ANSWER_SYNC_INTERVAL_MS of unsent edits aren't lost
   // when the user navigates away mid-window.
@@ -1660,6 +1893,8 @@ onBeforeUnmount(() => {
   unlockZoom()
   if (typeof window !== 'undefined') {
     window.removeEventListener('beforeunload', handleBeforeUnload)
+    window.removeEventListener('focus', syncTimer)
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
   }
 })
 </script>
@@ -1682,9 +1917,22 @@ onBeforeUnmount(() => {
       @back="closeFinishOverlay"
     />
 
+    <!-- Untimed tests (remainingSeconds null) show no timer at all. -->
     <TestFloatingTools
-      v-if="currentTest"
+      v-if="currentTest && remainingSeconds !== null"
       :remaining-seconds="remainingSeconds"
+      pausable
+      :pause-disabled="isPauseBusy || isSubmittingTest"
+      :pause-label="t('testPage.pause.button')"
+      @pause="pauseTest"
+    />
+
+    <TestPauseOverlay
+      v-if="currentTest && isPaused"
+      :remaining-seconds="remainingSeconds"
+      :busy="isPauseBusy"
+      :error-message="unpauseErrorMessage"
+      @resume="unpauseTest"
     />
 
 
@@ -1708,9 +1956,14 @@ onBeforeUnmount(() => {
           @retry="loadTest(requestedTestId)"
         />
 
+        <!-- Paused: kept mounted (answers, scroll, editor state survive) but
+             invisible and inert, so nothing can be read or answered behind the
+             pause overlay. -->
         <div
           v-else-if="canAccessTest"
           class="mx-auto max-w-[1040px]"
+          :class="{ invisible: isPaused }"
+          :inert="isPaused"
         >
           <button
             v-if="isMathTest"
@@ -1734,7 +1987,7 @@ onBeforeUnmount(() => {
                 {{ currentTest.title || t('testPage.title') }}
               </h1>
               <p class="font-mono-custom mt-3 text-[11px] font-normal uppercase tracking-[0.18em] text-[#8a857c] sm:text-sm">
-                {{ totalDurationMinutes }} {{ t('testPage.minutes') }} &bull; {{ totalQuestions }} {{ t('testPage.questionsLabel') }}
+                <template v-if="totalDurationMinutes">{{ totalDurationMinutes }} {{ t('testPage.minutes') }} &bull; </template>{{ totalQuestions }} {{ t('testPage.questionsLabel') }}
               </p>
             </div>
 
@@ -1811,6 +2064,7 @@ onBeforeUnmount(() => {
 
       <TestBottomBar
         v-if="canAccessTest"
+        :inert="isPaused"
         :answered-count="answeredCount"
         :total-questions="totalQuestions"
         :answered-label="t('testPage.answered')"

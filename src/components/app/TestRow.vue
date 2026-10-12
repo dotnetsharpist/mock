@@ -62,7 +62,9 @@ const takers = computed(() =>
     <div class="flex w-full shrink-0 items-center justify-end gap-3 sm:w-auto">
       <!-- Neutral, not green: the attempts list carries a raw score with no
            maximum, so this says the test was finished, never how well. -->
-      <StatusBadge v-if="test.state === 'done'" tone="neutral">Yakunlangan</StatusBadge>
+      <StatusBadge v-if="test.state === 'done'" tone="neutral">
+        {{ test.expired ? 'Vaqt tugadi' : 'Yakunlangan' }}
+      </StatusBadge>
       <StatusBadge v-else-if="test.state === 'progress'" tone="info">Yechilmoqda</StatusBadge>
 
       <!-- Always the primary ink button: every row's action starts or resumes a

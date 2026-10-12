@@ -84,9 +84,16 @@ const meta = computed(() =>
       >
         <AppIcon :name="subject.icon" :size="19" />
       </span>
-      <StatusBadge v-if="result.isPremium" tone="neutral" class="!px-2 !py-0.5 !text-[10px]">
-        PREMIUM
-      </StatusBadge>
+      <div class="flex flex-wrap justify-end gap-1.5">
+        <!-- Graded like any other result, but the student did not hand it in:
+             the clock ran out first. -->
+        <StatusBadge v-if="result.expired" tone="neutral" class="!px-2 !py-0.5 !text-[10px]">
+          VAQT TUGADI
+        </StatusBadge>
+        <StatusBadge v-if="result.isPremium" tone="neutral" class="!px-2 !py-0.5 !text-[10px]">
+          PREMIUM
+        </StatusBadge>
+      </div>
     </div>
 
     <h3 class="mt-3 text-[14.5px] font-bold leading-[1.35] tracking-[-0.01em] text-app-ink">

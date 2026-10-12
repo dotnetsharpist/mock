@@ -5,6 +5,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useBalanceStore } from '@/stores/balance'
+import ActiveAttemptBanner from './ActiveAttemptBanner.vue'
 import AppIcon from './AppIcon.vue'
 import CoinIcon from './CoinIcon.vue'
 
@@ -176,4 +177,9 @@ async function signOut() {
       </div>
     </div>
   </header>
+
+  <!-- Every platform screen opens with this bar, so the way back into an
+       unfinished test sits under it on all of them — wherever the student
+       lands after leaving one. -->
+  <ActiveAttemptBanner />
 </template>

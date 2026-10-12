@@ -1168,11 +1168,24 @@ async function loadResults() {
 
     hasSubmittedResult.value = true
 
+    // A result exists, so this attempt is no longer the one to continue.
+    authStore.forgetActiveAttempt(attemptId)
+
     // Fresh attempt, fresh baseline: reviews present now are not "newly
     // arrived", and polling starts (only) if grading is still pending.
     seenBiologyReviewGroupIds = new Set()
     reconcileBiologyPolling({ initial: true })
   } catch (error) {
+    // 409: the attempt is still running (a link to one that was never
+    // finished) — there is no result yet, so send the student back into it.
+    if (error?.attemptRunning && requestedTestId.value) {
+      await router.replace({
+        path: '/test',
+        query: { testId: requestedTestId.value, attemptId: Number(attemptId) },
+      })
+      return
+    }
+
     testLoadError.value =
       error instanceof Error ? error.message : 'Natijani yuklashda xatolik yuz berdi.'
   } finally {
@@ -1190,10 +1203,10 @@ async function finalizeTestSubmission() {
 
   activeAttemptId.value = Number(attemptId)
 
-  // Finalize the attempt server-side. We render the graded result from
-  // get-results (loadResults) right after, so we don't depend on the submit
-  // response shape here.
-  await testStore.submitTestAttempt(testId, attemptId)
+  // Finalize the attempt server-side. It answers Completed, or Expired when the
+  // time ran out first (an attempt that already finished is a 200 too); either
+  // way the result is read from get-results (loadResults) right after.
+  await testStore.submitTestAttempt(attemptId)
   testProgressStore.clearProgress(Number(testId))
 }
 

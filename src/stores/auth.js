@@ -690,6 +690,18 @@ export const useAuthStore = defineStore('auth', () => {
     return userInfo.value
   }
 
+  // The results page proves an attempt is over. Drop it from the cached /user
+  // so the shell's "continue your test" banner doesn't show it again before
+  // the next /user read lands.
+  function forgetActiveAttempt(testAttemptId) {
+    if (
+      userInfo.value?.activeAttempt &&
+      Number(userInfo.value.activeAttempt.testAttemptId) === Number(testAttemptId)
+    ) {
+      userInfo.value = { ...userInfo.value, activeAttempt: null }
+    }
+  }
+
   function logout() {
     token.value = ''
     errorMessage.value = ''
@@ -717,6 +729,7 @@ export const useAuthStore = defineStore('auth', () => {
     telegramLogin,
     googleLogin,
     getUserInfo,
+    forgetActiveAttempt,
     updateProfile,
     userInfo,
     logout,

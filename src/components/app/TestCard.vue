@@ -81,8 +81,19 @@ const takers = computed(() =>
 
       <!-- State reads as one glanceable mark in the corner, so a block of cards
            can be scanned without reading any of them. -->
+      <!-- The clock ran out before it was handed in: finished, but not a
+           check mark — a neutral clock that says so on hover. -->
       <span
-        v-if="test.state === 'done'"
+        v-if="test.state === 'done' && test.expired"
+        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-app-tile text-app-ink"
+        role="img"
+        aria-label="Vaqt tugadi"
+        title="Vaqt tugadi"
+      >
+        <AppIcon name="clock" :size="13" />
+      </span>
+      <span
+        v-else-if="test.state === 'done'"
         class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-app-good-bg text-app-good"
         role="img"
         aria-label="Yakunlangan"

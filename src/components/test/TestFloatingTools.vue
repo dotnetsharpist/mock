@@ -1,34 +1,39 @@
 <script setup>
 import { computed } from 'vue'
+import { formatCountdown } from '@/utils/formatCountdown'
 
 const props = defineProps({
   remainingSeconds: {
     type: Number,
     default: 0,
   },
+  // The pause button sits in the pill (the real test page only — the demo
+  // pages have no attempt to pause). It goes quiet while a pause/unpause is on
+  // the wire or the test is being finished.
+  pausable: {
+    type: Boolean,
+    default: false,
+  },
+  pauseDisabled: {
+    type: Boolean,
+    default: false,
+  },
+  pauseLabel: {
+    type: String,
+    default: '',
+  },
 })
 
-const formattedTime = computed(() => {
-  const totalSeconds = Math.max(Math.floor(Number(props.remainingSeconds || 0)), 0)
-  const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = totalSeconds % 60
+defineEmits(['pause'])
 
-  const normalizedMinutes = String(minutes).padStart(2, '0')
-  const normalizedSeconds = String(seconds).padStart(2, '0')
-
-  if (hours > 0) {
-    return `${String(hours).padStart(2, '0')}:${normalizedMinutes}:${normalizedSeconds}`
-  }
-
-  return `${normalizedMinutes}:${normalizedSeconds}`
-})
+const formattedTime = computed(() => formatCountdown(props.remainingSeconds))
 </script>
 
 <template>
   <div class="fixed right-3 top-3 z-30 sm:right-6 sm:top-6">
     <div
       class="floating-timer flex items-center gap-2 rounded-full border border-white/10 bg-black/92 px-3 py-2 text-white shadow-[0_14px_32px_rgba(0,0,0,0.22)] backdrop-blur-md sm:gap-3 sm:px-4 sm:py-3"
+      :class="pausable ? '!pr-2 sm:!pr-3' : ''"
     >
       <div
         class="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 sm:h-11 sm:w-11"
@@ -53,6 +58,21 @@ const formattedTime = computed(() => {
       <span class="countdown-text">
         {{ formattedTime }}
       </span>
+
+      <button
+        v-if="pausable"
+        type="button"
+        :disabled="pauseDisabled"
+        :aria-label="pauseLabel"
+        :title="pauseLabel"
+        class="flex h-8 w-8 items-center justify-center rounded-full bg-white text-black transition hover:bg-white/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:w-11"
+        @click="$emit('pause')"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" class="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true">
+          <rect x="6" y="5" width="4" height="14" rx="1" />
+          <rect x="14" y="5" width="4" height="14" rx="1" />
+        </svg>
+      </button>
     </div>
   </div>
 </template>
