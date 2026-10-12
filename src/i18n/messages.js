@@ -150,13 +150,13 @@ const messages = {
     },
     pricing: {
       title: "Ta'riflar va Narxlar",
-      description: "Tangalarni xarid qiling va istalgan vaqtda testlarni yeching. Tangalar muddatsiz — ular tugamaguncha amal qiladi.",
+      description: "Tanga sotib oling — har 2 tanga bitta premium test yoki AI insho tekshiruviga ketadi. Tangalar muddatsiz, obuna yo‘q.",
       cta: 'Demoga hoziroq buyurtma bering',
       moreInfo: "Ko‘proq ma’lumot",
       buy: 'Sotib olish',
       authModal: {
         title: "Avval ro'yxatdan o'ting",
-        description: "Tariflarni sotib olish uchun hisobingizga kiring yoki bir daqiqada ro'yxatdan o'ting.",
+        description: "Tanga sotib olish uchun hisobingizga kiring yoki bir daqiqada ro'yxatdan o'ting.",
         register: "Ro'yxatdan o'tish",
         login: 'Kirish',
         close: 'Yopish'
@@ -165,28 +165,30 @@ const messages = {
       popular: 'Eng ommabop',
       bestValue: 'Eng tejamli',
       billingNote: "To'lovdan so'ng tangalar hisobingizga qo'lda faollashtiriladi",
+      // Every pack buys the same thing — the only differences are the size and
+      // the per-test price. Don't invent features a bigger pack "unlocks".
       plans: [
         {
-          name: "Boshlang'ich Ta'rif",
+          name: 'Kichik paket',
           price: "20 000 so'm",
           tokens: 5,
           highlighted: false,
-          features: ['Barcha fanlar testlari', 'Yechimlar va batafsil tahlil', 'Tangalar muddatsiz amal qiladi']
+          features: ['2 ta premium test yoki insho tekshiruvi', 'Sinab ko‘rish uchun yetarli']
         },
         {
-          name: "Plus Ta'rifi",
+          name: 'O‘rta paket',
           price: "35 000 so'm",
           tokens: 10,
           highlighted: true,
-          features: ['Barcha fanlar testlari', 'Yechimlar va batafsil tahlil', 'Natijalar statistikasi', 'Tangalar muddatsiz amal qiladi']
+          features: ['5 ta premium test yoki insho tekshiruvi', 'Bir necha haftalik tayyorgarlik uchun']
         },
         {
-          name: "Premium Ta'rifi",
+          name: 'Katta paket',
           price: "70 000 so'm",
           tokens: 25,
           highlighted: false,
           bestValue: true,
-          features: ['Barcha fanlar testlari', 'Yechimlar va batafsil tahlil', 'Natijalar statistikasi', 'Test sertifikati', 'Tangalar muddatsiz amal qiladi']
+          features: ['12 ta premium test yoki insho tekshiruvi', 'Imtihongacha to‘liq tayyorgarlik uchun']
         }
       ],
       payment: {
@@ -842,13 +844,13 @@ const messages = {
     },
     pricing: {
       title: 'Тарифы и цены',
-      description: 'Покупайте токены и проходите тесты в любое время. Токены бессрочные — действуют, пока не закончатся.',
+      description: 'Покупайте токены — каждые 2 токена идут на один премиум-тест или AI-проверку эссе. Токены бессрочные, без подписки.',
       cta: 'Заказать демо сейчас',
       moreInfo: 'Подробнее',
       buy: 'Купить',
       authModal: {
         title: 'Сначала зарегистрируйтесь',
-        description: 'Чтобы покупать тарифы, войдите в аккаунт или зарегистрируйтесь за минуту.',
+        description: 'Чтобы купить токены, войдите в аккаунт или зарегистрируйтесь за минуту.',
         register: 'Зарегистрироваться',
         login: 'Войти',
         close: 'Закрыть'
@@ -859,26 +861,26 @@ const messages = {
       billingNote: 'После оплаты токены начисляются на ваш счёт вручную',
       plans: [
         {
-          name: 'Стартовый тариф',
+          name: 'Малый пакет',
           price: "20 000 so'm",
           tokens: 5,
           highlighted: false,
-          features: ['Тесты по всем предметам', 'Решения и подробный разбор', 'Токены не сгорают']
+          features: ['2 премиум-теста или проверки эссе', 'Чтобы попробовать']
         },
         {
-          name: 'Тариф Plus',
+          name: 'Средний пакет',
           price: "35 000 so'm",
           tokens: 10,
           highlighted: true,
-          features: ['Тесты по всем предметам', 'Решения и подробный разбор', 'Статистика результатов', 'Токены не сгорают']
+          features: ['5 премиум-тестов или проверок эссе', 'На несколько недель подготовки']
         },
         {
-          name: 'Тариф Premium',
+          name: 'Большой пакет',
           price: "70 000 so'm",
           tokens: 25,
           highlighted: false,
           bestValue: true,
-          features: ['Тесты по всем предметам', 'Решения и подробный разбор', 'Статистика результатов', 'Сертификат теста', 'Токены не сгорают']
+          features: ['12 премиум-тестов или проверок эссе', 'На полную подготовку к экзамену']
         }
       ],
       payment: {

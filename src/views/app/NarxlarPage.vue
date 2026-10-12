@@ -47,11 +47,13 @@ const plans = computed(() =>
       index,
       tokens,
       ratio: ratio ? `${Number(ratio.toFixed(1))}x` : null,
+      // No badge on the plain pack — "Basic" was an English filler word next to
+      // two Uzbek ones, and it labelled a pack that has nothing less in it.
       badge: plan.highlighted
         ? { label: t('pricing.popular'), solid: true }
         : plan.bestValue
           ? { label: t('pricing.bestValue'), solid: false }
-          : { label: 'Basic', solid: false },
+          : null,
     }
   }),
 )
@@ -69,24 +71,28 @@ onMounted(() => {
 })
 
 // The three rules that govern tanga, stated once where they are being sold.
+// Tanga buy two things — a premium test and an AI essay check — and both cost
+// the same (TEST_TOKEN_COST; the essay price is the backend's, mirrored here).
+// The first essay check is free (backend FreeReviewCount = 1).
 const HOW_IT_WORKS = [
   {
     key: 'cost',
     numeral: '2',
-    title: '2 tanga = 1 premium test',
-    description: 'Har bir premium testni boshlash uchun 2 tanga kerak bo‘ladi.',
+    title: '2 tanga = 1 test yoki 1 insho tekshiruvi',
+    description:
+      'Premium test ham, AI insho tekshiruvi ham 2 tangadan. Birinchi insho tekshiruvi bepul.',
   },
   {
     key: 'expiry',
     icon: 'infinity',
     title: 'Tanga muddatsiz amal qiladi',
-    description: 'Sotib olgan tangalaringiz cheklanmagan muddatgacha saqlanadi.',
+    description: 'Obuna emas — tangalar sarflanmaguncha hisobingizda turadi.',
   },
   {
     key: 'charge',
     icon: 'play',
-    title: 'Faqat boshlaganda yechiladi',
-    description: 'Testni boshlamaguningizcha hech qanday tanga yechilmaydi.',
+    title: 'Faqat ishlatganda yechiladi',
+    description: 'Tanga testni boshlaganingizda yoki inshoni tekshiruvga yuborganingizda yechiladi.',
   },
 ]
 </script>
@@ -94,7 +100,7 @@ const HOW_IT_WORKS = [
 <template>
   <AppTopbar
     title="Narxlar"
-    subtitle="Tanga sotib oling va istalgan vaqtda testlarni yeching."
+    subtitle="Tanga sotib oling — premium testlar va AI insho tekshiruvi uchun."
     :user="user"
     @open-menu="$emit('openMenu')"
   />
@@ -115,7 +121,7 @@ const HOW_IT_WORKS = [
           <!-- Same rule as the topbar subtitle: on a phone this sentence only
                restates the heading above it. -->
           <p class="mt-0.5 hidden text-[13px] text-app-muted sm:block">
-            O‘zingizga mos paketni tanlang va premium testlarni cheksiz yeching.
+            Har bir paket bir xil narsani beradi — faqat hajmi va bittasining narxi farq qiladi.
           </p>
         </div>
 
@@ -147,6 +153,7 @@ const HOW_IT_WORKS = [
                 {{ plan.name }}
               </h4>
               <span
+                v-if="plan.badge"
                 class="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em]"
                 :class="
                   plan.badge.solid

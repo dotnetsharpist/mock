@@ -34,9 +34,9 @@ const steps = [
 
 // Worded exactly as the platform's own Narxlar screen words them.
 const tangaFacts = [
-  { title: '2 tanga = 1 premium test', body: 'Har bir premium testni boshlash uchun 2 tanga kerak bo‘ladi.' },
-  { title: 'Muddatsiz amal qiladi', body: 'Sotib olgan tangalaringiz cheklanmagan muddatgacha saqlanadi.' },
-  { title: 'Faqat boshlaganda yechiladi', body: 'Testni boshlamaguningizcha hech qanday tanga yechilmaydi.' },
+  { title: '2 tanga = 1 test yoki 1 insho tekshiruvi', body: 'Premium test ham, AI insho tekshiruvi ham 2 tangadan. Birinchi insho tekshiruvi bepul.' },
+  { title: 'Muddatsiz amal qiladi', body: 'Obuna emas — tangalar sarflanmaguncha hisobingizda turadi.' },
+  { title: 'Faqat ishlatganda yechiladi', body: 'Tanga testni boshlaganingizda yoki inshoni tekshiruvga yuborganingizda yechiladi.' },
 ]
 </script>
 
