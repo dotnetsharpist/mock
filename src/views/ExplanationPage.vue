@@ -8,7 +8,6 @@ import TestInlineMathText from '@/components/test/TestInlineMathText.vue'
 import EssayAnalysisSection from '@/components/onatili/EssayAnalysisSection.vue'
 import BiologyReviewSection from '@/components/biology/BiologyReviewSection.vue'
 import EssayProcessingOverlay from '@/components/test/EssayProcessingOverlay.vue'
-import WebinarPromo from '@/components/webinar/WebinarPromo.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTestStore } from '@/stores/test'
 import { useTestProgressStore } from '@/stores/testProgress'
@@ -857,25 +856,6 @@ const showEssayCheckingOverlay = computed(
     essayQuestions.value.length > 0 &&
     (isFinalizingSubmission.value || isLoadingTest.value) &&
     !testLoadError.value,
-)
-
-// The webinar popup opens itself on mount, so mount it once the results are
-// on screen and nothing else covers them: not over the "submitting" / essay
-// checking screen, and not over the certificate that opens on finish (it
-// waits until that is closed). Latched, so reopening the certificate later
-// doesn't unmount and re-pop it.
-const showWebinarPopup = ref(false)
-watch(
-  () =>
-    hasSubmittedResult.value &&
-    !isLoadingTest.value &&
-    !isFinalizingSubmission.value &&
-    !testLoadError.value &&
-    !isCertificateModalOpen.value,
-  (ready) => {
-    if (ready) showWebinarPopup.value = true
-  },
-  { immediate: true },
 )
 
 // The score ring + review table cover the auto-graded questions. An AI-only
@@ -2357,9 +2337,6 @@ function answerFeedbackText(question) {
           </div>
         </details>
       </section>
-
-      <!-- CEFR webinar popup — temporary campaign, see WebinarPromo.vue. -->
-      <WebinarPromo v-if="showWebinarPopup" />
     </div>
 
     <Teleport to="body">
