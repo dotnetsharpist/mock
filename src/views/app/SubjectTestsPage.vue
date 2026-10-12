@@ -14,6 +14,7 @@ import TestCard from '@/components/app/TestCard.vue'
 import SkeletonBlock from '@/components/app/SkeletonBlock.vue'
 import EmptyState from '@/components/app/EmptyState.vue'
 import TestLaunchDialogs from '@/components/app/TestLaunchDialogs.vue'
+import ActiveAttemptDialog from '@/components/app/ActiveAttemptDialog.vue'
 import ProfileGateModal from '@/components/ProfileGateModal.vue'
 import { SUBJECTS, unknownSubject } from '@/components/app/subjects.js'
 import { useTestCatalogStore } from '@/stores/testCatalog'
@@ -43,6 +44,14 @@ const {
   showProfileGate,
   onProfileCompleted,
   onProfileCancel,
+  activeAttemptGate: {
+    blockingAttempt,
+    isFinishing: isFinishingAttempt,
+    finishError: finishAttemptError,
+    goToAttempt,
+    finishAttempt,
+    close: closeAttemptGate,
+  },
 } = useTestLauncher()
 
 void catalog.load()
@@ -402,6 +411,15 @@ const sortOptions = asOptions(SORTS)
       @confirm="confirmLaunch"
       @close="closeLaunch"
       @topup="goToTopUp"
+    />
+
+    <ActiveAttemptDialog
+      :attempt="blockingAttempt"
+      :busy="isFinishingAttempt"
+      :error="finishAttemptError"
+      @go="goToAttempt"
+      @finish="finishAttempt"
+      @close="closeAttemptGate"
     />
 
     <ProfileGateModal

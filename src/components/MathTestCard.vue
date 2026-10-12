@@ -10,7 +10,9 @@ import { isPremiumTest, isTestPurchased, testTokenCost } from '@/utils/premium'
 import { subjectIcon } from '@/utils/subjects'
 import { COMPLETE_PROFILE_PATH, PHONE_VERIFY_REDIRECTS_ENABLED } from '@/utils/postAuth'
 import ProfileGateModal from '@/components/ProfileGateModal.vue'
+import ActiveAttemptDialog from '@/components/app/ActiveAttemptDialog.vue'
 import { useProfileGate } from '@/composables/useProfileGate'
+import { useActiveAttemptGate } from '@/composables/useActiveAttemptGate'
 
 const props = defineProps({
   test: {
@@ -44,6 +46,26 @@ const showAttemptChoiceModal = ref(false)
 const showPremiumModal = ref(false)
 const showTopUpModal = ref(false)
 const isCheckingBalance = ref(false)
+const isCheckingAttempt = ref(false)
+const activeAttemptGate = useActiveAttemptGate()
+const {
+  blockingAttempt,
+  isFinishing: isFinishingAttempt,
+  finishError: finishAttemptError,
+} = activeAttemptGate
+
+// Every start below mints a new attempt, so one still open (running or
+// paused, any test) is continued or finished first. True when nothing is open;
+// otherwise the dialog is up, and `next` — this card's start modal — follows
+// if the student finishes the open one.
+const passActiveAttemptGate = async (next) => {
+  isCheckingAttempt.value = true
+  try {
+    return await activeAttemptGate.check(next)
+  } finally {
+    isCheckingAttempt.value = false
+  }
+}
 const isInProgressCard = computed(() => Boolean(props.test.isInProgressCard))
 
 // Card icon follows the test's subject — π for math, scroll for history, atom
@@ -99,6 +121,13 @@ const handlePremiumClick = async () => {
     showAttemptChoiceModal.value = true
     return
   }
+
+  // After finishing an open attempt, an owned test still gets a confirm rather
+  // than starting the moment that dialog closes.
+  const isClear = await passActiveAttemptGate(() =>
+    isPurchased.value ? (showStartModal.value = true) : beginPremiumPurchase(),
+  )
+  if (!isClear) return
 
   // Already owns it → no charge, just open.
   if (isPurchased.value) {
@@ -224,7 +253,7 @@ const openTest = async () => {
 // to registration the instant they click — before the confirm modal or any
 // backend call — mirroring the premium card's gate. An authenticated user gets
 // the usual confirm modal and the unchanged start flow.
-const handleStartClick = () => {
+const handleStartClick = async () => {
   if (props.isAttemptedCard) {
     showAttemptChoiceModal.value = true
     return
@@ -238,7 +267,10 @@ const handleStartClick = () => {
     return
   }
 
-  showStartModal.value = true
+  const openStartModal = () => {
+    showStartModal.value = true
+  }
+  if (await passActiveAttemptGate(openStartModal)) openStartModal()
 }
 
 const handleStartTest = async () => {
@@ -312,6 +344,12 @@ const openLastResult = async () => {
 
 const reattemptTest = async () => {
   showAttemptChoiceModal.value = false
+
+  const isClear = await passActiveAttemptGate(() =>
+    requiresPurchaseToRetake.value ? beginPremiumPurchase() : (showStartModal.value = true),
+  )
+  if (!isClear) return
+
   // A paid test whose attempt is already used must be bought again before it
   // can be re-taken → route through the purchase confirm/top-up flow. Free
   // tests (and any still-owned premium) just restart with no charge.
@@ -413,7 +451,7 @@ const handleAttemptedCardClick = () => {
           v-if="!isInProgressCard"
           type="button"
           @click.stop="isPremium ? handlePremiumClick() : handleStartClick()"
-          :disabled="isStarting || isCheckingBalance"
+          :disabled="isStarting || isCheckingBalance || isCheckingAttempt"
           class="flex w-full items-center justify-center gap-2 rounded-full bg-[#1a1814] px-4 py-3.5 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(26,24,20,0.18)] transition duration-300 hover:-translate-y-0.5 hover:bg-black hover:shadow-[0_14px_36px_rgba(26,24,20,0.24)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <svg v-if="isAttemptedCard" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -424,7 +462,7 @@ const handleAttemptedCardClick = () => {
             <path stroke-linecap="round" stroke-linejoin="round" d="m14.752 11.168-4.586-2.65A1 1 0 0 0 8.667 9.39v5.22a1 1 0 0 0 1.499.872l4.586-2.65a1 1 0 0 0 0-1.664Z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
           </svg>
-          {{ isStarting ? t('mathCard.starting') : isCheckingBalance ? t('mathCard.checking') : isAttemptedCard ? t('mathCard.viewResult') : t('mathCard.start') }}
+          {{ isStarting ? t('mathCard.starting') : isCheckingBalance || isCheckingAttempt ? t('mathCard.checking') : isAttemptedCard ? t('mathCard.viewResult') : t('mathCard.start') }}
         </button>
 
         <button
@@ -619,6 +657,15 @@ const handleAttemptedCardClick = () => {
       v-model:show="showProfileGate"
       @completed="onProfileCompleted"
       @cancel="onProfileCancel"
+    />
+
+    <ActiveAttemptDialog
+      :attempt="blockingAttempt"
+      :busy="isFinishingAttempt"
+      :error="finishAttemptError"
+      @go="activeAttemptGate.goToAttempt"
+      @finish="activeAttemptGate.finishAttempt"
+      @close="activeAttemptGate.close"
     />
   </article>
 </template>

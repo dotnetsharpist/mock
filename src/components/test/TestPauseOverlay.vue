@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import logoMark from '@/assets/logo-removed.png'
+import logoMarkDark from '@/assets/logo-mark.png'
 import { formatCountdown } from '@/utils/formatCountdown'
 
 // Full-screen cover while the attempt is paused. The server has frozen the
@@ -30,10 +30,15 @@ const formattedTime = computed(() => formatCountdown(props.remainingSeconds))
       aria-modal="true"
       aria-labelledby="test-pause-title"
     >
-      <div class="absolute left-5 top-5 flex items-center gap-2.5 sm:left-8 sm:top-7">
-        <img :src="logoMark" alt="MilliyMock" class="h-7 w-auto object-contain" />
+      <!-- A way out: the clock is frozen and TestPage doesn't guard a paused
+           attempt, so leaving is safe — the dashboard's banner brings it back. -->
+      <RouterLink
+        to="/dashboard"
+        class="absolute left-5 top-5 flex items-center gap-2.5 rounded-md transition-opacity hover:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1a1814] sm:left-8 sm:top-7"
+      >
+        <img :src="logoMarkDark" alt="" class="h-7 w-auto object-contain" />
         <span class="text-[15px] font-bold tracking-[-0.025em]">MilliyMock</span>
-      </div>
+      </RouterLink>
 
       <div
         class="mb-8 flex h-[104px] w-[104px] items-center justify-center rounded-full border border-[#e0ddd7] bg-white shadow-[0_10px_30px_rgba(26,24,20,0.07)]"

@@ -5,6 +5,10 @@
 //   free     → confirm, then start
 //   paid     → confirm the tanga cost, then start; short balance → top up
 //
+// Free and paid both start a new attempt, so another one still open (running
+// or paused, any test) has to be continued or finished first — the
+// useActiveAttemptGate dialog, after which the confirm above follows.
+//
 // A finished test takes the free/paid path again — this screen is for taking
 // tests, not reading results. Whether a re-take costs tanga is the backend's
 // call: it re-reports `isPurchased` per user, and start-test is the authority.
@@ -18,17 +22,30 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTestStore } from '@/stores/test'
 import { useBalanceStore } from '@/stores/balance'
+import { useTestCatalogStore } from '@/stores/testCatalog'
 import { isPremiumTest, isTestPurchased, testTokenCost } from '@/utils/premium'
 import { COMPLETE_PROFILE_PATH, PHONE_VERIFY_REDIRECTS_ENABLED } from '@/utils/postAuth'
 import { useProfileGate } from '@/composables/useProfileGate'
+import { useActiveAttemptGate } from '@/composables/useActiveAttemptGate'
 
-export function useTestLauncher() {
+// onAttemptFinished: the screen's own refresh, for when the gate's dialog has
+// just finished an open attempt (its row is now a result).
+export function useTestLauncher({ onAttemptFinished } = {}) {
   const route = useRoute()
   const router = useRouter()
   const testStore = useTestStore()
   const balanceStore = useBalanceStore()
+  const catalog = useTestCatalogStore()
   const { showProfileGate, ensureProfileComplete, onProfileCompleted, onProfileCancel } =
     useProfileGate()
+  const activeAttemptGate = useActiveAttemptGate({
+    onFinished: (attempt) => {
+      // The finished attempt's test reads "in progress" until the attempts are
+      // read again. No skeleton: the store only shows one on its first load.
+      if (catalog.hasLoaded) void catalog.load({ force: true })
+      onAttemptFinished?.(attempt)
+    },
+  })
 
   // The test awaiting confirmation, and which dialog is showing for it.
   const pending = ref(null)
@@ -57,6 +74,19 @@ export function useTestLauncher() {
       return
     }
 
+    // Anything else starts a new attempt — not while another is open.
+    busyTestId.value = test.id
+    let isClear = false
+    try {
+      isClear = await activeAttemptGate.check(() => offer(test))
+    } finally {
+      busyTestId.value = null
+    }
+    if (isClear) await offer(test)
+  }
+
+  // The confirmation for starting `test`: start, purchase or top-up.
+  async function offer(test) {
     pending.value = test
 
     // Free, or already owned → a plain confirm. Nothing is charged.
@@ -156,5 +186,6 @@ export function useTestLauncher() {
     showProfileGate,
     onProfileCompleted,
     onProfileCancel,
+    activeAttemptGate,
   }
 }

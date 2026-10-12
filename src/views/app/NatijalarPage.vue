@@ -23,6 +23,7 @@ import EssayResultCard from '@/components/app/EssayResultCard.vue'
 import SkeletonBlock from '@/components/app/SkeletonBlock.vue'
 import EmptyState from '@/components/app/EmptyState.vue'
 import TestLaunchDialogs from '@/components/app/TestLaunchDialogs.vue'
+import ActiveAttemptDialog from '@/components/app/ActiveAttemptDialog.vue'
 import ProfileGateModal from '@/components/ProfileGateModal.vue'
 import { subjectKeyFromApi } from '@/components/app/subjects.js'
 import { useTestStore } from '@/stores/test'
@@ -58,7 +59,18 @@ const {
   showProfileGate,
   onProfileCompleted,
   onProfileCancel,
-} = useTestLauncher()
+  activeAttemptGate: {
+    blockingAttempt,
+    isFinishing: isFinishingAttempt,
+    finishError: finishAttemptError,
+    goToAttempt,
+    finishAttempt,
+    close: closeAttemptGate,
+  },
+} = useTestLauncher({
+  // The launcher's dialog just finished an open attempt — it is a result now.
+  onAttemptFinished: () => refreshAttemptsQuietly(),
+})
 
 // ——— Tabs, synced to ?view= so a result link can be shared/bookmarked ————
 const VALID_VIEWS = ['tests', 'essays']
@@ -94,6 +106,15 @@ const fetchAttempts = async () => {
     errorKind.value = isNetworkError(error) ? 'network' : 'fetch'
   } finally {
     isLoading.value = false
+  }
+}
+
+// Re-read without the skeleton: the list is on screen behind a dialog.
+const refreshAttemptsQuietly = async () => {
+  try {
+    rawAttempts.value = await testStore.fetchUserAttempts()
+  } catch (error) {
+    console.error(error)
   }
 }
 
@@ -546,6 +567,15 @@ const errorCopy = computed(() =>
       @confirm="confirmLaunch"
       @close="closeLaunch"
       @topup="goToTopUp"
+    />
+
+    <ActiveAttemptDialog
+      :attempt="blockingAttempt"
+      :busy="isFinishingAttempt"
+      :error="finishAttemptError"
+      @go="goToAttempt"
+      @finish="finishAttempt"
+      @close="closeAttemptGate"
     />
 
     <ProfileGateModal
