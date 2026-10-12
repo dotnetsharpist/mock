@@ -14,6 +14,7 @@ import { useRouter } from 'vue-router'
 import { NModal, NCard } from 'naive-ui'
 import EssayAnalysisSection from '@/components/onatili/EssayAnalysisSection.vue'
 import EssayProcessingOverlay from '@/components/test/EssayProcessingOverlay.vue'
+import WebinarPromo from '@/components/webinar/WebinarPromo.vue'
 import FileDropOverlay from '@/components/app/FileDropOverlay.vue'
 import { useWindowFileDrop } from '@/composables/useWindowFileDrop'
 import { useAuthStore } from '@/stores/auth'
@@ -691,6 +692,9 @@ const SKELETON_COUNT = 6
 
     <!-- ═══════════════ 3. Result (AI analysis) ═══════════════ -->
     <template v-else>
+      <!-- CEFR webinar popup, opens over the score: temporary campaign, see WebinarPromo.vue. -->
+      <WebinarPromo v-if="reviewAnalysis" />
+
       <div class="mb-2 flex flex-wrap items-center justify-between gap-4">
         <div class="min-w-0">
           <p class="font-mono-custom text-[10px] font-semibold uppercase tracking-[0.22em] text-[#a39e94]">Insho mavzusi</p>

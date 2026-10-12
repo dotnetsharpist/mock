@@ -14,6 +14,7 @@ import SkeletonBlock from '@/components/app/SkeletonBlock.vue'
 import EmptyState from '@/components/app/EmptyState.vue'
 import EssayAnalysisSection from '@/components/onatili/EssayAnalysisSection.vue'
 import EssayProcessingOverlay from '@/components/test/EssayProcessingOverlay.vue'
+import WebinarPromo from '@/components/webinar/WebinarPromo.vue'
 import FileDropOverlay from '@/components/app/FileDropOverlay.vue'
 import {
   MAX_ESSAY_LENGTH,
@@ -366,6 +367,9 @@ const { isDragging } = useWindowFileDrop(
 
     <!-- ═══════════ 3. Review ═══════════ -->
     <template v-else>
+      <!-- CEFR webinar popup, opens over the score: temporary campaign, see WebinarPromo.vue. -->
+      <WebinarPromo v-if="reviewAnalysis" />
+
       <div class="mb-4 flex flex-wrap items-start justify-between gap-4">
         <div class="min-w-0">
           <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-app-muted">
