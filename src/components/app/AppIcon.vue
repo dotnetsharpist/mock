@@ -62,6 +62,17 @@ const paths = {
   calendar: ['M7 3.5V6', 'M17 3.5V6', 'M4.5 9.2h15', 'M5.5 5h13a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-12A1.5 1.5 0 0 1 5.5 5Z'],
   user: ['M19 20v-1.8a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4V20', 'M12 10.6a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8Z'],
 
+  // Question bank. A stack of sheets for the bank itself; the rest are its
+  // per-question actions and statuses.
+  layers: ['M12 3.5 2.8 8.2 12 12.9l9.2-4.7L12 3.5Z', 'm2.8 12.2 9.2 4.7 9.2-4.7', 'm2.8 16.2 9.2 4.7 9.2-4.7'],
+  bookmark: ['M6.5 4.6a1.1 1.1 0 0 1 1.1-1.1h8.8a1.1 1.1 0 0 1 1.1 1.1v15.6L12 16.6l-5.5 3.6V4.6Z'],
+  flag: ['M5 21V4.5', 'M5 4.5h11.2l-1.9 4.1 1.9 4.1H5'],
+  xCircle: ['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z', 'm9.2 9.2 5.6 5.6', 'm14.8 9.2-5.6 5.6'],
+  grid: ['M4.5 4.5h5.5V10H4.5Z', 'M14 4.5h5.5V10H14Z', 'M4.5 14h5.5v5.5H4.5Z', 'M14 14h5.5v5.5H14Z'],
+  flame: [
+    'M12 21c-3.6 0-6.5-2.6-6.5-6.3 0-3.1 2.1-5 3.6-6.6.4 1.7 1.3 2.8 2.4 3.4C11.3 8.3 12.6 5.4 15 3c.3 3.4 3.5 5.6 3.5 10.8C18.5 18 15.6 21 12 21Z',
+  ],
+
   // Subject icons. Same 24 grid and 1.7 stroke as everything above, so a grid of
   // mixed subjects reads as one system rather than assorted marks. One icon per
   // subject, referenced from components/app/subjects.js — never inline.

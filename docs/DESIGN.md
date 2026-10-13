@@ -85,6 +85,18 @@ landing's Playfair — serif is the marketing voice.
 - **Active attempt banner** (`ActiveAttemptBanner.vue`) — the way back into the student's one unfinished test, from `GET /user`'s `activeAttempt`. Built from existing parts: a card, the icon tile (clock while the time runs, pause when paused), an **info** badge ("Vaqt ketmoqda" / "Pauzada" — both are in-progress states, so neither is a warning), the test's title, `N ta javob berildi, N ta qoldi`, the time left, and the primary pill "Davom etish". A paused attempt's time is a static value; a running one counts down, and the banner hides itself when that reaches zero (nothing is left to continue). An untimed test shows no time. Rendered by `AppTopbar`, under the header, so it is on every platform screen.
 - **Active attempt dialog** (`ActiveAttemptDialog.vue`, driven by `composables/useActiveAttemptGate.js`) — stops a start button from opening a second attempt while one is still open. The launch dialogs' surface, with a close ×, the same icon tile and info badge as the banner, and the open test's title and `N ta javob berildi, N ta qoldi` in a sunken box so the choice is made knowing how far along it is. Two actions: the primary pill "Testga o‘tish" (the safe one — resume it) and the secondary "Testni yakunlash" (submit it; a note above says it cannot be continued after and its result goes to Natijalar). Finishing toasts where the result will be, then the start confirmation that was interrupted carries on. The app tokens are global, so the public subject pages' `MathTestCard` uses it too.
 
+### Question bank (`components/questionBank/`)
+
+Built from the parts above; no new colours, shadows or icon style.
+
+- **Difficulty badge** (`BankDifficultyBadge.vue`) — a neutral pill with a three-step signal (Oson / O‘rta / Qiyin). Never green/amber/red: colour here means how the *student* did, and a hard question is not a bad one.
+- **Status mark** (`BankStatusMark.vue`) — the student's latest answer to a question: `checkCircle` good, `xCircle` bad, an empty hairline ring for not tried.
+- **Answer option** (in `BankQuestionView.vue`) — letter circle + text in a 12px-radius row. Selected is an ink outline with a filled ink letter; after checking, the right option is `good`, a wrong pick `bad`, the rest fade. A square button beside each row crosses the option out (the exam's answer eliminator) and disappears once the answer is sent.
+- **Player** (`BankPlayerLayout.vue`) — full-screen like the test page: slim header (back, where you are, clock, save, report), the question, a fixed footer for navigation. A question with a passage goes two-column from `lg`, the passage sticky on the left.
+- **Palette** (`BankPalette.vue`) — the session's question map; same tones as the status mark, and plain ink for "answered" while a timed run hides results.
+- **Dialog** (`BankDialog.vue`) — the launch dialogs' surface with a body slot (start a session, report a question, reset progress). The destructive confirm is the only `bad`-filled button.
+- **Activity grid** (stats page) — a year of days as squares in ink at four strengths; still the neutral scale, not a new colour.
+
 ## Rules
 
 - No new colours, card shapes, shadow depths, fonts, or a second icon style.

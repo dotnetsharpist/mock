@@ -278,6 +278,27 @@ const routes = [
         meta: { requiresAuth: true, appTitle: 'Testlar', appIcon: 'tests', seo: { title: 'Testlar', robots: 'noindex, nofollow' } },
       },
       {
+        // Savollar banki — topic-by-topic practice questions, separate from
+        // the mock tests. The two players (one question, a session) are
+        // full-screen and live in the PlatformLayout group below.
+        path: 'savollar-banki',
+        name: 'savollar-banki',
+        component: () => import('@/views/app/questionBank/BankHomePage.vue'),
+        meta: { requiresAuth: true, appTitle: 'Savollar banki', appIcon: 'layers', seo: { title: 'Savollar banki', robots: 'noindex, nofollow' } },
+      },
+      {
+        path: 'savollar-banki/:subject',
+        name: 'savollar-banki-subject',
+        component: () => import('@/views/app/questionBank/BankSubjectPage.vue'),
+        meta: { requiresAuth: true, appTitle: 'Savollar banki', appIcon: 'layers', seo: { title: 'Savollar banki', robots: 'noindex, nofollow' } },
+      },
+      {
+        path: 'savollar-banki/:subject/statistika',
+        name: 'savollar-banki-stats',
+        component: () => import('@/views/app/questionBank/BankStatsPage.vue'),
+        meta: { requiresAuth: true, appTitle: 'Savollar banki', appIcon: 'layers', seo: { title: 'Savollar banki — statistika', robots: 'noindex, nofollow' } },
+      },
+      {
         // The platform's own pricing screen: balance, plans, tanga history.
         // `/narxlar` stays the public, SEO-indexed marketing page for logged-out
         // visitors — the global guard below sends signed-in users here instead,
@@ -376,6 +397,20 @@ const routes = [
         name: 'explanation',
         component: () => import('@/views/ExplanationPage.vue'),
         meta: { requiresAuth: true, chrome: false, support: false, seo: { robots: 'noindex, nofollow' } },
+      },
+      {
+        // One question opened from the bank list.
+        path: 'savollar-banki/:subject/savol/:id',
+        name: 'savollar-banki-question',
+        component: () => import('@/views/app/questionBank/BankQuestionPage.vue'),
+        meta: { requiresAuth: true, chrome: false, support: false, seo: { title: 'Savollar banki', robots: 'noindex, nofollow' } },
+      },
+      {
+        // A practice / timed session and, once finished, its results.
+        path: 'savollar-banki/sessiya/:id',
+        name: 'savollar-banki-session',
+        component: () => import('@/views/app/questionBank/BankSessionPage.vue'),
+        meta: { requiresAuth: true, chrome: false, support: false, seo: { title: 'Mashq', robots: 'noindex, nofollow' } },
       },
     ],
   },

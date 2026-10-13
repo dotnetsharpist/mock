@@ -73,6 +73,9 @@ move here one at a time as each is approved; the rest still render
 | `/testlar/:subject` | `views/app/SubjectTestsPage.vue` | one subject's mock list — **live API** |
 | `/essay` | `views/app/EssayPage.vue` | essay checking — **live API** |
 | `/tanga` | `views/app/NarxlarPage.vue` | balance, plans, tanga history — **live API** |
+| `/savollar-banki` | `views/app/questionBank/BankHomePage.vue` | question bank subjects — **live API** |
+| `/savollar-banki/:subject` | `views/app/questionBank/BankSubjectPage.vue` | topics, filters, question list, start a session |
+| `/savollar-banki/:subject/statistika` | `views/app/questionBank/BankStatsPage.vue` | accuracy, activity, weak topics, reset |
 | `/community` | `AppPlaceholderPage.vue` | not designed yet |
 | `/sozlamalar` | `AppPlaceholderPage.vue` | not designed yet |
 | `/yordam` | `AppPlaceholderPage.vue` | not designed yet |
@@ -163,8 +166,37 @@ dashboard's average and per-attempt results can use it.
 | `/result-exam/essay/:id` | `views/EssayResultPage.vue` | client-persisted essay analysis |
 | `/profile` | `views/ProfilePage.vue` | |
 | `/explanation` | `views/ExplanationPage.vue` | `chrome: false`, `support: false` |
+| `/savollar-banki/:subject/savol/:id` | `views/app/questionBank/BankQuestionPage.vue` | one bank question; `chrome: false` |
+| `/savollar-banki/sessiya/:id` | `views/app/questionBank/BankSessionPage.vue` | a bank session + its results; `chrome: false` |
 
 All carry `meta.requiresAuth: true` and `robots: noindex, nofollow`.
+
+### Savollar banki (question bank)
+
+Topic-by-topic practice questions, a **separate bank from the mock tests**
+(backend: `QuestionBankController`, `/api/question-bank/*`). Free for now.
+
+- Every request goes through `utils/questionBankApi.js`, which also turns the
+  backend's English errors into Uzbek.
+- Text is Markdown + LaTeX (`$…$`, `$$…$$`) + uploaded images
+  (`images/FILE_….png`, served next to `/api`), rendered by
+  `utils/bankMarkdown.js` (markdown-it, `html: false`, KaTeX) through
+  `components/questionBank/BankRichText.vue`. Not `TestInlineMathText` — that
+  one repairs the mock tests' legacy text with heuristics.
+- `stores/questionBank.js` keeps each subject's filters (so returning from a
+  question lands on the same list and page) and the list a question was
+  opened from, so the player's Oldingi / Keyingi walk that filtered list
+  (mirrored to sessionStorage for reloads).
+- Sessions: **Mashq** shows the verdict and solution after each answer;
+  **Vaqtli** gives every question its own clock, sends answers without
+  feedback and shows results at the end. Time per question is measured in the
+  browser (`composables/useBankClock.js`) and sent with the answer.
+- Backend dates are Tashkent wall-clock time serialised with a `Z`; display
+  them with `formatBankDate` (reads the UTC fields), never `toLocaleString`.
+
+**Local backend.** `utils/api.js` reads `VITE_API_BASE_URL` in `npm run dev`
+only (put it in `.env.local`, e.g. `http://localhost:5227/api`); production
+builds always use the live API.
 
 ### auth — `BareLayout`
 `/login`, `/register`, `/verify-phone`, `/complete-profile` — all noindex.
