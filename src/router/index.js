@@ -255,7 +255,7 @@ const routes = [
     beforeEnter: (to) => {
       const authStore = useAuthStore()
       if (authStore.isAuthenticated) return true
-      return { name: 'register', query: { redirect: to.fullPath } }
+      return { name: to.meta?.authEntry || 'register', query: { redirect: to.fullPath } }
     },
     children: [
       {
@@ -286,6 +286,17 @@ const routes = [
         name: 'tanga',
         component: () => import('@/views/app/NarxlarPage.vue'),
         meta: { requiresAuth: true, appTitle: 'Narxlar', appIcon: 'coins', seo: { title: 'Narxlar', robots: 'noindex, nofollow' } },
+      },
+      {
+        // Where Click sends the student back after paying: ?paymentId=…. The
+        // page polls the payment until it settles (utils/payment.js). The path
+        // is the backend's — it is the return URL Click was given. Someone
+        // landing here has an account (the checkout needed one), so a lost
+        // session goes to /login, not /register.
+        path: 'payment/result',
+        name: 'payment-result',
+        component: () => import('@/views/app/PaymentResultPage.vue'),
+        meta: { requiresAuth: true, authEntry: 'login', appTitle: 'To‘lov', appIcon: 'coins', seo: { title: 'To‘lov', robots: 'noindex, nofollow' } },
       },
       {
         path: 'essay',
@@ -475,8 +486,9 @@ router.beforeEach((to) => {
     return true
   }
 
+  // `meta.authEntry` picks the door for a route only account holders reach.
   return {
-    name: 'register',
+    name: to.meta?.authEntry || 'register',
     query: { redirect: to.fullPath },
   }
 })
