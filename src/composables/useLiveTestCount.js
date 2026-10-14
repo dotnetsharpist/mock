@@ -4,6 +4,8 @@ import { getTestApiBaseUrl } from '@/utils/api'
 // The real number of test attempts across every published test, summed from
 // `GET /api/test` (`attemptCount` per test), eased up to on load and re-polled
 // while the page is open so it reads as a live figure rather than a claim.
+// A hidden tab skips its polls: nobody is watching the number, and each poll
+// makes the backend count every test's questions and attempts.
 //
 // This is the same source and the same easing the old marketing hero used
 // (components/Hero.vue) — lifted out so the landing hero can show it too.
@@ -56,9 +58,13 @@ export function useLiveTestCount({ fallback = 6500, pollMs = 30000 } = {}) {
     }
   }
 
+  const poll = () => {
+    if (document.visibilityState === 'visible') load()
+  }
+
   onMounted(() => {
     load()
-    timer = setInterval(load, pollMs)
+    timer = setInterval(poll, pollMs)
   })
 
   onBeforeUnmount(() => {

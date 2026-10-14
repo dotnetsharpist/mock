@@ -205,6 +205,12 @@ export const useTestCatalogStore = defineStore('testCatalog', () => {
     return [...known, ...unknown]
   })
 
+  // A test's raw subject from the cached list, or null if it is not loaded.
+  // Lets the test and result pages skip their own GET /test when the student
+  // came from Testlar. Reads the raw list, so an admin's drafts are found too.
+  const subjectOf = (testId) =>
+    tests.value.find((test) => Number(test.id) === Number(testId))?.subject ?? null
+
   function reset() {
     tests.value = []
     attempts.value = []
@@ -219,6 +225,7 @@ export const useTestCatalogStore = defineStore('testCatalog', () => {
     catalogue,
     subjectsWithTests,
     testsForSubject,
+    subjectOf,
     load,
     reset,
   }

@@ -9,9 +9,11 @@
 //   insholar    localStorage, via utils/essayCheckingStorage.js — the essay
 //               centre has no server history yet
 //
-// The catalogue store is consulted only to enrich a row (subject key, premium
-// flags, question count). It is never the source of *which* tests are listed:
-// an attempt on a test that has since been unpublished must still appear here.
+// Each attempt already carries its test (subject, title, premium flags,
+// question count), so this page does not fetch the catalogue (GET /test). If
+// another screen already loaded it, the cached copy fills any gap in a row. It
+// is never the source of *which* tests are listed: an attempt on a test that
+// has since been unpublished must still appear here.
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppTopbar from '@/components/app/AppTopbar.vue'
@@ -128,8 +130,6 @@ const removeEssay = (id) => {
 onMounted(() => {
   fetchAttempts()
   essayCheckings.value = loadEssayCheckings()
-  // Enriches the rows; a failure here costs a subject icon, not the list.
-  catalog.load().catch(() => {})
 })
 
 // The backend writes unset dates as the .NET sentinel, not null.
