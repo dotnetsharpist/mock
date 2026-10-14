@@ -1,4 +1,6 @@
-const DEFAULT_API_BASE_URL = 'https://api.milliymock.uz/api'
+const prod = 'https://api.milliymock.uz/api'
+const local = 'http://localhost:5227/api'
+const DEFAULT_API_BASE_URL = prod
 
 function resolveApiBaseUrl() {
   return (
