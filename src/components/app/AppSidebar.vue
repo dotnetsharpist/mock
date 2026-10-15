@@ -25,7 +25,10 @@ const route = useRoute()
 const navItems = [
   { label: 'Bosh sahifa', icon: 'home', to: '/dashboard' },
   { label: 'Testlar', icon: 'tests', to: '/testlar' },
-  { label: 'Savollar banki', icon: 'layers', to: '/savollar-banki' },
+  // Savollar banki is hidden from the nav for now. /savollar-banki and its
+  // sub-routes still resolve for anyone who has the link — uncomment to bring
+  // the item back.
+  // { label: 'Savollar banki', icon: 'layers', to: '/savollar-banki' },
   { label: 'Essay tekshirish', icon: 'essay', to: '/essay' },
   { label: 'Natijalar', icon: 'results', to: '/natijalarim' },
   { label: 'Kurslar', icon: 'cap', to: '/kurslarim' },

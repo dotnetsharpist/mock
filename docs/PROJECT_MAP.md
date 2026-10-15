@@ -73,10 +73,10 @@ move here one at a time as each is approved; the rest still render
 | `/testlar/:subject` | `views/app/SubjectTestsPage.vue` | one subject's mock list — **live API** |
 | `/essay` | `views/app/EssayPage.vue` | essay checking — **live API** |
 | `/tanga` | `views/app/NarxlarPage.vue` | balance, plans, tanga history — **live API** |
-| `/savollar-banki` | `views/app/questionBank/BankHomePage.vue` | question bank subjects — **live API** |
+| `/payment/result` | `views/app/PaymentResultPage.vue` | Click's return URL (`?paymentId=`) — polls the payment — **live API** |
+| `/savollar-banki` | `views/app/questionBank/BankHomePage.vue` | question bank subjects — **live API**. Not in the sidebar (direct link only) |
 | `/savollar-banki/:subject` | `views/app/questionBank/BankSubjectPage.vue` | topics, filters, question list, start a session |
 | `/savollar-banki/:subject/statistika` | `views/app/questionBank/BankStatsPage.vue` | accuracy, activity, weak topics, reset |
-| `/payment/result` | `views/app/PaymentResultPage.vue` | Click's return URL (`?paymentId=`) — polls the payment — **live API** |
 | `/community` | `AppPlaceholderPage.vue` | not designed yet |
 | `/sozlamalar` | `AppPlaceholderPage.vue` | not designed yet |
 | `/yordam` | `AppPlaceholderPage.vue` | not designed yet |
@@ -149,10 +149,10 @@ words around a pack — localised name, features, badge — are i18n
 the i18n plans are shown as they are and the code is derived as `coins<N>`.
 
 The modal offers two ways to pay (`utils/payment.js`,
-`composables/useClickCheckout.js`). **Click is hidden for now**
-(`CLICK_PAYMENT_ENABLED = false` in `utils/payment.js`, since 2026-10-14): the
-dialog is the Telegram-only one, with its original copy and billing note.
-Everything below stays wired; flipping the flag brings the Click dialog back.
+`composables/useClickCheckout.js`). Click sits behind one switch,
+`CLICK_PAYMENT_ENABLED` in `utils/payment.js` (on since 2026-10-14). Off, the
+dialog is the Telegram-only one, with its original copy and billing note, and
+everything below stays wired.
 
 - **Click** (primary): `POST /api/payment/checkout` `{ tariffCode, provider:
   "Click" }` → `{ paymentId, paymentUrl }`, then the tab goes to `paymentUrl`.
@@ -199,6 +199,8 @@ All carry `meta.requiresAuth: true` and `robots: noindex, nofollow`.
 
 Topic-by-topic practice questions, a **separate bank from the mock tests**
 (backend: `QuestionBankController`, `/api/question-bank/*`). Free for now.
+**Hidden from the sidebar for now** — the nav item is commented out in
+`components/app/AppSidebar.vue`; every route still resolves by direct link.
 
 - Every request goes through `utils/questionBankApi.js`, which also turns the
   backend's English errors into Uzbek.
