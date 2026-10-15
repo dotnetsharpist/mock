@@ -25,6 +25,7 @@ const route = useRoute()
 const navItems = [
   { label: 'Bosh sahifa', icon: 'home', to: '/dashboard' },
   { label: 'Testlar', icon: 'tests', to: '/testlar' },
+  { label: 'Savollar banki', icon: 'layers', to: '/savollar-banki' },
   { label: 'Essay tekshirish', icon: 'essay', to: '/essay' },
   { label: 'Natijalar', icon: 'results', to: '/natijalarim' },
   { label: 'Kurslar', icon: 'cap', to: '/kurslarim' },

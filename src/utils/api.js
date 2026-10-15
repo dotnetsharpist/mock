@@ -2,8 +2,12 @@ const prod = 'https://api.milliymock.uz/api'
 const local = 'http://localhost:5227/api'
 const DEFAULT_API_BASE_URL = prod
 
+// `npm run dev` can point at a backend on this machine by setting
+// VITE_API_BASE_URL (e.g. in .env.local, which git ignores). Production builds
+// ignore it and always talk to the live API.
 function resolveApiBaseUrl() {
   return (
+    (import.meta.env.DEV && import.meta.env.VITE_API_BASE_URL) ||
     DEFAULT_API_BASE_URL
   )
 }

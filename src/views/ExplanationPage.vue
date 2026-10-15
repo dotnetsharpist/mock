@@ -10,6 +10,7 @@ import BiologyReviewSection from '@/components/biology/BiologyReviewSection.vue'
 import EssayProcessingOverlay from '@/components/test/EssayProcessingOverlay.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTestStore } from '@/stores/test'
+import { useTestCatalogStore } from '@/stores/testCatalog'
 import { useTestProgressStore } from '@/stores/testProgress'
 import { apiFetch, getTestApiBaseUrl } from '@/utils/api'
 import { buildCertificateViewModel } from '@/utils/certificateData'
@@ -22,6 +23,7 @@ const { locale, t } = useI18n()
 const message = useMessage()
 const authStore = useAuthStore()
 const testStore = useTestStore()
+const catalog = useTestCatalogStore()
 const testProgressStore = useTestProgressStore()
 
 const OPTION_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
@@ -1062,6 +1064,13 @@ const progressLegend = computed(() => [
 ])
 
 async function resolveTestSubjectName(testId) {
+  // Cached when the student came from Testlar — no request needed.
+  const cached = catalog.subjectOf(testId)
+  if (cached) {
+    testSubjectName.value = subjectDisplayName(cached)
+    return
+  }
+
   try {
     const response = await apiFetch(`${apiBaseUrl}/test`, {
       headers: { accept: '*/*' },

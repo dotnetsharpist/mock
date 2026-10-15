@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { useAuthStore } from './auth'
+import { useTestCatalogStore } from './testCatalog'
 import { apiFetch, getTestApiBaseUrl } from '@/utils/api'
 import { AI_REVIEW_MODES, isBiologyOpenResponseGroup } from '@/utils/aiReview'
 import { ATTEMPT_STATUS, normalizeRemainingSeconds } from '@/utils/attemptStatus'
@@ -189,22 +190,28 @@ export const useTestStore = defineStore('test', () => {
 
   // start-test omits the test's subject; resolve it from the list endpoint so
   // subject-gated UI (e.g. the math-only formula tool) works. Best-effort and
-  // non-blocking — a failure just leaves subject undefined.
+  // non-blocking — a failure just leaves subject undefined. Coming from Testlar
+  // the list is already cached, so only a cold start (refresh, direct link)
+  // asks the API.
   async function enrichSubject(testId, apiBaseUrl) {
     try {
-      const response = await apiFetch(`${apiBaseUrl}/test`, {
-        headers: buildAuthHeaders(),
-      })
-      const payload = await response.json().catch(() => null)
-      const list = Array.isArray(payload?.data) ? payload.data : []
-      const match = list.find((test) => Number(test.id) === Number(testId))
+      let subject = useTestCatalogStore().subjectOf(testId)
+
+      if (!subject) {
+        const response = await apiFetch(`${apiBaseUrl}/test`, {
+          headers: buildAuthHeaders(),
+        })
+        const payload = await response.json().catch(() => null)
+        const list = Array.isArray(payload?.data) ? payload.data : []
+        subject = list.find((test) => Number(test.id) === Number(testId))?.subject
+      }
 
       if (
-        match?.subject &&
+        subject &&
         currentTest.value &&
         Number(currentTest.value.id) === Number(testId)
       ) {
-        currentTest.value = { ...currentTest.value, subject: match.subject }
+        currentTest.value = { ...currentTest.value, subject }
       }
     } catch {
       // Subject is a nice-to-have; ignore network/parse failures.
