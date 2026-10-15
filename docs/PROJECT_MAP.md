@@ -146,10 +146,10 @@ words around a pack — localised name, features, badge — are i18n
 the i18n plans are shown as they are and the code is derived as `coins<N>`.
 
 The modal offers two ways to pay (`utils/payment.js`,
-`composables/useClickCheckout.js`). **Click is hidden for now**
-(`CLICK_PAYMENT_ENABLED = false` in `utils/payment.js`, since 2026-10-14): the
-dialog is the Telegram-only one, with its original copy and billing note.
-Everything below stays wired; flipping the flag brings the Click dialog back.
+`composables/useClickCheckout.js`). Click sits behind one switch,
+`CLICK_PAYMENT_ENABLED` in `utils/payment.js` (on since 2026-10-14). Off, the
+dialog is the Telegram-only one, with its original copy and billing note, and
+everything below stays wired.
 
 - **Click** (primary): `POST /api/payment/checkout` `{ tariffCode, provider:
   "Click" }` → `{ paymentId, paymentUrl }`, then the tab goes to `paymentUrl`.
