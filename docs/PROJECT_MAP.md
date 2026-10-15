@@ -76,6 +76,7 @@ move here one at a time as each is approved; the rest still render
 | `/savollar-banki` | `views/app/questionBank/BankHomePage.vue` | question bank subjects — **live API** |
 | `/savollar-banki/:subject` | `views/app/questionBank/BankSubjectPage.vue` | topics, filters, question list, start a session |
 | `/savollar-banki/:subject/statistika` | `views/app/questionBank/BankStatsPage.vue` | accuracy, activity, weak topics, reset |
+| `/payment/result` | `views/app/PaymentResultPage.vue` | Click's return URL (`?paymentId=`) — polls the payment — **live API** |
 | `/community` | `AppPlaceholderPage.vue` | not designed yet |
 | `/sozlamalar` | `AppPlaceholderPage.vue` | not designed yet |
 | `/yordam` | `AppPlaceholderPage.vue` | not designed yet |
@@ -136,17 +137,40 @@ the authority.
 marketing page for logged-out visitors. A signed-in user asking for it is sent
 to `/tanga` by the global guard, because the marketing page carries the public
 navbar and would drop them out of the platform shell. `/tanga` reads the
-balance (`GET /api/balance`), the plans (the same i18n source the public page
-uses, so a price cannot be right in one place and stale in the other) and the
-tanga history (`GET /api/transaction`), and reuses `PricingPaymentModal` rather
-than reimplementing purchase. That modal is a hand-off, not a payment form: it
-names the package and deep-links into `@milliymock_bot` —
-`https://t.me/milliymock_bot?start=pay_coins<N>_<userId>`
-(`utils/telegramBot.js#telegramBotPayUrl`), where N is the plan's `tokens`
-(5 / 10 / 25 — the bot keys packages by tanga count, so the i18n plans must
-stay in step with it) and userId is the `nameid` claim decoded from the JWT.
-Payment method, receipt and crediting all happen in the bot. The old card
-number + prefilled chat to the support account are gone.
+balance (`GET /api/balance`), the plans and the tanga history
+(`GET /api/transaction`), and reuses `PricingPaymentModal` rather than
+reimplementing purchase.
+
+The plans come from `composables/usePricingPlans.js`, shared by both pages so a
+price cannot be right in one place and stale in the other. Prices, tanga counts
+and tariff codes are the backend's (`GET /api/payment/tariffs`, no login); the
+words around a pack — localised name, features, badge — are i18n
+`pricing.plans`, matched to a tariff by tanga count. If the tariffs call fails
+the i18n plans are shown as they are and the code is derived as `coins<N>`.
+
+The modal offers two ways to pay (`utils/payment.js`,
+`composables/useClickCheckout.js`). **Click is hidden for now**
+(`CLICK_PAYMENT_ENABLED = false` in `utils/payment.js`, since 2026-10-14): the
+dialog is the Telegram-only one, with its original copy and billing note.
+Everything below stays wired; flipping the flag brings the Click dialog back.
+
+- **Click** (primary): `POST /api/payment/checkout` `{ tariffCode, provider:
+  "Click" }` → `{ paymentId, paymentUrl }`, then the tab goes to `paymentUrl`.
+  A new checkout on every press — a Click URL is never reused. 400 = provider
+  unavailable, 404 = unknown tariff, 401 = the usual `apiFetch` bounce to
+  `/login`. Click returns the student to `/payment/result?paymentId=`, which
+  polls `GET /api/payment/{id}` every 2 s for up to 60 s: `Approved` → done,
+  balance refreshed; `Cancelled` → failed, "Qayta urinish" opens a new
+  checkout; `AwaitingPayment` / `Processing` → waiting. Still not final at 60 s
+  → stop, say the tanga arrive once Click confirms, link @Milliymocksupport.
+  404 → one generic error (not yours, or no such payment). A signed-out visit
+  goes to `/login`, not `/register` (`meta.authEntry`).
+- **Card, via `@milliymock_bot`**: a deep link —
+  `https://t.me/milliymock_bot?start=pay_coins<N>_<userId>`
+  (`utils/telegramBot.js#telegramBotPayUrl`), where N is the plan's `tokens`
+  (the bot keys packages by tanga count) and userId is the `nameid` claim
+  decoded from the JWT. Payment, receipt and crediting all happen in the bot;
+  tanga bought there are still activated by hand.
 
 The dashboard is still placeholder — every figure there is marked `TODO(api)`,
 and `?empty=1` previews its first-run state.

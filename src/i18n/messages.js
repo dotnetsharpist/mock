@@ -165,6 +165,10 @@ const messages = {
       popular: 'Eng ommabop',
       bestValue: 'Eng tejamli',
       billingNote: "To'lovdan so'ng tangalar hisobingizga qo'lda faollashtiriladi",
+      // Shown instead of billingNote while CLICK_PAYMENT_ENABLED (utils/payment.js) is on.
+      billingNoteWithClick: "Click orqali to'lovda tangalar hisobingizga avtomatik tushadi, Telegram bot orqali to'lovda esa qo'lda faollashtiriladi",
+      // Only for a pack the backend sells that has no copy in `plans` below.
+      tariffFeature: '{count} ta premium test yoki insho tekshiruvi',
       // Every pack buys the same thing — the only differences are the size and
       // the per-test price. Don't invent features a bigger pack "unlocks".
       plans: [
@@ -197,7 +201,27 @@ const messages = {
         description: "{plan} ta'rifi ({price}) xaridi {'@'}milliymock_bot da yakunlanadi. Tugmani bosing — bot to'lovni qabul qiladi va tangalar hisobingizga tushadi.",
         telegram: 'Telegram botni ochish',
         hint: 'Bot sizning hisobingizni avtomatik taniydi — hech narsa yozish shart emas.',
-        close: 'Yopish'
+        close: 'Yopish',
+        // The two-option dialog, used while CLICK_PAYMENT_ENABLED (utils/payment.js) is on.
+        withClick: {
+          eyebrow: "To'lov",
+          title: "To'lov usulini tanlang",
+          description: "Click orqali to'lasangiz, tangalar to'lov tasdiqlanishi bilan hisobingizga avtomatik tushadi. Karta bilan Telegram bot orqali ham to'lash mumkin.",
+          or: 'yoki',
+          telegram: "Telegram bot orqali to'lash",
+          hint: "Bot orqali karta bilan to'lanadi. Bot hisobingizni avtomatik taniydi — hech narsa yozish shart emas."
+        },
+        click: {
+          button: "Click orqali to'lash",
+          pending: 'Click ochilmoqda…',
+          hint: "Click sahifasiga o'tasiz, to'lovdan so'ng shu saytga qaytasiz.",
+          errors: {
+            unknownTariff: "Bu paket topilmadi — narxlar yangilangan bo'lishi mumkin. Sahifani yangilab, qayta urinib ko'ring.",
+            providerUnavailable: "Click orqali to'lov hozircha ishlamayapti. Telegram bot orqali to'lashingiz mumkin.",
+            network: "Internet aloqasini tekshirib, qayta urinib ko'ring.",
+            generic: "To'lovni boshlab bo'lmadi. Qayta urinib ko'ring yoki {'@'}Milliymocksupport ga yozing."
+          }
+        }
       }
     },
     subjectPage: {
@@ -859,6 +883,11 @@ const messages = {
       popular: 'Самый популярный',
       bestValue: 'Выгоднее всего',
       billingNote: 'После оплаты токены начисляются на ваш счёт вручную',
+      // Shown instead of billingNote while CLICK_PAYMENT_ENABLED (utils/payment.js) is on.
+      billingNoteWithClick: 'При оплате через Click токены начисляются автоматически, через Telegram-бот — вручную',
+      // Only for a pack the backend sells that has no copy in `plans` below.
+      // zero | one | few | many — see russianPluralRule in i18n/index.js.
+      tariffFeature: '{count} премиум-тестов или проверок эссе | {count} премиум-тест или проверка эссе | {count} премиум-теста или проверки эссе | {count} премиум-тестов или проверок эссе',
       plans: [
         {
           name: 'Малый пакет',
@@ -889,7 +918,27 @@ const messages = {
         description: "Покупка тарифа «{plan}» ({price}) завершается в {'@'}milliymock_bot. Нажмите кнопку — бот примет оплату, и токены поступят на ваш счёт.",
         telegram: 'Открыть Telegram-бот',
         hint: 'Бот сам распознает ваш аккаунт — ничего вводить не нужно.',
-        close: 'Закрыть'
+        close: 'Закрыть',
+        // The two-option dialog, used while CLICK_PAYMENT_ENABLED (utils/payment.js) is on.
+        withClick: {
+          eyebrow: 'Оплата',
+          title: 'Выберите способ оплаты',
+          description: 'При оплате через Click токены поступят на счёт автоматически, как только платёж подтвердится. Картой можно оплатить и через Telegram-бот.',
+          or: 'или',
+          telegram: 'Оплатить через Telegram-бот',
+          hint: 'Через бот оплата идёт картой. Бот сам распознает ваш аккаунт — ничего вводить не нужно.'
+        },
+        click: {
+          button: 'Оплатить через Click',
+          pending: 'Открываем Click…',
+          hint: 'Вы перейдёте на страницу Click, а после оплаты вернётесь на сайт.',
+          errors: {
+            unknownTariff: 'Этот пакет не найден — возможно, цены обновились. Обновите страницу и попробуйте снова.',
+            providerUnavailable: 'Оплата через Click сейчас недоступна. Можно оплатить через Telegram-бот.',
+            network: 'Проверьте подключение к интернету и попробуйте снова.',
+            generic: "Не удалось начать оплату. Попробуйте снова или напишите в {'@'}Milliymocksupport."
+          }
+        }
       }
     },
     subjectPage: {

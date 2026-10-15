@@ -43,7 +43,10 @@ watch(
       // moved us and we are still parked on a route that needs a session.
       await nextTick()
       if (!authStore.isAuthenticated && route.meta?.requiresAuth) {
-        void router.replace({ name: 'register', query: { redirect: route.fullPath } })
+        void router.replace({
+          name: route.meta?.authEntry || 'register',
+          query: { redirect: route.fullPath },
+        })
       }
       return
     }

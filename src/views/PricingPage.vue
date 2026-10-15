@@ -1,15 +1,18 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Testimonials from '@/components/Testimonials.vue'
 import AppReveal from '@/components/AppReveal.vue'
 import PricingPaymentModal from '@/components/PricingPaymentModal.vue'
 import AuthRequiredModal from '@/components/AuthRequiredModal.vue'
 import { useAuthStore } from '@/stores/auth'
+import { usePricingPlans } from '@/composables/usePricingPlans'
+import { CLICK_PAYMENT_ENABLED } from '@/utils/payment'
 
-const { t, tm } = useI18n()
+const { t } = useI18n()
 const authStore = useAuthStore()
-const plans = computed(() => tm('pricing.plans'))
+const { plans } = usePricingPlans()
+const billingNoteKey = CLICK_PAYMENT_ENABLED ? 'pricing.billingNoteWithClick' : 'pricing.billingNote'
 
 const isPaymentOpen = ref(false)
 const isAuthModalOpen = ref(false)
@@ -181,7 +184,7 @@ const closeAuthModal = () => {
 
         <!-- Billing note -->
         <p class="mt-8 text-center font-mono-custom text-[11px] uppercase tracking-[0.14em] text-[#a39e94]">
-          {{ t('pricing.billingNote') }}
+          {{ t(billingNoteKey) }}
         </p>
       </div>
     </section>

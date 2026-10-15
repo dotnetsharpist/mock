@@ -2,13 +2,14 @@
 // Narxlar — buying tanga, from inside the platform.
 //
 // Two real things, no invented ones:
-//   • the plans, from the same i18n source the public pricing page reads, so
-//     a price cannot be right in one place and stale in the other
+//   • the plans, from the same source the public pricing page reads
+//     (usePricingPlans: the backend's tariffs, worded by i18n), so a price
+//     cannot be right in one place and stale in the other
 //   • the balance, which lives in the top bar on every screen — this page does
 //     not repeat it
 //
-// Buying reuses PricingPaymentModal — the hand-off into @milliymock_bot, where
-// the payment itself happens — so the flow can't drift from the public page.
+// Buying reuses PricingPaymentModal — Click (while CLICK_PAYMENT_ENABLED), or a
+// card through @milliymock_bot — so the flow can't drift from the public page.
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppTopbar from '@/components/app/AppTopbar.vue'
@@ -17,16 +18,19 @@ import AppIcon from '@/components/app/AppIcon.vue'
 import CoinIcon from '@/components/app/CoinIcon.vue'
 import PricingPaymentModal from '@/components/PricingPaymentModal.vue'
 import { useBalanceStore } from '@/stores/balance'
+import { usePricingPlans } from '@/composables/usePricingPlans'
+import { CLICK_PAYMENT_ENABLED } from '@/utils/payment'
 
 defineProps({
   user: { type: Object, required: true },
 })
 defineEmits(['openMenu'])
 
-const { t, tm } = useI18n()
+const { t } = useI18n()
 const balanceStore = useBalanceStore()
 
-const rawPlans = computed(() => tm('pricing.plans'))
+const { plans: rawPlans } = usePricingPlans()
+const billingNoteKey = CLICK_PAYMENT_ENABLED ? 'pricing.billingNoteWithClick' : 'pricing.billingNote'
 
 // The cheapest plan is the yardstick the others are measured against.
 const basePlan = computed(() =>
@@ -246,7 +250,7 @@ const HOW_IT_WORKS = [
         </dl>
 
         <p class="mt-5 border-t border-app-border pt-4 text-[12.5px] text-app-muted">
-          {{ t('pricing.billingNote') }}.
+          {{ t(billingNoteKey) }}.
         </p>
       </section>
     </AppCard>
