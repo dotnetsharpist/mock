@@ -83,15 +83,78 @@ export async function readJsonBody(response) {
   }
 }
 
-// Drop-in wrapper around `fetch` that funnels 401s through the auth-redirect
-// handler. All test/auth API calls should go through this so a dead token
-// can't leave the user staring at a half-loaded page.
-export async function apiFetch(input, init) {
-  const response = await fetch(input, init)
+// The bearer token a request carries, if any. Callers pass headers as a plain
+// object with `Authorization: Bearer <token>`.
+function bearerTokenOf(init) {
+  const value = init?.headers?.Authorization
+  return typeof value === 'string' && value.startsWith('Bearer ')
+    ? value.slice('Bearer '.length)
+    : ''
+}
 
-  if (response.status === 401) {
-    handleUnauthorized()
+function withBearerToken(init, token) {
+  return { ...init, headers: { ...init.headers, Authorization: `Bearer ${token}` } }
+}
+
+async function getAuthStore() {
+  try {
+    const { useAuthStore } = await import('@/stores/auth')
+    return useAuthStore()
+  } catch {
+    return null
+  }
+}
+
+// Drop-in wrapper around `fetch` that keeps the session alive and funnels dead
+// sessions through the auth-redirect handler. All test/auth API calls should
+// go through this so a dead token can't leave the user staring at a
+// half-loaded page.
+//
+// Access tokens live 15 minutes. A request carrying one that is about to
+// expire renews it first — an endpoint open to guests would otherwise quietly
+// answer an expired token as a guest instead of failing. A 401 is retried
+// once with a renewed token; only a session that can't be renewed is sent to
+// /login.
+export async function apiFetch(input, init) {
+  const sentToken = bearerTokenOf(init)
+
+  if (!sentToken) {
+    const response = await fetch(input, init)
+    if (response.status === 401) {
+      handleUnauthorized()
+    }
+    return response
   }
 
-  return response
+  const authStore = await getAuthStore()
+
+  let token = sentToken
+  if (authStore?.isAccessTokenStale()) {
+    // On failure keep the old token; the 401 path below decides what happens.
+    token = (await authStore.refreshSession(token).catch(() => '')) || token
+  }
+
+  const response = await fetch(input, token === sentToken ? init : withBearerToken(init, token))
+  if (response.status !== 401) {
+    return response
+  }
+
+  let freshToken = ''
+  try {
+    freshToken = authStore ? await authStore.refreshSession(token) : ''
+  } catch {
+    // Couldn't reach the API to renew — leave the session alone.
+    return response
+  }
+
+  if (!freshToken) {
+    handleUnauthorized()
+    return response
+  }
+
+  const retried = await fetch(input, withBearerToken(init, freshToken))
+  if (retried.status === 401) {
+    handleUnauthorized()
+  }
+  return retried
 }

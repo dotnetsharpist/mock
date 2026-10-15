@@ -8,9 +8,19 @@ import {
 } from '@/utils/authErrors'
 
 const TOKEN_KEY = 'milliymock_token'
+const REFRESH_TOKEN_KEY = 'milliymock_refresh_token'
+const TOKEN_EXPIRES_AT_KEY = 'milliymock_token_expires_at'
+// Renew the access token this long before it expires, so no request leaves
+// with a token that dies on the way.
+const REFRESH_MARGIN_MS = 60 * 1000
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem(TOKEN_KEY) || '')
+  // When the access token expires, on this browser's clock (taken from the
+  // API's expiresIn, so a wrong device clock doesn't matter). 0 = unknown: a
+  // session from before refresh tokens, which runs until the API rejects it.
+  let tokenExpiresAt = Number(localStorage.getItem(TOKEN_EXPIRES_AT_KEY)) || 0
+  let refreshInFlight = null
   const isLoading = ref(false)
   const errorMessage = ref('')
   const userInfo = ref(null)
@@ -111,8 +121,7 @@ export const useAuthStore = defineStore('auth', () => {
         throw error
       }
 
-      token.value = payload.data.token
-      localStorage.setItem(TOKEN_KEY, payload.data.token)
+      saveSession(payload.data)
 
       return payload
     } catch (error) {
@@ -159,8 +168,7 @@ export const useAuthStore = defineStore('auth', () => {
                 throw authApiError(payload, response.status, 'telegramLogin')
             }
 
-            token.value = payload.data.token
-            localStorage.setItem(TOKEN_KEY, payload.data.token)
+            saveSession(payload.data)
 
         } catch (error) {
             errorMessage.value = localizeAuthFailure(error)
@@ -200,8 +208,7 @@ export const useAuthStore = defineStore('auth', () => {
                 throw authApiError(payload, response.status, 'googleLogin')
             }
 
-            token.value = payload.data.token
-            localStorage.setItem(TOKEN_KEY, payload.data.token)
+            saveSession(payload.data)
 
         } catch (error) {
             errorMessage.value = localizeAuthFailure(error)
@@ -366,8 +373,7 @@ export const useAuthStore = defineStore('auth', () => {
         throw error
       }
 
-      token.value = payload.data.token
-      localStorage.setItem(TOKEN_KEY, payload.data.token)
+      saveSession(payload.data)
 
       // Same shape GET /user returns; saves a round trip for the post-auth
       // routing, and getUserInfo() overwrites it anyway when it next runs.
@@ -417,8 +423,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       if (payload?.data?.token) {
-        token.value = payload.data.token
-        localStorage.setItem(TOKEN_KEY, payload.data.token)
+        saveSession(payload.data)
       }
 
       return payload?.data || null
@@ -588,8 +593,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       if (payload?.data?.token) {
-        token.value = payload.data.token
-        localStorage.setItem(TOKEN_KEY, payload.data.token)
+        saveSession(payload.data)
       }
 
       return payload?.data || null
@@ -702,11 +706,99 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Every sign-in answer (login, sign-up, OTP, reset, refresh) is the same
+  // LoginResultDto: an access token, its lifetime in seconds, a refresh token.
+  function saveSession(data) {
+    token.value = data.token
+    localStorage.setItem(TOKEN_KEY, data.token)
+
+    if (data.refreshToken && data.expiresIn) {
+      tokenExpiresAt = Date.now() + data.expiresIn * 1000
+      localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken)
+      localStorage.setItem(TOKEN_EXPIRES_AT_KEY, String(tokenExpiresAt))
+    } else {
+      forgetRefreshToken()
+    }
+  }
+
+  function forgetRefreshToken() {
+    tokenExpiresAt = 0
+    localStorage.removeItem(REFRESH_TOKEN_KEY)
+    localStorage.removeItem(TOKEN_EXPIRES_AT_KEY)
+  }
+
+  function isAccessTokenStale() {
+    return tokenExpiresAt > 0 && Date.now() >= tokenExpiresAt - REFRESH_MARGIN_MS
+  }
+
+  // Trades the refresh token for a new pair (POST /auth/refresh — the old
+  // refresh token is spent). Resolves to the new access token, or '' when the
+  // session is over. Rejects when the API can't be reached or fails, so a
+  // dropped connection never signs anyone out. Concurrent callers share one
+  // request; a caller holding a token that was already replaced just gets the
+  // current one.
+  function refreshSession(staleToken) {
+    if (staleToken && token.value && token.value !== staleToken) {
+      return Promise.resolve(token.value)
+    }
+    if (!refreshInFlight) {
+      refreshInFlight = requestRefresh().finally(() => {
+        refreshInFlight = null
+      })
+    }
+    return refreshInFlight
+  }
+
+  async function requestRefresh() {
+    // Read from storage, not memory: another tab may have rotated it already.
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY)
+    if (!refreshToken) return ''
+
+    const response = await fetch(`${getTestApiBaseUrl()}/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        accept: '*/*',
+      },
+      body: JSON.stringify({ refreshToken }),
+    })
+
+    const payload = await readJsonBody(response)
+
+    if (response.ok && payload?.code === 200 && payload?.data?.token) {
+      saveSession(payload.data)
+      return payload.data.token
+    }
+
+    if (response.status >= 500) {
+      throw new Error(`Token refresh failed with ${response.status}.`)
+    }
+
+    // Refused (expired, revoked, signed out elsewhere): the session is over.
+    forgetRefreshToken()
+    return ''
+  }
+
   function logout() {
+    // Best effort: revoke the refresh token on the server so it can't be used again.
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY)
+    if (refreshToken) {
+      fetch(`${getTestApiBaseUrl()}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          accept: '*/*',
+        },
+        body: JSON.stringify({ refreshToken }),
+        keepalive: true,
+      }).catch(() => {})
+    }
+
     token.value = ''
     errorMessage.value = ''
     userInfo.value = null
     localStorage.removeItem(TOKEN_KEY)
+    forgetRefreshToken()
   }
 
   return {
@@ -733,5 +825,7 @@ export const useAuthStore = defineStore('auth', () => {
     updateProfile,
     userInfo,
     logout,
+    isAccessTokenStale,
+    refreshSession,
   }
 })
