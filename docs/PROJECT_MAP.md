@@ -74,7 +74,7 @@ move here one at a time as each is approved; the rest still render
 | `/essay` | `views/app/EssayPage.vue` | essay checking — **live API** |
 | `/tanga` | `views/app/NarxlarPage.vue` | balance, plans, tanga history — **live API** |
 | `/payment/result` | `views/app/PaymentResultPage.vue` | Click's return URL (`?paymentId=`) — polls the payment — **live API** |
-| `/savollar-banki` | `views/app/questionBank/BankHomePage.vue` | question bank subjects — **live API** |
+| `/savollar-banki` | `views/app/questionBank/BankHomePage.vue` | question bank subjects — **live API**. Not in the sidebar (direct link only) |
 | `/savollar-banki/:subject` | `views/app/questionBank/BankSubjectPage.vue` | topics, filters, question list, start a session |
 | `/savollar-banki/:subject/statistika` | `views/app/questionBank/BankStatsPage.vue` | accuracy, activity, weak topics, reset |
 | `/community` | `AppPlaceholderPage.vue` | not designed yet |
@@ -199,6 +199,8 @@ All carry `meta.requiresAuth: true` and `robots: noindex, nofollow`.
 
 Topic-by-topic practice questions, a **separate bank from the mock tests**
 (backend: `QuestionBankController`, `/api/question-bank/*`). Free for now.
+**Hidden from the sidebar for now** — the nav item is commented out in
+`components/app/AppSidebar.vue`; every route still resolves by direct link.
 
 - Every request goes through `utils/questionBankApi.js`, which also turns the
   backend's English errors into Uzbek.
