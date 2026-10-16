@@ -6,6 +6,7 @@ import { setLocale } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useBalanceStore } from '@/stores/balance'
 import { useMobileMenu } from '@/composables/useMobileMenu'
+import { PLATFORM_HOME } from '@/composables/usePlatformEntry'
 import logoMark from '@/assets/logo-removed.png'
 
 // Drawer open/close lives in a shared composable so the Hero CTA (and anything
@@ -21,6 +22,8 @@ const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+// Signed in, "home" is the platform; the landing page would only offer "Platformaga kirish".
+const homePath = computed(() => (authStore.isAuthenticated ? PLATFORM_HOME : '/'))
 const balanceStore = useBalanceStore()
 
 // Current spendable tanga (real balance minus locally-tracked unlocks).
@@ -127,7 +130,7 @@ onBeforeUnmount(() => {
       class="flex items-center justify-between px-4 transition-all duration-300 sm:px-6 lg:px-8"
       :class="isScrolled ? 'h-14' : 'h-16'"
     >
-      <router-link to="/" class="group flex shrink-0 items-center gap-2.5" @click="closeMobileMenu">
+      <router-link :to="homePath" class="group flex shrink-0 items-center gap-2.5" @click="closeMobileMenu">
         <img
           :src="logoMark"
           alt="MilliyMock"
@@ -265,7 +268,7 @@ onBeforeUnmount(() => {
         @click.stop
       >
         <div class="flex items-center justify-between border-b border-[#1a1a1a] px-5 py-4">
-          <router-link to="/" class="flex items-center gap-2.5" @click="closeMobileMenu">
+          <router-link :to="homePath" class="flex items-center gap-2.5" @click="closeMobileMenu">
             <img :src="logoMark" alt="MilliyMock" class="h-7 w-auto object-contain" />
             <span class="text-base font-bold text-white">MilliyMock</span>
           </router-link>

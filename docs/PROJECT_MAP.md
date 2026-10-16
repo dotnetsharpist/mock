@@ -343,6 +343,13 @@ Static defaults live in `index.html`. `public/sitemap.xml` lists the public URLs
 Known limitation: meta is client-rendered, so non-JS crawlers see only the
 static `index.html` tags.
 
+## "Home" for signed-in users
+
+Signed in, every "Bosh sahifa" link and the logo lead to `PLATFORM_HOME`
+(`/dashboard`, from `composables/usePlatformEntry.js`), not to `/`. The landing
+page would only offer "Platformaga kirish" again. Signed out, they lead to `/`.
+The exception is "Chiqish" (sign out), which lands on `/` on purpose.
+
 ## The landing page
 
 Built from the Claude Design file `MilliyMock Landing.dc.html` (project

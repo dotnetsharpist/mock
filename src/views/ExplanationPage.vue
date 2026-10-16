@@ -8,6 +8,7 @@ import TestInlineMathText from '@/components/test/TestInlineMathText.vue'
 import EssayAnalysisSection from '@/components/onatili/EssayAnalysisSection.vue'
 import BiologyReviewSection from '@/components/biology/BiologyReviewSection.vue'
 import EssayProcessingOverlay from '@/components/test/EssayProcessingOverlay.vue'
+import { PLATFORM_HOME } from '@/composables/usePlatformEntry'
 import { useAuthStore } from '@/stores/auth'
 import { useTestStore } from '@/stores/test'
 import { useTestCatalogStore } from '@/stores/testCatalog'
@@ -1775,7 +1776,7 @@ function answerFeedbackText(question) {
 
     <div class="relative z-10 mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 sm:pt-10 lg:px-8">
       <div class="mb-4 flex items-center gap-1.5 text-xs text-[#a39e94] sm:mb-6">
-        <RouterLink to="/" class="cursor-default transition-colors hover:text-[#8a857c] cursor-pointer">Bosh sahifa</RouterLink>
+        <RouterLink :to="PLATFORM_HOME" class="cursor-default transition-colors hover:text-[#8a857c] cursor-pointer">Bosh sahifa</RouterLink>
         <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="m9 18 6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
