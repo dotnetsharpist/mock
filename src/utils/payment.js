@@ -3,9 +3,17 @@
 // utils/telegramBot.js#telegramBotPayUrl.
 //
 //   GET  /payment/tariffs          no auth → [{ code, name, coins, price }]   price in so'm
-//   POST /payment/checkout         auth, JSON { tariffCode, provider: "Click" }
+//   GET  /payment/offer            no auth → { version, offerUrl, privacyUrl }
+//                                  the public offer + privacy policy a student
+//                                  must accept before any checkout
+//   POST /payment/checkout         auth, JSON { tariffCode, provider: "Click",
+//                                               acceptOffer: true, offerVersion }
 //                                  → { paymentId, paymentUrl }
-//                                  400 provider not available, 404 unknown tariff code
+//                                  400 "Accept the public offer…" (acceptance missing),
+//                                      "Payments are temporarily unavailable" (the
+//                                      server is misconfigured), or provider not
+//                                      available; 404 unknown tariff code;
+//                                  409 the offer changed since offerVersion was read
 //   GET  /payment/{paymentId}      auth → { id, provider, tariffCode, tariffName,
 //                                  amount, coins, status, createdAt, paidAt }
 //                                  404 not this user's payment, or no such payment
@@ -58,6 +66,16 @@ async function readData(response, fallbackMessage) {
   return payload.data
 }
 
+// Only a web page is accepted: these go into window.location and into links.
+function toWebUrl(value) {
+  try {
+    const url = new URL(String(value || ''))
+    return ['https:', 'http:'].includes(url.protocol) ? url.href : null
+  } catch {
+    return null
+  }
+}
+
 export async function fetchTariffs() {
   const response = await apiFetch(`${getTestApiBaseUrl()}/payment/tariffs`, {
     headers: { accept: '*/*' },
@@ -74,28 +92,42 @@ export async function fetchTariffs() {
     .filter((tariff) => tariff.code && tariff.coins > 0 && tariff.price > 0)
 }
 
+// The terms behind the "I accept" checkbox. `version` goes back with the
+// checkout, so the server knows which text the student actually accepted.
+export async function fetchOffer() {
+  const response = await apiFetch(`${getTestApiBaseUrl()}/payment/offer`, {
+    headers: { accept: '*/*' },
+  })
+  const data = await readData(response, 'Could not load the public offer.')
+
+  const offer = {
+    version: String(data.version || ''),
+    offerUrl: toWebUrl(data.offerUrl),
+    privacyUrl: toWebUrl(data.privacyUrl),
+  }
+  if (!offer.version || !offer.offerUrl || !offer.privacyUrl) {
+    throw new Error('The public offer came back incomplete.')
+  }
+
+  return offer
+}
+
 // Always a fresh checkout: a Click URL belongs to one payment, so it is never
-// cached or reused — every press of the button comes through here.
-export async function createCheckout(tariffCode, provider = PAYMENT_PROVIDER_CLICK) {
+// cached or reused — every press of the button comes through here. Only called
+// once the student has ticked the offer, so acceptance is always true;
+// `offerVersion` is the version of the offer they were shown.
+export async function createCheckout(tariffCode, { offerVersion, provider = PAYMENT_PROVIDER_CLICK }) {
   const response = await apiFetch(`${getTestApiBaseUrl()}/payment/checkout`, {
     method: 'POST',
     headers: { accept: '*/*', 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify({ tariffCode, provider }),
+    body: JSON.stringify({ tariffCode, provider, acceptOffer: true, offerVersion }),
   })
   const data = await readData(response, 'Could not start the payment.')
 
-  // The URL goes straight into window.location, so only a web page is accepted.
-  let paymentUrl = null
-  try {
-    paymentUrl = new URL(String(data.paymentUrl || ''))
-  } catch {
-    // handled below
-  }
-  if (!paymentUrl || !['https:', 'http:'].includes(paymentUrl.protocol)) {
-    throw new Error('Checkout returned no payment URL.')
-  }
+  const paymentUrl = toWebUrl(data.paymentUrl)
+  if (!paymentUrl) throw new Error('Checkout returned no payment URL.')
 
-  return { paymentId: data.paymentId, paymentUrl: paymentUrl.href }
+  return { paymentId: data.paymentId, paymentUrl }
 }
 
 export async function fetchPayment(paymentId) {

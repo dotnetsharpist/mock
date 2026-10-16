@@ -6,7 +6,9 @@
 // after the student is back, so the page asks: GET /payment/{id} every 2 s, for
 // up to 60 s.
 //   Approved                     → done; the tanga pill is refreshed
-//   Cancelled                    → failed; "Qayta urinish" opens a NEW checkout
+//   Cancelled                    → failed; "Qayta urinish" reopens the payment
+//                                  dialog for the same pack, where the offer is
+//                                  accepted again before a NEW checkout
 //   AwaitingPayment / Processing → still waiting on Click
 // Not final after 60 s → stop asking. The backend credits the tanga whenever
 // Click confirms, so the page says that and points to support.
@@ -20,7 +22,8 @@ import AppIcon from '@/components/app/AppIcon.vue'
 import CoinIcon from '@/components/app/CoinIcon.vue'
 import SkeletonBlock from '@/components/app/SkeletonBlock.vue'
 import StatusBadge from '@/components/app/StatusBadge.vue'
-import { useClickCheckout } from '@/composables/useClickCheckout'
+import PricingPaymentModal from '@/components/PricingPaymentModal.vue'
+import { usePricingPlans } from '@/composables/usePricingPlans'
 import { useBalanceStore } from '@/stores/balance'
 import { fetchPayment, formatSom, PAYMENT_STATUS } from '@/utils/payment'
 
@@ -35,11 +38,7 @@ const SUPPORT_URL = 'https://t.me/Milliymocksupport'
 
 const route = useRoute()
 const balanceStore = useBalanceStore()
-const {
-  start: startCheckout,
-  isStarting: isCheckoutStarting,
-  error: checkoutError,
-} = useClickCheckout()
+const { plans } = usePricingPlans()
 
 // checking   no answer yet
 // pending    Click has not confirmed yet
@@ -192,8 +191,32 @@ const showDetails = computed(
   () => phase.value !== 'notFound' && (Boolean(payment.value) || phase.value === 'checking'),
 )
 
+// "Qayta urinish" doesn't start a checkout itself: a new payment needs the
+// offer accepted again, and the payment dialog is where that happens. The pack
+// is shown as the pricing pages show it, or — if it's not among them — as the
+// payment describes it.
+const isPaymentOpen = ref(false)
+const retryPlan = computed(() => {
+  const paid = payment.value
+  if (!paid?.tariffCode) return null
+  return (
+    plans.value.find((plan) => plan.code === paid.tariffCode) || {
+      name: paid.tariffName,
+      price: formatSom(paid.amount),
+      tokens: paid.coins,
+      code: paid.tariffCode,
+    }
+  )
+})
+
+// Held still while the dialog is open: a fresh object from usePricingPlans
+// would count as another pack and reset the dialog.
+const selectedPlan = ref(null)
+
 const retry = () => {
-  if (payment.value?.tariffCode) startCheckout(payment.value.tariffCode)
+  if (!retryPlan.value) return
+  selectedPlan.value = retryPlan.value
+  isPaymentOpen.value = true
 }
 
 const primaryPill =
@@ -276,14 +299,6 @@ const secondaryPill =
         </div>
       </dl>
 
-      <p
-        v-if="checkoutError"
-        role="alert"
-        class="mt-5 rounded-xl bg-app-bad-bg px-4 py-3 text-[13px] leading-[1.6] text-app-bad"
-      >
-        {{ checkoutError }}
-      </p>
-
       <div v-if="!isWaiting" class="mt-6 flex flex-wrap gap-3">
         <template v-if="phase === 'approved'">
           <RouterLink to="/testlar" :class="primaryPill">
@@ -295,22 +310,16 @@ const secondaryPill =
 
         <template v-else-if="phase === 'cancelled'">
           <button
-            v-if="payment?.tariffCode"
+            v-if="retryPlan"
             type="button"
             :class="primaryPill"
-            :disabled="isCheckoutStarting"
-            :aria-busy="isCheckoutStarting"
+            aria-haspopup="dialog"
             @click="retry"
           >
-            <span
-              v-if="isCheckoutStarting"
-              class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current/30 border-t-current motion-reduce:animate-none"
-              aria-hidden="true"
-            ></span>
-            <AppIcon v-else name="refresh" :size="15" />
-            {{ isCheckoutStarting ? 'Click ochilmoqda…' : 'Qayta urinish' }}
+            <AppIcon name="refresh" :size="15" />
+            Qayta urinish
           </button>
-          <RouterLink to="/tanga" :class="payment?.tariffCode ? secondaryPill : primaryPill">
+          <RouterLink to="/tanga" :class="retryPlan ? secondaryPill : primaryPill">
             Boshqa paket tanlash
           </RouterLink>
         </template>
@@ -327,5 +336,11 @@ const secondaryPill =
         </template>
       </div>
     </AppCard>
+
+    <PricingPaymentModal
+      :open="isPaymentOpen"
+      :plan="selectedPlan"
+      @close="isPaymentOpen = false"
+    />
   </main>
 </template>

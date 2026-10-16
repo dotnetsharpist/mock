@@ -1,9 +1,11 @@
 <script setup>
-import { computed, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import TelegramCodeLink from '@/components/auth/TelegramCodeLink.vue'
+import OfferConsentCheckbox from '@/components/OfferConsentCheckbox.vue'
 import { useClickCheckout } from '@/composables/useClickCheckout'
+import { usePaymentOffer } from '@/composables/usePaymentOffer'
 import { CLICK_PAYMENT_ENABLED } from '@/utils/payment'
 import { telegramBotPayUrl } from '@/utils/telegramBot'
 
@@ -13,6 +15,11 @@ import { telegramBotPayUrl } from '@/utils/telegramBot'
 //     The tanga are credited by the backend — nothing manual.
 //   • a card, in @milliymock_bot: the site only hands over which package and
 //     which account, via the deep link; the bot does the rest.
+// Click is behind an "I accept the public offer and privacy policy" checkbox
+// (the providers require it; the checkout refuses without it). It starts
+// unticked on every opening — a tick is never carried over to another payment.
+// The bot link is not behind it: that payment does not go through the
+// site's checkout.
 // Click is hidden while CLICK_PAYMENT_ENABLED is false: the dialog is then the
 // Telegram-only hand-off, with the copy it had before Click.
 const props = defineProps({
@@ -34,8 +41,12 @@ const {
   start: startClickCheckout,
   isStarting: isClickStarting,
   error: clickError,
+  errorKind: clickErrorKind,
   clearError: clearClickError,
 } = useClickCheckout()
+const { offer, loadFailed: offerLoadFailed, load: loadOffer } = usePaymentOffer()
+
+const acceptedOffer = ref(false)
 
 const planName = computed(() => props.plan?.name || '')
 const planPrice = computed(() => props.plan?.price || '')
@@ -57,14 +68,60 @@ const description = computed(() =>
   t(copyKey('description'), { plan: shortPlanName.value, price: planPrice.value }),
 )
 
+// Every opening is a new payment: nothing ticked, and the offer read afresh
+// so its version is the one on screen.
+const prepareOffer = () => {
+  acceptedOffer.value = false
+  if (showClick) loadOffer()
+}
+
 // A failure belongs to the attempt it came from, not to the next pack opened.
 watch(
   () => [props.open, props.plan],
-  () => clearClickError(),
+  ([open]) => {
+    clearClickError()
+    if (open) prepareOffer()
+  },
+  { immediate: true },
 )
 
-const payWithClick = () => {
-  if (props.plan?.code) startClickCheckout(props.plan.code)
+// Back from Click with the browser's back button, the page can come out of
+// the back/forward cache with the dialog still open and ticked. The next press
+// is a new payment, so it asks again.
+const onPageShow = (event) => {
+  if (event.persisted && props.open) {
+    clearClickError()
+    prepareOffer()
+  }
+}
+onMounted(() => window.addEventListener('pageshow', onPageShow))
+onBeforeUnmount(() => window.removeEventListener('pageshow', onPageShow))
+
+// The checkout's answers about the offer go under the checkbox, as a field
+// error; anything else stays under the button.
+const offerError = computed(() =>
+  ['offerRequired', 'offerChanged'].includes(clickErrorKind.value) ? clickError.value : '',
+)
+const generalError = computed(() => (offerError.value ? '' : clickError.value))
+
+// Ticking it is the answer to an offer error.
+watch(acceptedOffer, (accepted) => {
+  if (accepted && offerError.value) clearClickError()
+})
+
+const canPayWithClick = computed(
+  () => acceptedOffer.value && Boolean(offer.value) && Boolean(props.plan?.code) && !isClickStarting.value,
+)
+
+const payWithClick = async () => {
+  if (!canPayWithClick.value) return
+  await startClickCheckout(props.plan.code, offer.value.version)
+
+  // The server did not take this tick: untick, so the box agrees with the
+  // error under it. On a 409 the offer changed after this dialog read it —
+  // show the new one before asking again.
+  if (offerError.value) acceptedOffer.value = false
+  if (clickErrorKind.value === 'offerChanged') loadOffer()
 }
 
 // Decode the user's DB id from the JWT. The backend embeds it as the
@@ -177,11 +234,44 @@ const close = () => emit('close')
             </div>
 
             <template v-if="showClick">
+              <!-- The public offer — unticked on every opening. Until the
+                   offer arrives, the two link words are plain text and the box
+                   can't be ticked. -->
+              <div class="mt-6">
+                <OfferConsentCheckbox
+                  v-model="acceptedOffer"
+                  :offer-url="offer?.offerUrl"
+                  :privacy-url="offer?.privacyUrl"
+                  :disabled="isClickStarting"
+                  :error-id="offerError ? 'payment-offer-error' : ''"
+                />
+
+                <p
+                  v-if="offerError"
+                  id="payment-offer-error"
+                  role="alert"
+                  class="mt-2 pl-7 text-[12.5px] leading-relaxed text-[#b91c1c]"
+                >
+                  {{ offerError }}
+                </p>
+                <p v-else-if="offerLoadFailed" role="alert" class="mt-2 pl-7 text-[12.5px] leading-relaxed text-[#b91c1c]">
+                  {{ t('pricing.payment.offer.loadFailed') }}
+                  <button
+                    type="button"
+                    class="font-semibold underline underline-offset-2 hover:text-[#7f1d1d]"
+                    @click="loadOffer"
+                  >
+                    {{ t('pricing.payment.offer.retry') }}
+                  </button>
+                </p>
+              </div>
+
               <!-- Click — a new checkout on every press; the tab then leaves for Click. -->
               <button
                 type="button"
-                class="mt-6 inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-full bg-[#1a1814] px-5 text-sm font-semibold text-white transition hover:bg-black active:scale-[0.99] disabled:cursor-wait disabled:opacity-70"
-                :disabled="isClickStarting || !plan?.code"
+                class="mt-4 inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-full bg-[#1a1814] px-5 text-sm font-semibold text-white transition hover:bg-black active:scale-[0.99] disabled:active:scale-100"
+                :class="isClickStarting ? 'cursor-wait opacity-70' : 'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[#1a1814]'"
+                :disabled="!canPayWithClick"
                 :aria-busy="isClickStarting"
                 @click="payWithClick"
               >
@@ -194,11 +284,11 @@ const close = () => emit('close')
               </button>
 
               <p
-                v-if="clickError"
+                v-if="generalError"
                 role="alert"
                 class="mt-3 rounded-xl bg-[#fee3e2] px-4 py-3 text-[13px] leading-relaxed text-[#b91c1c]"
               >
-                {{ clickError }}
+                {{ generalError }}
               </p>
               <p v-else class="mt-3 text-center text-[12px] leading-relaxed text-[#8a857c]">
                 {{ t('pricing.payment.click.hint') }}

@@ -140,13 +140,24 @@ const messages = {
         },
         {
           title: 'Huquqiy',
-          links: ['Maxfiylik siyosati', 'Foydalanish shartlari']
+          // Real pages; the other columns' entries are placeholders (href="#").
+          links: [
+            { label: 'Maxfiylik siyosati', to: '/maxfiylik' },
+            { label: 'Ommaviy oferta', to: '/oferta' }
+          ]
         }
       ],
       contactTitle: 'Biz bilan bog‘laning',
       contactButton: "Telegram: {'@'}Milliymocksupport",
       copyright: '© 2026 Milliy Mock Platformasi. Barcha huquqlar himoyalangan.',
       disclaimer: 'Ushbu platforma Milliy sertifikat imtihoniga tayyorlanish uchun mo‘ljallangan mock test tizimi hisoblanadi. Bu sayt rasmiy imtihon tashkilotlari bilan bevosita bog‘liq emas.'
+    },
+    // OfferConsentCheckbox — the payment dialog and the register form.
+    // {offer} and {privacy} are the two links.
+    offerConsent: {
+      label: 'Men {offer} va {privacy} shartlarini qabul qilaman',
+      offerLink: 'ommaviy oferta',
+      privacyLink: 'maxfiylik siyosati'
     },
     pricing: {
       title: "Ta'riflar va Narxlar",
@@ -211,11 +222,19 @@ const messages = {
           telegram: "Telegram bot orqali to'lash",
           hint: "Bot orqali karta bilan to'lanadi. Bot hisobingizni avtomatik taniydi — hech narsa yozish shart emas."
         },
+        // Around the consent checkbox above the Click button (its own words are
+        // in `offerConsent`).
+        offer: {
+          loadFailed: "Shartlarni yuklab bo'lmadi.",
+          retry: 'Qayta urinish'
+        },
         click: {
           button: "Click orqali to'lash",
           pending: 'Click ochilmoqda…',
           hint: "Click sahifasiga o'tasiz, to'lovdan so'ng shu saytga qaytasiz.",
           errors: {
+            offerRequired: "To'lash uchun ommaviy oferta va maxfiylik siyosati shartlarini qabul qiling.",
+            offerChanged: "Shartlar yangilandi. Iltimos, ularni qayta ko'rib chiqing va qabul qiling.",
             unknownTariff: "Bu paket topilmadi — narxlar yangilangan bo'lishi mumkin. Sahifani yangilab, qayta urinib ko'ring.",
             providerUnavailable: "Click orqali to'lov hozircha ishlamayapti. Telegram bot orqali to'lashingiz mumkin.",
             network: "Internet aloqasini tekshirib, qayta urinib ko'ring.",
@@ -858,13 +877,24 @@ const messages = {
         },
         {
           title: 'Правовая информация',
-          links: ['Политика конфиденциальности', 'Условия использования']
+          // Real pages; the other columns' entries are placeholders (href="#").
+          links: [
+            { label: 'Политика конфиденциальности', to: '/maxfiylik' },
+            { label: 'Публичная оферта', to: '/oferta' }
+          ]
         }
       ],
       contactTitle: 'Свяжитесь с нами',
       contactButton: "Telegram: {'@'}Milliymocksupport",
       copyright: '© 2026 Платформа Milliy Mock. Все права защищены.',
       disclaimer: 'Эта платформа предназначена для подготовки к экзамену на национальный сертификат с помощью mock-тестов. Она не связана напрямую с официальными экзаменационными организациями.'
+    },
+    // OfferConsentCheckbox — the payment dialog and the register form.
+    // {offer} and {privacy} are the two links.
+    offerConsent: {
+      label: 'Я принимаю условия {offer} и {privacy}',
+      offerLink: 'публичной оферты',
+      privacyLink: 'политики конфиденциальности'
     },
     pricing: {
       title: 'Тарифы и цены',
@@ -928,11 +958,19 @@ const messages = {
           telegram: 'Оплатить через Telegram-бот',
           hint: 'Через бот оплата идёт картой. Бот сам распознает ваш аккаунт — ничего вводить не нужно.'
         },
+        // Around the consent checkbox above the Click button (its own words are
+        // in `offerConsent`).
+        offer: {
+          loadFailed: 'Не удалось загрузить условия.',
+          retry: 'Повторить'
+        },
         click: {
           button: 'Оплатить через Click',
           pending: 'Открываем Click…',
           hint: 'Вы перейдёте на страницу Click, а после оплаты вернётесь на сайт.',
           errors: {
+            offerRequired: 'Чтобы оплатить, примите условия публичной оферты и политики конфиденциальности.',
+            offerChanged: 'Условия обновились. Пожалуйста, ознакомьтесь с ними и примите их снова.',
             unknownTariff: 'Этот пакет не найден — возможно, цены обновились. Обновите страницу и попробуйте снова.',
             providerUnavailable: 'Оплата через Click сейчас недоступна. Можно оплатить через Telegram-бот.',
             network: 'Проверьте подключение к интернету и попробуйте снова.',

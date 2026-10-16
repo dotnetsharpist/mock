@@ -9,6 +9,7 @@ import OtpCodeInput from '@/components/auth/OtpCodeInput.vue'
 import AuthSwitchCta from '@/components/auth/AuthSwitchCta.vue'
 import TelegramCodeLink from '@/components/auth/TelegramCodeLink.vue'
 import SocialAuthButtons from '@/components/auth/SocialAuthButtons.vue'
+import OfferConsentCheckbox from '@/components/OfferConsentCheckbox.vue'
 import { PLATFORM_HOME } from '@/composables/usePlatformEntry'
 import { resolvePostAuthRoute } from '@/utils/postAuth'
 
@@ -34,6 +35,10 @@ const password = ref('')
 const passwordConfirm = ref('')
 const showPassword = ref(false)
 const validationError = ref('')
+// "Men ommaviy oferta va maxfiylik siyosati shartlarini qabul qilaman" — the
+// policy covers what this form starts collecting, so the account can't be
+// created without it. Unticked on every visit; the button waits for it.
+const acceptedOffer = ref(false)
 
 const PASSWORD_MIN_LENGTH = 6
 const OTP_LENGTH = 6
@@ -275,6 +280,10 @@ const submitRegisterForm = async () => {
 
   validationError.value = ''
   alreadyAttached.value = null
+
+  if (!acceptedOffer.value) {
+    return
+  }
 
   if (!firstName.value.trim() || !lastName.value.trim() || !fatherName.value.trim()) {
     validationError.value = t('register.validation')
@@ -528,6 +537,8 @@ onBeforeUnmount(() => {
           </label>
         </div>
 
+        <OfferConsentCheckbox v-model="acceptedOffer" class="mt-5" offer-url="/oferta" privacy-url="/maxfiylik" />
+
         <p
           v-if="validationError || authStore.errorMessage"
           class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
@@ -537,8 +548,9 @@ onBeforeUnmount(() => {
 
         <button
           type="submit"
-          :disabled="authStore.isLoading"
-          class="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#1a1814] text-sm font-semibold text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+          :disabled="authStore.isLoading || !acceptedOffer"
+          class="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#1a1814] text-sm font-semibold text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:active:scale-100"
+          :class="authStore.isLoading ? 'disabled:opacity-70' : 'disabled:opacity-40 disabled:hover:bg-[#1a1814]'"
         >
           {{ authStore.isLoading ? t('register.submitting') : t('register.continue') }}
         </button>

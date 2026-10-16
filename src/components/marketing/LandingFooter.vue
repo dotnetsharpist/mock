@@ -11,5 +11,11 @@ import logoLockup from '@/assets/landing/logo-lockup.png'
     <div class="text-center text-[14px] text-footer-text">
       © 2026 Milliy Mock. Barcha huquqlar himoyalangan.
     </div>
+    <!-- Not in the design: the payment providers need the offer reachable
+         from every public page. -->
+    <nav class="flex gap-5 text-[13px] text-footer-text" aria-label="Huquqiy hujjatlar">
+      <RouterLink to="/oferta" class="transition-colors hover:text-ink">Ommaviy oferta</RouterLink>
+      <RouterLink to="/maxfiylik" class="transition-colors hover:text-ink">Maxfiylik siyosati</RouterLink>
+    </nav>
   </footer>
 </template>

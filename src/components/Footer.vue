@@ -41,9 +41,14 @@ const socials = [
           <ul class="space-y-3 text-sm">
             <li
               v-for="link in column.links"
-              :key="link"
+              :key="link.label || link"
             >
-              <a href="#" class="text-[#a8a39a] transition-colors duration-200 hover:text-white">{{ link }}</a>
+              <RouterLink
+                v-if="link.to"
+                :to="link.to"
+                class="text-[#a8a39a] transition-colors duration-200 hover:text-white"
+              >{{ link.label }}</RouterLink>
+              <a v-else href="#" class="text-[#a8a39a] transition-colors duration-200 hover:text-white">{{ link }}</a>
             </li>
           </ul>
         </div>

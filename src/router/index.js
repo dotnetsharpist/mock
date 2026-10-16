@@ -108,6 +108,34 @@ const routes = [
       },
       // The old placeholder address for the same subject.
       { path: 'ai-tekshiruv', redirect: { name: 'essay-tekshirish' } },
+      // The documents the payment checkbox links to — the backend's
+      // GET /payment/offer returns exactly these two URLs.
+      {
+        path: 'oferta',
+        name: 'oferta',
+        component: () => import('@/views/marketing/LegalPage.vue'),
+        props: { doc: 'oferta' },
+        meta: {
+          seo: {
+            title: 'Ommaviy oferta',
+            description:
+              'MilliyMock platformasida tanga sotib olish shartlari: narxlar, to‘lov, pulni qaytarish va tomonlarning majburiyatlari.',
+          },
+        },
+      },
+      {
+        path: 'maxfiylik',
+        name: 'maxfiylik',
+        component: () => import('@/views/marketing/LegalPage.vue'),
+        props: { doc: 'maxfiylik' },
+        meta: {
+          seo: {
+            title: 'Maxfiylik siyosati',
+            description:
+              'MilliyMock qanday shaxsga doir ma’lumotlarni yig‘adi, ularni qayerda saqlaydi va kimga uzatadi.',
+          },
+        },
+      },
     ],
   },
 

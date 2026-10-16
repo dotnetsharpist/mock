@@ -44,6 +44,8 @@ into `MarketingLayout` would silently redesign them.
 | `/natijalar` | `views/marketing/NatijalarPage.vue` | **placeholder.** Public success stories — *not* `/result-exam` |
 | `/platforma` | `views/marketing/PlatformaPage.vue` | placeholder |
 | `/ai-tekshiruv` | `views/marketing/AiTekshiruvPage.vue` | placeholder |
+| `/oferta` | `views/marketing/LegalPage.vue` | the public offer — text in `content/legal/oferta.md`; GET /payment/offer's `offerUrl` |
+| `/maxfiylik` | `views/marketing/LegalPage.vue` | the privacy policy — text in `content/legal/maxfiylik.md`; `privacyUrl` |
 
 ### public (legacy chrome) — `PublicLayout`
 | Path | Component | Notes |
@@ -150,18 +152,27 @@ the i18n plans are shown as they are and the code is derived as `coins<N>`.
 
 The modal offers two ways to pay (`utils/payment.js`,
 `composables/useClickCheckout.js`). Click sits behind one switch,
-`CLICK_PAYMENT_ENABLED` in `utils/payment.js` (on since 2026-10-14). Off, the
+`CLICK_PAYMENT_ENABLED` in `utils/payment.js` (currently off). Off, the
 dialog is the Telegram-only one, with its original copy and billing note, and
 everything below stays wired.
 
-- **Click** (primary): `POST /api/payment/checkout` `{ tariffCode, provider:
-  "Click" }` → `{ paymentId, paymentUrl }`, then the tab goes to `paymentUrl`.
-  A new checkout on every press — a Click URL is never reused. 400 = provider
-  unavailable, 404 = unknown tariff, 401 = the usual `apiFetch` bounce to
-  `/login`. Click returns the student to `/payment/result?paymentId=`, which
-  polls `GET /api/payment/{id}` every 2 s for up to 60 s: `Approved` → done,
-  balance refreshed; `Cancelled` → failed, "Qayta urinish" opens a new
-  checkout; `AwaitingPayment` / `Processing` → waiting. Still not final at 60 s
+- **Click** (primary): behind an unticked "Men ommaviy oferta va maxfiylik
+  siyosati shartlarini qabul qilaman" checkbox — the providers require it and
+  the backend enforces it. Each opening of the modal reads
+  `GET /api/payment/offer` (no login) → `{ version, offerUrl, privacyUrl }`
+  (`composables/usePaymentOffer.js`); the tick is never carried over to another
+  payment. Then `POST /api/payment/checkout` `{ tariffCode, provider: "Click",
+  acceptOffer: true, offerVersion }` → `{ paymentId, paymentUrl }`, and the tab
+  goes to `paymentUrl`. A new checkout on every press — a Click URL is never
+  reused. 400 "Accept the public offer…" → field error under the checkbox;
+  409 → the offer changed: re-read it, untick, ask again; 400 "Payments are
+  temporarily unavailable" → generic error; other 400 = provider unavailable,
+  404 = unknown tariff, 401 = the usual `apiFetch` bounce to `/login`. Click
+  returns the student to `/payment/result?paymentId=`, which polls
+  `GET /api/payment/{id}` every 2 s for up to 60 s: `Approved` → done, balance
+  refreshed; `Cancelled` → failed, "Qayta urinish" reopens the modal for the
+  same pack (so the offer is accepted again); `AwaitingPayment` /
+  `Processing` → waiting. Still not final at 60 s
   → stop, say the tanga arrive once Click confirms, link @Milliymocksupport.
   404 → one generic error (not yours, or no such payment). A signed-out visit
   goes to `/login`, not `/register` (`meta.authEntry`).
