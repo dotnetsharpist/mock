@@ -1,5 +1,7 @@
 <script setup>
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { PLATFORM_HOME, usePlatformEntry } from '@/composables/usePlatformEntry'
 import logoMarkDark from '@/assets/logo-mark.png'
 import logoMark from '@/assets/logo-removed.png'
 
@@ -7,6 +9,9 @@ import logoMark from '@/assets/logo-removed.png'
 // desktop, back-to-home link and a centered card column on the right. Pages
 // render their header + card into the default slot.
 const { t, tm } = useI18n()
+// /verify-phone and /complete-profile are reached signed in; home for them is the platform.
+const { hasSession } = usePlatformEntry()
+const homePath = computed(() => (hasSession.value ? PLATFORM_HOME : '/'))
 </script>
 
 <template>
@@ -17,7 +22,7 @@ const { t, tm } = useI18n()
       <div class="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/[0.05] blur-3xl"></div>
       <div class="pointer-events-none absolute -bottom-28 -left-20 h-80 w-80 rounded-full bg-white/[0.04] blur-3xl"></div>
 
-      <router-link to="/" class="relative flex items-center gap-2.5">
+      <router-link :to="homePath" class="relative flex items-center gap-2.5">
         <img :src="logoMark" alt="MilliyMock" class="h-9 w-auto object-contain" />
         <span class="text-[17px] font-bold tracking-[-0.025em] text-white">MilliyMock</span>
       </router-link>
@@ -53,7 +58,7 @@ const { t, tm } = useI18n()
     <!-- Form panel -->
     <div class="relative flex min-h-screen flex-col px-4 py-7 sm:px-8">
       <router-link
-        to="/"
+        :to="homePath"
         class="inline-flex items-center gap-2 text-sm font-medium text-[#8a857c] transition hover:text-[#1a1814]"
       >
         <span class="text-base">←</span>

@@ -354,6 +354,29 @@ Static defaults live in `index.html`. `public/sitemap.xml` lists the public URLs
 Known limitation: meta is client-rendered, so non-JS crawlers see only the
 static `index.html` tags.
 
+## "Home" for signed-in users
+
+Signed in, every "Bosh sahifa" link and the logo lead to `PLATFORM_HOME`
+(`/dashboard`, from `composables/usePlatformEntry.js`), not to `/`. The landing
+page would only offer "Platformaga kirish" again. Signed out, they lead to `/`.
+The exception is "Chiqish" (sign out), which lands on `/` on purpose.
+
+## Activity pings
+
+`utils/presence.js` (started in `main.js`) tells the API that a signed-in user
+still has the site open, for the backend's `LastSeenAt` and `UserSessions`.
+
+- Sends `POST /api/user/ping` with `{ tabId, section, visible }` every 30 s, background
+  tabs included, and at once on a section change or a tab visibility change.
+  `tabId` is made once per page load, so the API can combine several tabs.
+  Time counts as on screen if any tab is.
+- Section comes from the route name via `SECTION_BY_ROUTE`; unlisted routes
+  are `Other`. **Add new routes there**, or their time counts as Other.
+- Guests make no request.
+- A failed ping is dropped silently: it never goes through `apiFetch`, so it can't
+  sign anyone out or redirect. A token about to expire is renewed first,
+  because an idle open tab still counts as online.
+
 ## The landing page
 
 Built from the Claude Design file `MilliyMock Landing.dc.html` (project

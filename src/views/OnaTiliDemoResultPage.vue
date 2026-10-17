@@ -7,6 +7,7 @@
 // data; production passes the backend's real payload (utils/essayAnalysisApi.js).
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { PLATFORM_HOME, usePlatformEntry } from '@/composables/usePlatformEntry'
 import { NModal, NCard, NPopover } from 'naive-ui'
 import EssayAnalysisSection from '@/components/onatili/EssayAnalysisSection.vue'
 import { onaTiliDemoTest as demoTest } from '@/data/onaTiliDemoTest'
@@ -18,6 +19,7 @@ import {
 } from '@/data/onaTiliDemoAnalysis'
 
 const router = useRouter()
+const { hasSession } = usePlatformEntry()
 
 // ——— Submission (written by OnaTiliDemoPage on submit) ————————————————
 const SUBMISSION_KEY = 'onatili-demo-submission-v1'
@@ -322,7 +324,7 @@ const hasUserEssay = computed(
       <!-- Breadcrumb -->
       <div class="mb-4 flex items-center justify-between gap-3 sm:mb-6">
         <div class="flex items-center gap-1.5 text-xs text-[#a39e94]">
-          <RouterLink to="/" class="cursor-pointer transition-colors hover:text-[#8a857c]">Bosh sahifa</RouterLink>
+          <RouterLink :to="hasSession ? PLATFORM_HOME : '/'" class="cursor-pointer transition-colors hover:text-[#8a857c]">Bosh sahifa</RouterLink>
           <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="m9 18 6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
