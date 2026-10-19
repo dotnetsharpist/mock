@@ -1,6 +1,8 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, START_LOCATION } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { applySeo } from '@/utils/seo'
+import { hasStoredSession } from '@/utils/authToken'
+import { PLATFORM_HOME } from '@/composables/usePlatformEntry'
 // Import your page components
 import LandingPage from '@/views/marketing/LandingPage.vue'
 import MarketingLayout from '@/layouts/MarketingLayout.vue'
@@ -494,7 +496,17 @@ const router = createRouter({
   },
 })
 
-router.beforeEach((to) => {
+router.beforeEach((to, from) => {
+  // Opening milliymock.uz with a session goes straight into the platform — the
+  // landing page would only offer "Platformaga kirish" again. Only on a page
+  // load's first navigation: sign-out leaves for `/` *before* it drops the
+  // token (see AppTopbar's signOut), so an in-app trip to `/` must still reach
+  // the landing page. A localStorage peek, not the auth store, to keep the
+  // marketing shell free of session requests (utils/authToken.js).
+  if (from === START_LOCATION && to.name === 'home' && hasStoredSession()) {
+    return PLATFORM_HOME
+  }
+
   // A signed-in student asking for pricing wants their balance and history, not
   // the marketing page — and the marketing page carries the public navbar,
   // which would drop them out of the platform shell. Logged-out visitors still
