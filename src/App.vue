@@ -2,6 +2,7 @@
 // The app root is now just the global providers. Navbar / Footer / SupportButton
 // moved into the per-group layouts (src/layouts/*) so the public marketing shell
 // and the authenticated platform shell can differ — see src/router/index.js.
+import AppUpdateDialog from '@/components/AppUpdateDialog.vue'
 import NetworkStatusAlert from '@/components/NetworkStatusAlert.vue'
 import { NMessageProvider } from 'naive-ui'
 import { RouterView } from 'vue-router'
@@ -13,6 +14,7 @@ import { RouterView } from 'vue-router'
          invalid HTML. Same `w-full`, so nothing changes visually. -->
     <div class="w-full">
       <NetworkStatusAlert />
+      <AppUpdateDialog />
       <RouterView />
     </div>
   </NMessageProvider>

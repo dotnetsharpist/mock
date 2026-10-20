@@ -23,7 +23,8 @@ vue-router equivalent; nested layout routes are the idiomatic translation.)
 | auth | `BareLayout.vue` | none (`/complete-profile` requires auth) | `/login`, `/register`, `/verify-phone`, `/complete-profile` |
 
 `App.vue` is now only global providers (`NMessageProvider`,
-`NetworkStatusAlert`) + `<RouterView>`. The old `layoutlessRoutes` /
+`NetworkStatusAlert`, `AppUpdateDialog` — the "reload the page" dialog when a
+lazy chunk fails after a deploy) + `<RouterView>`. The old `layoutlessRoutes` /
 `supportlessRoutes` path arrays are gone; layouts read `meta.chrome` and
 `meta.support` instead.
 

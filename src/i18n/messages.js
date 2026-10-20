@@ -34,6 +34,12 @@ const messages = {
       title: 'Internet aloqasi uzildi',
       description: 'Iltimos, ulanishni tekshiring. Internet qaytsa, sahifa avtomatik davom etadi.'
     },
+    updateAlert: {
+      title: 'Sayt yangilandi',
+      description: 'Saytning yangi versiyasi chiqdi. Davom etish uchun sahifani yangilang.',
+      reload: 'Sahifani yangilash',
+      later: 'Keyinroq'
+    },
     hero: {
       badge: 'Milliy sertifikat uchun zamonaviy mock platforma',
       titleStart: 'Milliy Sertifikatga',
@@ -770,6 +776,12 @@ const messages = {
     networkAlert: {
       title: 'Интернет-соединение потеряно',
       description: 'Проверьте подключение. Когда интернет вернется, страница продолжит работу.'
+    },
+    updateAlert: {
+      title: 'Сайт обновился',
+      description: 'Вышла новая версия сайта. Чтобы продолжить, обновите страницу.',
+      reload: 'Обновить страницу',
+      later: 'Позже'
     },
     hero: {
       badge: 'Современная mock-платформа для национального сертификата',
