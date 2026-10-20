@@ -1,4 +1,9 @@
-version: '3.8'
+# The site's web server: serves ./dist read-only, the site itself is not in the
+# image. On the server, CI uploads each release into ./dist while the container
+# keeps running (.github/workflows/deploy.yml, docs/DEPLOY.md). Locally,
+# `npm run build && docker compose up -d --build` serves your build the same way
+# on http://localhost:3000.
+name: milliymock-frontend
 
 services:
   frontend:
@@ -7,3 +12,5 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    volumes:
+      - ./dist:/srv:ro

@@ -1,0 +1,184 @@
+name: Deploy
+
+# Builds the site here on GitHub and uploads the files to the server, where a
+# small `serve` container (Dockerfile, docker-compose.yml) serves them. A normal
+# deploy restarts nothing, so the site never goes down, and the hashed assets of
+# the last few releases stay on the server, so tabs opened before a deploy keep
+# working. Server setup, secrets and rollback: docs/DEPLOY.md.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# One deploy at a time. A push that lands mid-deploy waits for it instead of
+# racing it for the same files.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  # On the server, relative to the deploy user's home.
+  APP_DIR: milliymock-frontend
+  # How many releases' assets stay on the server for already-open tabs.
+  KEEP_RELEASES: 5
+
+jobs:
+  deploy:
+    # A manual run from another branch would ship that branch to production.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Notify via Telegram about the job start
+        continue-on-error: true
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          SUMMARY=$(printf '%s' "$COMMIT_MSG" | head -n 1)
+          TEXT=$(printf '⏳ *Deploying MilliyMock Frontend...*\n\nRepo: *%s*\nActor: *%s*\nMessage: %s' \
+            "${{ github.repository }}" "${{ github.actor }}" "$SUMMARY")
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage" \
+            -d chat_id=${{ secrets.TG_USER_ID }} \
+            -d parse_mode=Markdown \
+            --data-urlencode "text=$TEXT"
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Build
+        env:
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+        run: |
+          # Baked in at build time; without it the Google button silently never
+          # renders.
+          : "${VITE_GOOGLE_CLIENT_ID:?Add the VITE_GOOGLE_CLIENT_ID repository variable (Settings, Secrets and variables, Actions, Variables)}"
+          npm ci
+          npm run build
+          # What's live: https://milliymock.uz/version.txt
+          echo "$GITHUB_SHA" > dist/version.txt
+
+      - name: Set up SSH
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+        run: |
+          command -v rsync >/dev/null || sudo apt-get install -y rsync
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SERVER_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts
+          cat >> ~/.ssh/config <<EOF
+          Host server
+            HostName $SERVER_IP
+            User $SERVER_USER
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+          EOF
+
+      - name: Upload the site
+        run: |
+          RSYNC=(rsync -rlt '--chmod=D755,F644')
+          RELEASE="$(date -u +%Y%m%dT%H%M%SZ)-${GITHUB_SHA::7}"
+
+          # shellcheck disable=SC2029 # APP_DIR is meant to expand here, on the runner
+          ssh server "mkdir -p '$APP_DIR/dist/assets' '$APP_DIR/releases'"
+
+          # The server's own files: the compose file and the serve image.
+          "${RSYNC[@]}" Dockerfile docker-compose.yml .dockerignore "server:$APP_DIR/"
+
+          # 1. New hashed assets first. Never --delete here: tabs opened before
+          #    this deploy still load the old ones.
+          "${RSYNC[@]}" dist/assets/ "server:$APP_DIR/dist/assets/"
+
+          # 2. Everything else but index.html. Files dropped from public/ go.
+          "${RSYNC[@]}" --delete --exclude=/assets/ --exclude=/index.html dist/ "server:$APP_DIR/dist/"
+
+          # 3. index.html last. rsync writes it to a temp file and renames it, so
+          #    the swap is atomic: from here on visitors get the new build, and
+          #    every asset it asks for is already there.
+          "${RSYNC[@]}" dist/index.html "server:$APP_DIR/dist/"
+
+          # This release's asset list; the next step prunes by it.
+          ls dist/assets > "$RUNNER_TEMP/$RELEASE.txt"
+          "${RSYNC[@]}" "$RUNNER_TEMP/$RELEASE.txt" "server:$APP_DIR/releases/"
+
+      - name: Prune old assets and start the server
+        run: |
+          ssh server bash -s -- "$APP_DIR" "$KEEP_RELEASES" "$GITHUB_SHA" <<'EOF'
+          set -euo pipefail
+          export LC_ALL=C
+          cd "$1"
+
+          # Keep the assets listed by the last $2 releases, delete the rest.
+          printf '%s\n' releases/*.txt | head -n -"$2" | xargs -r rm --
+          sort -u releases/*.txt > releases/.keep
+          find dist/assets -maxdepth 1 -type f -printf '%f\n' | sort | comm -23 - releases/.keep | (cd dist/assets && xargs -r rm -f --)
+          rm releases/.keep
+
+          # Whether a file differs from what the running container started with.
+          changed() { [ "$(sha256sum < "$1")" != "$(cat "releases/.applied-${1##*/}" 2>/dev/null)" ]; }
+
+          # Rebuild the serve image only when the Dockerfile changed: even a fully
+          # cached build gets a new image ID on Docker's containerd image store,
+          # and a new image makes `up` recreate the container. (A missing image
+          # is built by `up` anyway.)
+          if changed Dockerfile; then
+            docker compose build --quiet
+          fi
+
+          # One-time handover from the hand-run setup, whose container holds the
+          # name and port 3000. Removed right before `up`, so the gap is a
+          # second or two.
+          if docker inspect milliymock-frontend >/dev/null 2>&1 &&
+            [ "$(docker inspect -f '{{ index .Config.Labels "com.docker.compose.project" }}' milliymock-frontend)" != milliymock-frontend ]; then
+            docker rm -f milliymock-frontend
+          fi
+
+          # serve reads serve.json only at startup, so restart when it changed.
+          # Otherwise `up -d` leaves the container alone unless the image or the
+          # compose file changed: a normal deploy restarts nothing.
+          if changed dist/serve.json; then
+            docker compose up -d --force-recreate
+          else
+            docker compose up -d
+          fi
+          sha256sum < Dockerfile > releases/.applied-Dockerfile
+          sha256sum < dist/serve.json > releases/.applied-serve.json
+
+          # The container must be serving this release.
+          for _ in $(seq 20); do
+            [ "$(docker exec milliymock-frontend wget -qO- http://127.0.0.1:3000/version.txt 2>/dev/null)" = "$3" ] && exit 0
+            sleep 1
+          done
+          echo "The container is not serving $3" >&2
+          exit 1
+          EOF
+
+      - name: Notify via Telegram on success
+        if: success()
+        continue-on-error: true
+        run: |
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TG_USER_ID }} \
+          -d $'text=✅ *MilliyMock Frontend deploy successful!*\n\nRepo: *${{ github.repository }}*\nActor: *${{ github.actor }}*' \
+          -d parse_mode=Markdown
+
+      - name: Notify via Telegram on failure
+        if: failure()
+        continue-on-error: true
+        run: |
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TG_USER_ID }} \
+          -d $'text=❌ *MilliyMock Frontend deploy failed!*\n\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}' \
+          -d parse_mode=Markdown
