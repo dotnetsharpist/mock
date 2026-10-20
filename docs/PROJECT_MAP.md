@@ -3,7 +3,8 @@
 Vue 3.5 SPA (Vite 7, vue-router 4, Pinia, Tailwind 4, vue-i18n, naive-ui).
 Backend is a separate .NET solution in `../backend`. Deployed by GitHub Actions
 on every push to `main`: built there, uploaded as static files, served by a
-small `serve` container that a normal deploy never restarts — `docs/DEPLOY.md`.
+small `serve` container that a normal deploy never restarts — see
+`.github/workflows/deploy.yml`.
 Not Vercel.
 
 ## The wall: marketing vs platform

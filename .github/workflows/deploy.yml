@@ -4,7 +4,8 @@ name: Deploy
 # small `serve` container (Dockerfile, docker-compose.yml) serves them. A normal
 # deploy restarts nothing, so the site never goes down, and the hashed assets of
 # the last few releases stay on the server, so tabs opened before a deploy keep
-# working. Server setup, secrets and rollback: docs/DEPLOY.md.
+# working. What's live: https://milliymock.uz/version.txt. To roll back,
+# re-run this workflow's run for an older commit.
 
 on:
   push:
