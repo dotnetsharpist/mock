@@ -77,13 +77,21 @@ jobs:
           install -d -m 700 ~/.ssh
           printf '%s\n' "$SERVER_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts
+          # Every ssh/rsync below shares one connection (ControlMaster): the
+          # server's firewall rate-limits new SSH connections, and opening one
+          # per command got the deploy's later ones silently dropped.
+          ssh-keyscan -t ed25519 -H "$SERVER_IP" >> ~/.ssh/known_hosts
           cat >> ~/.ssh/config <<EOF
           Host server
             HostName $SERVER_IP
             User $SERVER_USER
             IdentityFile ~/.ssh/deploy_key
             IdentitiesOnly yes
+            ControlMaster auto
+            ControlPath ~/.ssh/cm-%C
+            ControlPersist 15m
+            ConnectTimeout 20
+            ServerAliveInterval 15
           EOF
 
       - name: Upload the site
