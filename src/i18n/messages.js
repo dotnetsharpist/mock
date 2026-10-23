@@ -182,8 +182,9 @@ const messages = {
       popular: 'Eng ommabop',
       bestValue: 'Eng tejamli',
       billingNote: "To'lovdan so'ng tangalar hisobingizga qo'lda faollashtiriladi",
-      // Shown instead of billingNote while CLICK_PAYMENT_ENABLED (utils/payment.js) is on.
-      billingNoteWithClick: "Click orqali to'lovda tangalar hisobingizga avtomatik tushadi, Telegram bot orqali to'lovda esa qo'lda faollashtiriladi",
+      // Shown instead of billingNote while a gateway (utils/payment.js) works.
+      // {providers} names the working ones: "Click", "Click yoki Payme".
+      billingNoteOnline: "{providers} orqali to'lovda tangalar hisobingizga avtomatik tushadi, Telegram bot orqali to'lovda esa qo'lda faollashtiriladi",
       // Only for a pack the backend sells that has no copy in `plans` below.
       tariffFeature: '{count} ta premium test yoki insho tekshiruvi',
       // Every pack buys the same thing — the only differences are the size and
@@ -219,30 +220,45 @@ const messages = {
         telegram: 'Telegram botni ochish',
         hint: 'Bot sizning hisobingizni avtomatik taniydi — hech narsa yozish shart emas.',
         close: 'Yopish',
-        // The two-option dialog, used while CLICK_PAYMENT_ENABLED (utils/payment.js) is on.
-        withClick: {
+        // The tabbed dialog (Click / Payme / Karta), used while PAYMENT_PROVIDERS
+        // (utils/payment.js) has any.
+        online: {
           eyebrow: "To'lov",
           title: "To'lov usulini tanlang",
-          description: "Click orqali to'lasangiz, tangalar to'lov tasdiqlanishi bilan hisobingizga avtomatik tushadi. Karta bilan Telegram bot orqali ham to'lash mumkin.",
+          // Joins the provider names in billingNoteOnline: "Click yoki Payme".
           or: 'yoki',
+          tabsLabel: "To'lov usuli",
+          card: 'Karta',
+          cardLead: "Karta bilan Telegram bot orqali to'lanadi. Tangalar hisobingizga qo'lda faollashtiriladi.",
           telegram: "Telegram bot orqali to'lash",
-          hint: "Bot orqali karta bilan to'lanadi. Bot hisobingizni avtomatik taniydi — hech narsa yozish shart emas."
+          hint: 'Bot hisobingizni avtomatik taniydi — hech narsa yozish shart emas.'
         },
-        // Around the consent checkbox above the Click button (its own words are
-        // in `offerConsent`).
+        // Around the consent checkbox above the gateway buttons (its own words
+        // are in `offerConsent`).
         offer: {
           loadFailed: "Shartlarni yuklab bo'lmadi.",
           retry: 'Qayta urinish'
         },
-        click: {
-          button: "Click orqali to'lash",
-          pending: 'Click ochilmoqda…',
-          hint: "Click sahifasiga o'tasiz, to'lovdan so'ng shu saytga qaytasiz.",
+        // The Click and Payme tabs; {provider} is "Click" or "Payme", {price}
+        // the pack's price ("35 000 so'm").
+        gateway: {
+          lead: "{provider} orqali to'lov: tangalar to'lov tasdiqlanishi bilan hisobingizga avtomatik tushadi.",
+          button: "{price} to'lash",
+          pending: '{provider} ochilmoqda…',
+          hint: "{provider} sahifasiga o'tasiz, to'lovdan so'ng shu saytga qaytasiz.",
+          // A tab in PAUSED_PAYMENT_PROVIDERS; {others} names the gateways that work.
+          paused: {
+            title: '{provider} hozircha ishlamayapti',
+            text: "{provider} orqali to'lov tez orada ishga tushadi. Hozircha {others} orqali yoki karta bilan to'lashingiz mumkin.",
+            textCardOnly: "{provider} orqali to'lov tez orada ishga tushadi. Hozircha karta bilan Telegram bot orqali to'lashingiz mumkin.",
+            useProvider: "{provider} orqali to'lash",
+            useCard: "Karta bilan to'lash"
+          },
           errors: {
             offerRequired: "To'lash uchun ommaviy oferta va maxfiylik siyosati shartlarini qabul qiling.",
             offerChanged: "Shartlar yangilandi. Iltimos, ularni qayta ko'rib chiqing va qabul qiling.",
             unknownTariff: "Bu paket topilmadi — narxlar yangilangan bo'lishi mumkin. Sahifani yangilab, qayta urinib ko'ring.",
-            providerUnavailable: "Click orqali to'lov hozircha ishlamayapti. Telegram bot orqali to'lashingiz mumkin.",
+            providerUnavailable: "{provider} orqali to'lov hozircha ishlamayapti. Boshqa usul bilan to'lashingiz mumkin.",
             network: "Internet aloqasini tekshirib, qayta urinib ko'ring.",
             generic: "To'lovni boshlab bo'lmadi. Qayta urinib ko'ring yoki {'@'}Milliymocksupport ga yozing."
           }
@@ -925,8 +941,9 @@ const messages = {
       popular: 'Самый популярный',
       bestValue: 'Выгоднее всего',
       billingNote: 'После оплаты токены начисляются на ваш счёт вручную',
-      // Shown instead of billingNote while CLICK_PAYMENT_ENABLED (utils/payment.js) is on.
-      billingNoteWithClick: 'При оплате через Click токены начисляются автоматически, через Telegram-бот — вручную',
+      // Shown instead of billingNote while a gateway (utils/payment.js) works.
+      // {providers} names the working ones: "Click", "Click или Payme".
+      billingNoteOnline: 'При оплате через {providers} токены начисляются автоматически, через Telegram-бот — вручную',
       // Only for a pack the backend sells that has no copy in `plans` below.
       // zero | one | few | many — see russianPluralRule in i18n/index.js.
       tariffFeature: '{count} премиум-тестов или проверок эссе | {count} премиум-тест или проверка эссе | {count} премиум-теста или проверки эссе | {count} премиум-тестов или проверок эссе',
@@ -961,30 +978,45 @@ const messages = {
         telegram: 'Открыть Telegram-бот',
         hint: 'Бот сам распознает ваш аккаунт — ничего вводить не нужно.',
         close: 'Закрыть',
-        // The two-option dialog, used while CLICK_PAYMENT_ENABLED (utils/payment.js) is on.
-        withClick: {
+        // The tabbed dialog (Click / Payme / Karta), used while PAYMENT_PROVIDERS
+        // (utils/payment.js) has any.
+        online: {
           eyebrow: 'Оплата',
           title: 'Выберите способ оплаты',
-          description: 'При оплате через Click токены поступят на счёт автоматически, как только платёж подтвердится. Картой можно оплатить и через Telegram-бот.',
+          // Joins the provider names in billingNoteOnline: "Click или Payme".
           or: 'или',
+          tabsLabel: 'Способ оплаты',
+          card: 'Карта',
+          cardLead: 'Оплата картой через Telegram-бот. Токены начисляются на счёт вручную.',
           telegram: 'Оплатить через Telegram-бот',
-          hint: 'Через бот оплата идёт картой. Бот сам распознает ваш аккаунт — ничего вводить не нужно.'
+          hint: 'Бот сам распознает ваш аккаунт — ничего вводить не нужно.'
         },
-        // Around the consent checkbox above the Click button (its own words are
-        // in `offerConsent`).
+        // Around the consent checkbox above the gateway buttons (its own words
+        // are in `offerConsent`).
         offer: {
           loadFailed: 'Не удалось загрузить условия.',
           retry: 'Повторить'
         },
-        click: {
-          button: 'Оплатить через Click',
-          pending: 'Открываем Click…',
-          hint: 'Вы перейдёте на страницу Click, а после оплаты вернётесь на сайт.',
+        // The Click and Payme tabs; {provider} is "Click" or "Payme", {price}
+        // the pack's price ("35 000 so'm").
+        gateway: {
+          lead: 'Оплата через {provider}: токены поступят на счёт автоматически, как только платёж подтвердится.',
+          button: 'Оплатить {price}',
+          pending: 'Открываем {provider}…',
+          hint: 'Вы перейдёте на страницу {provider}, а после оплаты вернётесь на сайт.',
+          // A tab in PAUSED_PAYMENT_PROVIDERS; {others} names the gateways that work.
+          paused: {
+            title: '{provider} пока не работает',
+            text: 'Оплата через {provider} скоро заработает. Пока можно оплатить через {others} или картой.',
+            textCardOnly: 'Оплата через {provider} скоро заработает. Пока можно оплатить картой через Telegram-бот.',
+            useProvider: 'Оплатить через {provider}',
+            useCard: 'Оплатить картой'
+          },
           errors: {
             offerRequired: 'Чтобы оплатить, примите условия публичной оферты и политики конфиденциальности.',
             offerChanged: 'Условия обновились. Пожалуйста, ознакомьтесь с ними и примите их снова.',
             unknownTariff: 'Этот пакет не найден — возможно, цены обновились. Обновите страницу и попробуйте снова.',
-            providerUnavailable: 'Оплата через Click сейчас недоступна. Можно оплатить через Telegram-бот.',
+            providerUnavailable: 'Оплата через {provider} сейчас недоступна. Можно оплатить другим способом.',
             network: 'Проверьте подключение к интернету и попробуйте снова.',
             generic: "Не удалось начать оплату. Попробуйте снова или напишите в {'@'}Milliymocksupport."
           }

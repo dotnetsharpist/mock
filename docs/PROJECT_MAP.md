@@ -79,7 +79,7 @@ move here one at a time as each is approved; the rest still render
 | `/testlar/:subject` | `views/app/SubjectTestsPage.vue` | one subject's mock list — **live API** |
 | `/essay` | `views/app/EssayPage.vue` | essay checking — **live API** |
 | `/tanga` | `views/app/NarxlarPage.vue` | balance, plans, tanga history — **live API** |
-| `/payment/result` | `views/app/PaymentResultPage.vue` | Click's return URL (`?paymentId=`) — polls the payment — **live API** |
+| `/payment/result` | `views/app/PaymentResultPage.vue` | Click's and Payme's return URL (`?paymentId=`) — polls the payment — **live API** |
 | `/savollar-banki` | `views/app/questionBank/BankHomePage.vue` | question bank subjects — **live API**. Not in the sidebar (direct link only) |
 | `/savollar-banki/:subject` | `views/app/questionBank/BankSubjectPage.vue` | topics, filters, question list, start a session |
 | `/savollar-banki/:subject/statistika` | `views/app/questionBank/BankStatsPage.vue` | accuracy, activity, weak topics, reset |
@@ -154,33 +154,44 @@ words around a pack — localised name, features, badge — are i18n
 `pricing.plans`, matched to a tariff by tanga count. If the tariffs call fails
 the i18n plans are shown as they are and the code is derived as `coins<N>`.
 
-The modal offers two ways to pay (`utils/payment.js`,
-`composables/useClickCheckout.js`). Click sits behind one switch,
-`CLICK_PAYMENT_ENABLED` in `utils/payment.js` (currently off). Off, the
-dialog is the Telegram-only one, with its original copy and billing note, and
-everything below stays wired.
+The modal offers the gateways and the bot (`utils/payment.js`,
+`composables/usePaymentCheckout.js`). Which gateways show is one switch,
+`PAYMENT_PROVIDERS` in `utils/payment.js` (currently Click and Payme). A
+provider also in `PAUSED_PAYMENT_PROVIDERS` keeps its tab, but the tab only
+says it doesn't work yet and points to the others — no checkout is started.
+Payme is paused (2026-10-23) until its payment page shows MilliyMock instead
+of the YATT name. The billing note names the working ones. Empty, the dialog is the Telegram-only one, with its original copy and
+billing note, and everything below stays wired.
 
-- **Click** (primary): behind an unticked "Men ommaviy oferta va maxfiylik
-  siyosati shartlarini qabul qilaman" checkbox — the providers require it and
-  the backend enforces it. Each opening of the modal reads
-  `GET /api/payment/offer` (no login) → `{ version, offerUrl, privacyUrl }`
-  (`composables/usePaymentOffer.js`); the tick is never carried over to another
-  payment. Then `POST /api/payment/checkout` `{ tariffCode, provider: "Click",
+The dialog is one tab per way to pay — Click, Payme (as their logos,
+`assets/payment/`), then Karta — each with its own pay button. The result
+page's "Qayta urinish" opens it on the failed payment's provider
+(`initialMethod`).
+
+- **Click / Payme**: behind one unticked "Men
+  ommaviy oferta va maxfiylik siyosati shartlarini qabul qilaman" checkbox,
+  shared by both tabs —
+  the providers require it and the backend enforces it. Each opening of the
+  modal reads `GET /api/payment/offer` (no login) →
+  `{ version, offerUrl, privacyUrl }` (`composables/usePaymentOffer.js`); the
+  tick is never carried over to another payment. Then
+  `POST /api/payment/checkout` `{ tariffCode, provider: "Click" | "Payme",
   acceptOffer: true, offerVersion }` → `{ paymentId, paymentUrl }`, and the tab
-  goes to `paymentUrl`. A new checkout on every press — a Click URL is never
+  goes to `paymentUrl`. A new checkout on every press — a payment URL is never
   reused. 400 "Accept the public offer…" → field error under the checkbox;
   409 → the offer changed: re-read it, untick, ask again; 400 "Payments are
   temporarily unavailable" → generic error; other 400 = provider unavailable,
-  404 = unknown tariff, 401 = the usual `apiFetch` bounce to `/login`. Click
-  returns the student to `/payment/result?paymentId=`, which polls
+  404 = unknown tariff, 401 = the usual `apiFetch` bounce to `/login`. The
+  provider returns the student to `/payment/result?paymentId=`, which polls
   `GET /api/payment/{id}` every 2 s for up to 60 s: `Approved` → done, balance
   refreshed; `Cancelled` → failed, "Qayta urinish" reopens the modal for the
   same pack (so the offer is accepted again); `AwaitingPayment` /
   `Processing` → waiting. Still not final at 60 s
-  → stop, say the tanga arrive once Click confirms, link @Milliymocksupport.
+  → stop, say the tanga arrive once the provider confirms (named from the
+  payment's `provider`), link @Milliymocksupport.
   404 → one generic error (not yours, or no such payment). A signed-out visit
   goes to `/login`, not `/register` (`meta.authEntry`).
-- **Card, via `@milliymock_bot`**: a deep link —
+- **Karta, via `@milliymock_bot`** (not behind the checkbox): a deep link —
   `https://t.me/milliymock_bot?start=pay_coins<N>_<userId>`
   (`utils/telegramBot.js#telegramBotPayUrl`), where N is the plan's `tokens`
   (the bot keys packages by tanga count) and userId is the `nameid` claim

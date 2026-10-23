@@ -4,24 +4,36 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import TelegramCodeLink from '@/components/auth/TelegramCodeLink.vue'
 import OfferConsentCheckbox from '@/components/OfferConsentCheckbox.vue'
-import { useClickCheckout } from '@/composables/useClickCheckout'
+import { usePaymentCheckout } from '@/composables/usePaymentCheckout'
 import { usePaymentOffer } from '@/composables/usePaymentOffer'
-import { CLICK_PAYMENT_ENABLED } from '@/utils/payment'
+import {
+  formatProviders,
+  ONLINE_PAYMENT_ENABLED,
+  PAUSED_PAYMENT_PROVIDERS,
+  PAYMENT_PROVIDER_CLICK,
+  PAYMENT_PROVIDER_PAYME,
+  PAYMENT_PROVIDERS,
+  WORKING_PAYMENT_PROVIDERS,
+} from '@/utils/payment'
 import { telegramBotPayUrl } from '@/utils/telegramBot'
+import clickLogo from '@/assets/payment/click.svg'
+import paymeLogo from '@/assets/payment/payme.svg'
 
-// "Tanga sotib olish" → this dialog → one of two ways to pay:
-//   • Click (primary): a fresh checkout per press, then this tab goes to Click
-//     and comes back to /payment/result, which waits for the confirmation.
-//     The tanga are credited by the backend — nothing manual.
-//   • a card, in @milliymock_bot: the site only hands over which package and
-//     which account, via the deep link; the bot does the rest.
-// Click is behind an "I accept the public offer and privacy policy" checkbox
-// (the providers require it; the checkout refuses without it). It starts
-// unticked on every opening — a tick is never carried over to another payment.
-// The bot link is not behind it: that payment does not go through the
-// site's checkout.
-// Click is hidden while CLICK_PAYMENT_ENABLED is false: the dialog is then the
-// Telegram-only hand-off, with the copy it had before Click.
+// "Tanga sotib olish" → this dialog → a tab per way to pay:
+//   • a gateway — Click, Payme: a fresh checkout per press, then this tab goes
+//     to the provider and comes back to /payment/result, which waits for the
+//     confirmation. The tanga are credited by the backend — nothing manual.
+//   • Karta — a card, in @milliymock_bot: the site only hands over which
+//     package and which account, via the deep link; the bot does the rest.
+// The gateway tabs share one "I accept the public offer and privacy policy"
+// checkbox (the providers require it; the checkout refuses without it). It
+// starts unticked on every opening — a tick is never carried over to another
+// payment. The bot link is not behind it: that payment does not go through
+// the site's checkout.
+// Which gateways show is PAYMENT_PROVIDERS (utils/payment.js). With none, the
+// dialog is the Telegram-only hand-off, with the copy it had before them. A
+// gateway in PAUSED_PAYMENT_PROVIDERS keeps its tab, but the tab only says it
+// doesn't work yet and offers the other ways to pay.
 const props = defineProps({
   open: {
     type: Boolean,
@@ -31,6 +43,12 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+  // The tab to open on — a provider name, as the result page's "try again"
+  // passes the one that failed. Anything else keeps the current tab.
+  initialMethod: {
+    type: String,
+    default: '',
+  },
 })
 
 const emit = defineEmits(['close'])
@@ -38,25 +56,50 @@ const emit = defineEmits(['close'])
 const { t } = useI18n()
 const authStore = useAuthStore()
 const {
-  start: startClickCheckout,
-  isStarting: isClickStarting,
-  error: clickError,
-  errorKind: clickErrorKind,
-  clearError: clearClickError,
-} = useClickCheckout()
+  start: startCheckout,
+  startingProvider,
+  isStarting,
+  error: checkoutError,
+  errorKind: checkoutErrorKind,
+  clearError: clearCheckoutError,
+} = usePaymentCheckout()
 const { offer, loadFailed: offerLoadFailed, load: loadOffer } = usePaymentOffer()
 
 const acceptedOffer = ref(false)
+
+// The tabs: the gateways in PAYMENT_PROVIDERS order, then the card in the bot.
+// The dialog opens on the first one that works.
+const CARD = 'card'
+const methods = [...PAYMENT_PROVIDERS, CARD]
+const method = ref(methods.find((item) => !PAUSED_PAYMENT_PROVIDERS.includes(item)))
+const isPaused = computed(() => PAUSED_PAYMENT_PROVIDERS.includes(method.value))
+const isGateway = computed(() => method.value !== CARD && !isPaused.value)
+
+// What a paused tab sends the student to instead.
+const pausedAlternatives = [...WORKING_PAYMENT_PROVIDERS, CARD]
+const pausedText = computed(() =>
+  WORKING_PAYMENT_PROVIDERS.length
+    ? t('pricing.payment.gateway.paused.text', {
+        provider: method.value,
+        others: formatProviders(t('pricing.payment.online.or')),
+      })
+    : t('pricing.payment.gateway.paused.textCardOnly', { provider: method.value }),
+)
+
+const PROVIDER_LOGOS = {
+  [PAYMENT_PROVIDER_CLICK]: clickLogo,
+  [PAYMENT_PROVIDER_PAYME]: paymeLogo,
+}
 
 const planName = computed(() => props.plan?.name || '')
 const planPrice = computed(() => props.plan?.price || '')
 const planTokens = computed(() => Number(props.plan?.tokens) || 0)
 
-const showClick = CLICK_PAYMENT_ENABLED
+const showOnline = ONLINE_PAYMENT_ENABLED
 
-// The two dialogs word the same parts differently; `pricing.payment.withClick`
-// holds the Click version.
-const copyKey = (key) => (showClick ? `pricing.payment.withClick.${key}` : `pricing.payment.${key}`)
+// The two dialogs word the same parts differently; `pricing.payment.online`
+// holds the version with the gateways.
+const copyKey = (key) => (showOnline ? `pricing.payment.online.${key}` : `pricing.payment.${key}`)
 
 // Strip the "Ta'rif/Ta'rifi" suffix so sentences like "{plan} ta'rifi..."
 // don't read "Plus Ta'rifi ta'rifi".
@@ -64,33 +107,49 @@ const shortPlanName = computed(() =>
   planName.value.replace(/\s*Ta['’]rif(i)?$/i, '').trim() || planName.value,
 )
 
+// Only the Telegram-only dialog has one; with tabs, each tab says its own.
 const description = computed(() =>
-  t(copyKey('description'), { plan: shortPlanName.value, price: planPrice.value }),
+  t('pricing.payment.description', { plan: shortPlanName.value, price: planPrice.value }),
 )
 
 // Every opening is a new payment: nothing ticked, and the offer read afresh
 // so its version is the one on screen.
 const prepareOffer = () => {
   acceptedOffer.value = false
-  if (showClick) loadOffer()
+  if (showOnline) loadOffer()
 }
 
 // A failure belongs to the attempt it came from, not to the next pack opened.
 watch(
   () => [props.open, props.plan],
   ([open]) => {
-    clearClickError()
-    if (open) prepareOffer()
+    clearCheckoutError()
+    if (!open) return
+    if (methods.includes(props.initialMethod)) method.value = props.initialMethod
+    prepareOffer()
   },
   { immediate: true },
 )
 
-// Back from Click with the browser's back button, the page can come out of
-// the back/forward cache with the dialog still open and ticked. The next press
-// is a new payment, so it asks again.
+// An error is about the tab it came from.
+watch(method, () => clearCheckoutError())
+
+// Arrow keys move along the tabs, as in any tab list.
+const onTabKeydown = (event, index) => {
+  const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key]
+  if (!step) return
+  event.preventDefault()
+  const next = (index + step + methods.length) % methods.length
+  method.value = methods[next]
+  event.currentTarget.parentElement?.children[next]?.focus()
+}
+
+// Back from the provider with the browser's back button, the page can come out
+// of the back/forward cache with the dialog still open and ticked. The next
+// press is a new payment, so it asks again.
 const onPageShow = (event) => {
   if (event.persisted && props.open) {
-    clearClickError()
+    clearCheckoutError()
     prepareOffer()
   }
 }
@@ -100,28 +159,28 @@ onBeforeUnmount(() => window.removeEventListener('pageshow', onPageShow))
 // The checkout's answers about the offer go under the checkbox, as a field
 // error; anything else stays under the button.
 const offerError = computed(() =>
-  ['offerRequired', 'offerChanged'].includes(clickErrorKind.value) ? clickError.value : '',
+  ['offerRequired', 'offerChanged'].includes(checkoutErrorKind.value) ? checkoutError.value : '',
 )
-const generalError = computed(() => (offerError.value ? '' : clickError.value))
+const generalError = computed(() => (offerError.value ? '' : checkoutError.value))
 
 // Ticking it is the answer to an offer error.
 watch(acceptedOffer, (accepted) => {
-  if (accepted && offerError.value) clearClickError()
+  if (accepted && offerError.value) clearCheckoutError()
 })
 
-const canPayWithClick = computed(
-  () => acceptedOffer.value && Boolean(offer.value) && Boolean(props.plan?.code) && !isClickStarting.value,
+const canPayOnline = computed(
+  () => acceptedOffer.value && Boolean(offer.value) && Boolean(props.plan?.code) && !isStarting.value,
 )
 
-const payWithClick = async () => {
-  if (!canPayWithClick.value) return
-  await startClickCheckout(props.plan.code, offer.value.version)
+const pay = async () => {
+  if (!canPayOnline.value || !isGateway.value) return
+  await startCheckout(props.plan.code, offer.value.version, method.value)
 
   // The server did not take this tick: untick, so the box agrees with the
   // error under it. On a 409 the offer changed after this dialog read it —
   // show the new one before asking again.
   if (offerError.value) acceptedOffer.value = false
-  if (clickErrorKind.value === 'offerChanged') loadOffer()
+  if (checkoutErrorKind.value === 'offerChanged') loadOffer()
 }
 
 // Decode the user's DB id from the JWT. The backend embeds it as the
@@ -203,15 +262,16 @@ const close = () => emit('close')
               {{ t(copyKey('title')) }}
             </h2>
 
-            <!-- Description -->
-            <p class="mt-3 text-sm leading-6 text-[#6b6760]">
+            <!-- Description — the Telegram-only dialog's; with tabs, each
+                 tab carries its own. -->
+            <p v-if="!showOnline" class="mt-3 text-sm leading-6 text-[#6b6760]">
               {{ description }}
             </p>
 
             <!-- What's being bought -->
             <div class="mt-6 flex items-center gap-4 rounded-[18px] border border-[#e8e3da] bg-[#f7f5f1] p-5">
               <span
-                v-if="showClick"
+                v-if="showOnline"
                 class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-[#1a1814] ring-1 ring-[#e8e3da]"
               >
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -233,92 +293,194 @@ const close = () => emit('close')
               <span class="shrink-0 text-[17px] font-bold tracking-[-0.01em] text-[#1a1814]">{{ planPrice }}</span>
             </div>
 
-            <template v-if="showClick">
-              <!-- The public offer — unticked on every opening. Until the
-                   offer arrives, the two link words are plain text and the box
-                   can't be ticked. -->
-              <div class="mt-6">
-                <OfferConsentCheckbox
-                  v-model="acceptedOffer"
-                  :offer-url="offer?.offerUrl"
-                  :privacy-url="offer?.privacyUrl"
-                  :disabled="isClickStarting"
-                  :error-id="offerError ? 'payment-offer-error' : ''"
-                />
-
-                <p
-                  v-if="offerError"
-                  id="payment-offer-error"
-                  role="alert"
-                  class="mt-2 pl-7 text-[12.5px] leading-relaxed text-[#b91c1c]"
+            <template v-if="showOnline">
+              <!-- One tab per way to pay; the providers show as their logos. -->
+              <div
+                role="tablist"
+                :aria-label="t('pricing.payment.online.tabsLabel')"
+                class="mt-5 grid gap-1 rounded-[16px] bg-[#f3f0ea] p-1"
+                :style="{ gridTemplateColumns: `repeat(${methods.length}, minmax(0, 1fr))` }"
+              >
+                <button
+                  v-for="(item, index) in methods"
+                  :id="`pay-tab-${item}`"
+                  :key="item"
+                  type="button"
+                  role="tab"
+                  :aria-selected="method === item"
+                  aria-controls="pay-panel"
+                  :tabindex="method === item ? 0 : -1"
+                  :disabled="isStarting"
+                  class="group flex h-12 items-center justify-center gap-2 rounded-[12px] text-[14px] font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1a1814] disabled:cursor-not-allowed"
+                  :class="
+                    method === item
+                      ? 'bg-white text-[#1a1814] shadow-[0_1px_3px_rgba(26,24,20,0.12)] ring-1 ring-[#e8e3da]'
+                      : 'text-[#8a857c] hover:bg-white/60 hover:text-[#1a1814]'
+                  "
+                  @click="method = item"
+                  @keydown="onTabKeydown($event, index)"
                 >
-                  {{ offerError }}
-                </p>
-                <p v-else-if="offerLoadFailed" role="alert" class="mt-2 pl-7 text-[12.5px] leading-relaxed text-[#b91c1c]">
-                  {{ t('pricing.payment.offer.loadFailed') }}
-                  <button
-                    type="button"
-                    class="font-semibold underline underline-offset-2 hover:text-[#7f1d1d]"
-                    @click="loadOffer"
-                  >
-                    {{ t('pricing.payment.offer.retry') }}
-                  </button>
-                </p>
+                  <img
+                    v-if="PROVIDER_LOGOS[item]"
+                    :src="PROVIDER_LOGOS[item]"
+                    :alt="item"
+                    class="w-auto transition"
+                    :class="[
+                      item === PAYMENT_PROVIDER_CLICK ? 'h-[17px]' : 'h-[20px]',
+                      method === item ? '' : 'opacity-55 grayscale-[35%] group-hover:opacity-100 group-hover:grayscale-0',
+                    ]"
+                  />
+                  <template v-else-if="item === CARD">
+                    <svg class="h-[18px] w-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <rect x="2.75" y="5.25" width="18.5" height="13.5" rx="2.5" />
+                      <path d="M2.75 9.75h18.5M6.5 15h3" stroke-linecap="round" />
+                    </svg>
+                    {{ t('pricing.payment.online.card') }}
+                  </template>
+                  <template v-else>{{ item }}</template>
+                </button>
               </div>
 
-              <!-- Click — a new checkout on every press; the tab then leaves for Click. -->
-              <button
-                type="button"
-                class="mt-4 inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-full bg-[#1a1814] px-5 text-sm font-semibold text-white transition hover:bg-black active:scale-[0.99] disabled:active:scale-100"
-                :class="isClickStarting ? 'cursor-wait opacity-70' : 'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[#1a1814]'"
-                :disabled="!canPayWithClick"
-                :aria-busy="isClickStarting"
-                @click="payWithClick"
+              <div
+                id="pay-panel"
+                role="tabpanel"
+                :aria-labelledby="`pay-tab-${method}`"
+                class="mt-5"
               >
-                <span
-                  v-if="isClickStarting"
-                  class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
-                  aria-hidden="true"
-                ></span>
-                {{ isClickStarting ? t('pricing.payment.click.pending') : t('pricing.payment.click.button') }}
-              </button>
+                <!-- A paused gateway: say so, and offer the ways that work. -->
+                <template v-if="isPaused">
+                  <div class="rounded-[16px] border border-[#f0e2c4] bg-[#fdf7ea] px-4 py-3.5">
+                    <p class="flex items-center gap-2 text-[14px] font-semibold text-[#7a5a14]">
+                      <svg class="h-[18px] w-[18px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7.5v5.25l3 1.75" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                      {{ t('pricing.payment.gateway.paused.title', { provider: method }) }}
+                    </p>
+                    <p class="mt-1.5 text-[13px] leading-relaxed text-[#7a6a4a]">
+                      {{ pausedText }}
+                    </p>
+                  </div>
 
-              <p
-                v-if="generalError"
-                role="alert"
-                class="mt-3 rounded-xl bg-[#fee3e2] px-4 py-3 text-[13px] leading-relaxed text-[#b91c1c]"
-              >
-                {{ generalError }}
-              </p>
-              <p v-else class="mt-3 text-center text-[12px] leading-relaxed text-[#8a857c]">
-                {{ t('pricing.payment.click.hint') }}
-              </p>
+                  <div class="mt-4 space-y-2.5">
+                    <button
+                      v-for="(item, index) in pausedAlternatives"
+                      :key="item"
+                      type="button"
+                      class="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-full px-5 text-sm font-semibold transition active:scale-[0.99]"
+                      :class="
+                        index === 0
+                          ? 'bg-[#1a1814] text-white hover:bg-black'
+                          : 'border border-[#e2ddd3] bg-white text-[#1a1814] hover:bg-[#f7f5f1]'
+                      "
+                      @click="method = item"
+                    >
+                      {{
+                        item === CARD
+                          ? t('pricing.payment.gateway.paused.useCard')
+                          : t('pricing.payment.gateway.paused.useProvider', { provider: item })
+                      }}
+                    </button>
+                  </div>
+                </template>
 
-              <div class="my-5 flex items-center gap-3" aria-hidden="true">
-                <span class="h-px flex-1 bg-[#ece8e0]"></span>
-                <span class="font-mono-custom text-[11px] uppercase tracking-[0.16em] text-[#a39e94]">
-                  {{ t('pricing.payment.withClick.or') }}
-                </span>
-                <span class="h-px flex-1 bg-[#ece8e0]"></span>
+                <template v-else-if="isGateway">
+                  <p class="text-[13.5px] leading-relaxed text-[#6b6760]">
+                    {{ t('pricing.payment.gateway.lead', { provider: method }) }}
+                  </p>
+
+                  <!-- The public offer — unticked on every opening, shared by the
+                       gateway tabs. Until the offer arrives, the two link words
+                       are plain text and the box can't be ticked. -->
+                  <div class="mt-4">
+                    <OfferConsentCheckbox
+                      v-model="acceptedOffer"
+                      :offer-url="offer?.offerUrl"
+                      :privacy-url="offer?.privacyUrl"
+                      :disabled="isStarting"
+                      :error-id="offerError ? 'payment-offer-error' : ''"
+                    />
+
+                    <p
+                      v-if="offerError"
+                      id="payment-offer-error"
+                      role="alert"
+                      class="mt-2 pl-7 text-[12.5px] leading-relaxed text-[#b91c1c]"
+                    >
+                      {{ offerError }}
+                    </p>
+                    <p v-else-if="offerLoadFailed" role="alert" class="mt-2 pl-7 text-[12.5px] leading-relaxed text-[#b91c1c]">
+                      {{ t('pricing.payment.offer.loadFailed') }}
+                      <button
+                        type="button"
+                        class="font-semibold underline underline-offset-2 hover:text-[#7f1d1d]"
+                        @click="loadOffer"
+                      >
+                        {{ t('pricing.payment.offer.retry') }}
+                      </button>
+                    </p>
+                  </div>
+
+                  <!-- A new checkout on every press; the tab then leaves for the
+                       provider. -->
+                  <button
+                    type="button"
+                    class="mt-4 inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-full bg-[#1a1814] px-5 text-sm font-semibold text-white transition hover:bg-black active:scale-[0.99] disabled:active:scale-100"
+                    :class="isStarting ? 'cursor-wait opacity-70' : 'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[#1a1814]'"
+                    :disabled="!canPayOnline"
+                    :aria-busy="isStarting"
+                    @click="pay"
+                  >
+                    <span
+                      v-if="isStarting"
+                      class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
+                      aria-hidden="true"
+                    ></span>
+                    {{
+                      isStarting
+                        ? t('pricing.payment.gateway.pending', { provider: startingProvider })
+                        : t('pricing.payment.gateway.button', { price: planPrice })
+                    }}
+                  </button>
+
+                  <p
+                    v-if="generalError"
+                    role="alert"
+                    class="mt-3 rounded-xl bg-[#fee3e2] px-4 py-3 text-[13px] leading-relaxed text-[#b91c1c]"
+                  >
+                    {{ generalError }}
+                  </p>
+                  <p v-else class="mt-3 text-center text-[12px] leading-relaxed text-[#8a857c]">
+                    {{ t('pricing.payment.gateway.hint', { provider: method }) }}
+                  </p>
+                </template>
+
+                <!-- Karta — the bot; the deep link carries the package and the
+                     account. -->
+                <template v-else>
+                  <p class="text-[13.5px] leading-relaxed text-[#6b6760]">
+                    {{ t('pricing.payment.online.cardLead') }}
+                  </p>
+                  <TelegramCodeLink
+                    class="mt-4"
+                    :href="telegramUrl"
+                    :label="t('pricing.payment.online.telegram')"
+                    variant="primary"
+                  />
+                  <p class="mt-3 text-center text-[12px] leading-relaxed text-[#8a857c]">
+                    {{ t('pricing.payment.online.hint') }}
+                  </p>
+                </template>
               </div>
             </template>
 
-            <!-- Telegram — the deep link carries the package and the account.
-                 The only way to pay while Click is hidden; the card option
-                 under it otherwise. -->
-            <TelegramCodeLink
-              :class="showClick ? '' : 'mt-6'"
-              :href="telegramUrl"
-              :label="t(copyKey('telegram'))"
-              :variant="showClick ? 'outline' : 'primary'"
-            />
-
-            <p
-              class="text-center text-[12px] leading-relaxed text-[#8a857c]"
-              :class="showClick ? 'mt-3' : 'mt-4'"
-            >
-              {{ t(copyKey('hint')) }}
-            </p>
+            <!-- Telegram-only — the way to pay while no gateway is offered. -->
+            <template v-else>
+              <TelegramCodeLink class="mt-6" :href="telegramUrl" :label="t('pricing.payment.telegram')" variant="primary" />
+              <p class="mt-4 text-center text-[12px] leading-relaxed text-[#8a857c]">
+                {{ t('pricing.payment.hint') }}
+              </p>
+            </template>
           </div>
         </Transition>
       </div>

@@ -1,50 +1,51 @@
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { isNetworkError } from '@/utils/api'
-import { createCheckout, PAYMENT_PROVIDER_CLICK } from '@/utils/payment'
+import { createCheckout } from '@/utils/payment'
 
-// "Click orqali to'lash": create a checkout, then leave for Click in this tab.
-// Used by PricingPaymentModal — the result page's "try again" reopens that
-// dialog, so every payment passes the same offer checkbox.
+// "Click / Payme orqali to'lash": create a checkout with that provider, then
+// leave for its page in this tab. Used by PricingPaymentModal — the result
+// page's "try again" reopens that dialog, so every payment passes the same
+// offer checkbox.
 //
+// `startingProvider` is the provider whose checkout is on its way ('' when
+// none), so the dialog spins only the button that was pressed.
 // `error` is the words to show; `errorKind` says where they belong. The two
 // offer kinds are about the checkbox, so the dialog shows them under it:
 //   offerRequired  400 — the server saw no acceptance
 //   offerChanged   409 — the offer changed while the dialog was open; the
 //                  dialog re-reads it and asks for the tick again
-export function useClickCheckout() {
+export function usePaymentCheckout() {
   const { t } = useI18n()
-  const isStarting = ref(false)
+  const startingProvider = ref('')
+  const isStarting = computed(() => Boolean(startingProvider.value))
   const error = ref('')
   const errorKind = ref('')
 
-  // Back from Click with the browser's back button, the page can come out of
-  // the back/forward cache exactly as it left: button still spinning. Let the
-  // student press it again — that makes a new checkout, as it must.
+  // Back from the provider with the browser's back button, the page can come
+  // out of the back/forward cache exactly as it left: button still spinning.
+  // Let the student press it again — that makes a new checkout, as it must.
   const onPageShow = (event) => {
-    if (event.persisted) isStarting.value = false
+    if (event.persisted) startingProvider.value = ''
   }
   onMounted(() => window.addEventListener('pageshow', onPageShow))
   onBeforeUnmount(() => window.removeEventListener('pageshow', onPageShow))
 
-  async function start(tariffCode, offerVersion) {
+  async function start(tariffCode, offerVersion, provider) {
     if (isStarting.value) return
-    isStarting.value = true
+    startingProvider.value = provider
     clearError()
 
     try {
-      const { paymentUrl } = await createCheckout(tariffCode, {
-        offerVersion,
-        provider: PAYMENT_PROVIDER_CLICK,
-      })
+      const { paymentUrl } = await createCheckout(tariffCode, { offerVersion, provider })
       // Stays "starting" on purpose: the page is unloading.
       window.location.href = paymentUrl
     } catch (err) {
-      isStarting.value = false
+      startingProvider.value = ''
       // apiFetch is already taking them to /login.
       if (err?.status === 401) return
       errorKind.value = checkoutErrorKind(err)
-      error.value = t(`pricing.payment.click.errors.${errorKind.value}`)
+      error.value = t(`pricing.payment.gateway.errors.${errorKind.value}`, { provider })
     }
   }
 
@@ -53,7 +54,7 @@ export function useClickCheckout() {
     errorKind.value = ''
   }
 
-  return { start, isStarting, error, errorKind, clearError }
+  return { start, startingProvider, isStarting, error, errorKind, clearError }
 }
 
 // The backend answers three different problems with a 400; only the message

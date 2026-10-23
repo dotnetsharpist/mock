@@ -1,17 +1,19 @@
 <script setup>
-// To‘lov — where Click sends the student back after paying:
-// /payment/result?paymentId=…
+// To‘lov — where the provider (Click, Payme) sends the student back after
+// paying: /payment/result?paymentId=…
 //
-// Click confirms the payment to the backend on its own schedule, often a moment
-// after the student is back, so the page asks: GET /payment/{id} every 2 s, for
-// up to 60 s.
+// The provider confirms the payment to the backend on its own schedule, often a
+// moment after the student is back, so the page asks: GET /payment/{id} every
+// 2 s, for up to 60 s.
 //   Approved                     → done; the tanga pill is refreshed
 //   Cancelled                    → failed; "Qayta urinish" reopens the payment
 //                                  dialog for the same pack, where the offer is
 //                                  accepted again before a NEW checkout
-//   AwaitingPayment / Processing → still waiting on Click
+//   AwaitingPayment / Processing → still waiting on the provider
 // Not final after 60 s → stop asking. The backend credits the tanga whenever
-// Click confirms, so the page says that and points to support.
+// the provider confirms, so the page says that and points to support.
+// The copy names the provider from the payment itself; with no answer yet it
+// says "to‘lov tizimi".
 // 404 means the payment is not this student's, or does not exist — one
 // generic message for both, so the page never confirms that an id exists.
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
@@ -25,7 +27,7 @@ import StatusBadge from '@/components/app/StatusBadge.vue'
 import PricingPaymentModal from '@/components/PricingPaymentModal.vue'
 import { usePricingPlans } from '@/composables/usePricingPlans'
 import { useBalanceStore } from '@/stores/balance'
-import { fetchPayment, formatSom, PAYMENT_STATUS } from '@/utils/payment'
+import { fetchPayment, formatSom, PAYMENT_STATUS, providerLabel } from '@/utils/payment'
 
 defineProps({
   user: { type: Object, required: true },
@@ -41,7 +43,7 @@ const balanceStore = useBalanceStore()
 const { plans } = usePricingPlans()
 
 // checking   no answer yet
-// pending    Click has not confirmed yet
+// pending    the provider has not confirmed yet
 // approved, cancelled   final
 // timeout    still not final when the 60 s ran out
 // notFound   a 404, or no usable id in the URL
@@ -128,6 +130,8 @@ onBeforeUnmount(stopPolling)
 
 const isWaiting = computed(() => phase.value === 'checking' || phase.value === 'pending')
 
+const provider = computed(() => providerLabel(payment.value?.provider))
+
 const view = computed(() => {
   switch (phase.value) {
     case 'pending':
@@ -135,7 +139,9 @@ const view = computed(() => {
         icon: 'clock',
         tone: 'info',
         badge: 'Tasdiq kutilmoqda',
-        title: 'Click’dan tasdiq kutilmoqda…',
+        title: provider.value
+          ? `${provider.value}’dan tasdiq kutilmoqda…`
+          : 'To‘lov tizimidan tasdiq kutilmoqda…',
         description: 'Odatda bu bir necha soniya oladi. Tasdiq kelishi bilan shu yerda ko‘rasiz.',
       }
     case 'approved':
@@ -154,16 +160,15 @@ const view = computed(() => {
         badge: 'Bekor qilindi',
         title: 'To‘lov amalga oshmadi',
         description:
-          'Click to‘lovni tasdiqlamadi, shuning uchun tanga qo‘shilmadi. Qayta urinib ko‘rishingiz mumkin — yangi to‘lov ochiladi.',
+          `${provider.value || 'To‘lov tizimi'} to‘lovni tasdiqlamadi, shuning uchun tanga qo‘shilmadi. Qayta urinib ko‘rishingiz mumkin — yangi to‘lov ochiladi.`,
       }
     case 'timeout':
       return {
         icon: 'clock',
         tone: 'info',
         badge: 'Tasdiq kutilmoqda',
-        title: 'Click hali tasdiqlamadi',
-        description:
-          'Bu sahifada kutish shart emas: Click to‘lovni tasdiqlashi bilan tangalar hisobingizga avtomatik tushadi. Uzoq vaqt tushmasa, qo‘llab-quvvatlash xizmatiga yozing.',
+        title: `${provider.value || 'To‘lov tizimi'} hali tasdiqlamadi`,
+        description: `Bu sahifada kutish shart emas: ${provider.value || 'to‘lov tizimi'} to‘lovni tasdiqlashi bilan tangalar hisobingizga avtomatik tushadi. Uzoq vaqt tushmasa, qo‘llab-quvvatlash xizmatiga yozing.`,
       }
     case 'notFound':
       return {
@@ -192,7 +197,8 @@ const showDetails = computed(
 )
 
 // "Qayta urinish" doesn't start a checkout itself: a new payment needs the
-// offer accepted again, and the payment dialog is where that happens. The pack
+// offer accepted again, and the payment dialog is where that happens — on the
+// tab of the provider that failed. The pack
 // is shown as the pricing pages show it, or — if it's not among them — as the
 // payment describes it.
 const isPaymentOpen = ref(false)
@@ -228,7 +234,7 @@ const secondaryPill =
 <template>
   <AppTopbar
     title="To‘lov"
-    subtitle="Click orqali tanga xaridi."
+    :subtitle="provider ? `${provider} orqali tanga xaridi.` : 'Tanga xaridi.'"
     :user="user"
     @open-menu="$emit('openMenu')"
   />
@@ -340,6 +346,7 @@ const secondaryPill =
     <PricingPaymentModal
       :open="isPaymentOpen"
       :plan="selectedPlan"
+      :initial-method="provider"
       @close="isPaymentOpen = false"
     />
   </main>

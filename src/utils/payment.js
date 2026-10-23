@@ -1,12 +1,12 @@
-// Buying tanga through the backend's payment gateway (Click). The other way to
-// pay — a card, through @milliymock_bot — is a deep link and needs no API; see
-// utils/telegramBot.js#telegramBotPayUrl.
+// Buying tanga through the backend's payment gateways (Click, Payme). The other
+// way to pay — a card, through @milliymock_bot — is a deep link and needs no
+// API; see utils/telegramBot.js#telegramBotPayUrl.
 //
 //   GET  /payment/tariffs          no auth → [{ code, name, coins, price }]   price in so'm
 //   GET  /payment/offer            no auth → { version, offerUrl, privacyUrl }
 //                                  the public offer + privacy policy a student
 //                                  must accept before any checkout
-//   POST /payment/checkout         auth, JSON { tariffCode, provider: "Click",
+//   POST /payment/checkout         auth, JSON { tariffCode, provider: "Click" | "Payme",
 //                                               acceptOffer: true, offerVersion }
 //                                  → { paymentId, paymentUrl }
 //                                  400 "Accept the public offer…" (acceptance missing),
@@ -18,20 +18,47 @@
 //                                  amount, coins, status, createdAt, paidAt }
 //                                  404 not this user's payment, or no such payment
 //
-// The checkout hands back a Click page; Click sends the student back to
-// /payment/result?paymentId=… (views/app/PaymentResultPage.vue), which polls the
-// payment until it settles. A 401 anywhere is handled by apiFetch (→ /login).
+// The checkout hands back the provider's page; the provider sends the student
+// back to /payment/result?paymentId=… (views/app/PaymentResultPage.vue), which
+// polls the payment until it settles. A 401 anywhere is handled by apiFetch
+// (→ /login).
 import { apiFetch, getTestApiBaseUrl, readJsonBody } from '@/utils/api'
 import { useAuthStore } from '@/stores/auth'
 
-// TEMP (2026-10-14): Click is hidden from the purchase dialog for now. This is
-// the ONE switch — set it to true and the Click button, the two-option dialog
-// copy and the "Click credits automatically" billing note all come back.
-// While false the dialog is the Telegram-only one it was before Click. Nothing
-// else is off: the checkout code, /payment/result and the tariffs fetch stay.
-export const CLICK_PAYMENT_ENABLED = false
-
 export const PAYMENT_PROVIDER_CLICK = 'Click'
+export const PAYMENT_PROVIDER_PAYME = 'Payme'
+
+// The gateways the purchase dialog offers, one tab each, in this order.
+// This is the ONE switch: take a provider out and its tab goes, and the
+// billing note stops naming it. Empty, the dialog is the Telegram-only one it
+// was before the gateways. Nothing else is off: the checkout code,
+// /payment/result and the tariffs fetch stay.
+export const PAYMENT_PROVIDERS = [PAYMENT_PROVIDER_CLICK, PAYMENT_PROVIDER_PAYME]
+export const ONLINE_PAYMENT_ENABLED = PAYMENT_PROVIDERS.length > 0
+
+// Gateways that keep their tab but don't take payments yet: the tab says so
+// and points to the others, and no checkout is ever started for them.
+// TEMP (2026-10-23): Payme's payment page shows the sole proprietor's (YATT)
+// name and no logo until Payme sets the cashbox's branding — take it out of
+// this list once it shows MilliyMock.
+export const PAUSED_PAYMENT_PROVIDERS = [PAYMENT_PROVIDER_PAYME]
+export const WORKING_PAYMENT_PROVIDERS = PAYMENT_PROVIDERS.filter(
+  (provider) => !PAUSED_PAYMENT_PROVIDERS.includes(provider),
+)
+
+// "Click yoki Payme" / "Click или Payme": the gateways that work, as the copy
+// names them. `or` is the locale's word (i18n `pricing.payment.online.or`);
+// Intl.ListFormat can't do it — Chrome ships no Uzbek list patterns and
+// prints "Click or Payme".
+export function formatProviders(or) {
+  return WORKING_PAYMENT_PROVIDERS.join(` ${or} `)
+}
+
+// The name to print for a payment's `provider`, as the backend spells it.
+export function providerLabel(provider) {
+  const value = String(provider || '')
+  return PAYMENT_PROVIDERS.find((known) => known.toLowerCase() === value.toLowerCase()) || value
+}
 
 export const PAYMENT_STATUS = {
   awaitingPayment: 'AwaitingPayment',
@@ -112,11 +139,11 @@ export async function fetchOffer() {
   return offer
 }
 
-// Always a fresh checkout: a Click URL belongs to one payment, so it is never
-// cached or reused — every press of the button comes through here. Only called
+// Always a fresh checkout: a payment URL belongs to one payment, so it is never
+// cached or reused — every press of a button comes through here. Only called
 // once the student has ticked the offer, so acceptance is always true;
 // `offerVersion` is the version of the offer they were shown.
-export async function createCheckout(tariffCode, { offerVersion, provider = PAYMENT_PROVIDER_CLICK }) {
+export async function createCheckout(tariffCode, { offerVersion, provider }) {
   const response = await apiFetch(`${getTestApiBaseUrl()}/payment/checkout`, {
     method: 'POST',
     headers: { accept: '*/*', 'Content-Type': 'application/json', ...authHeaders() },

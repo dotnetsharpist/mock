@@ -8,7 +8,7 @@
 //   • the balance, which lives in the top bar on every screen — this page does
 //     not repeat it
 //
-// Buying reuses PricingPaymentModal — Click (while CLICK_PAYMENT_ENABLED), or a
+// Buying reuses PricingPaymentModal — Click / Payme (PAYMENT_PROVIDERS), or a
 // card through @milliymock_bot — so the flow can't drift from the public page.
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -19,7 +19,7 @@ import CoinIcon from '@/components/app/CoinIcon.vue'
 import PricingPaymentModal from '@/components/PricingPaymentModal.vue'
 import { useBalanceStore } from '@/stores/balance'
 import { usePricingPlans } from '@/composables/usePricingPlans'
-import { CLICK_PAYMENT_ENABLED } from '@/utils/payment'
+import { formatProviders, WORKING_PAYMENT_PROVIDERS } from '@/utils/payment'
 
 defineProps({
   user: { type: Object, required: true },
@@ -30,7 +30,7 @@ const { t } = useI18n()
 const balanceStore = useBalanceStore()
 
 const { plans: rawPlans } = usePricingPlans()
-const billingNoteKey = CLICK_PAYMENT_ENABLED ? 'pricing.billingNoteWithClick' : 'pricing.billingNote'
+const billingNoteKey = WORKING_PAYMENT_PROVIDERS.length ? 'pricing.billingNoteOnline' : 'pricing.billingNote'
 
 // The cheapest plan is the yardstick the others are measured against.
 const basePlan = computed(() =>
@@ -250,7 +250,7 @@ const HOW_IT_WORKS = [
         </dl>
 
         <p class="mt-5 border-t border-app-border pt-4 text-[12.5px] text-app-muted">
-          {{ t(billingNoteKey) }}.
+          {{ t(billingNoteKey, { providers: formatProviders(t('pricing.payment.online.or')) }) }}.
         </p>
       </section>
     </AppCard>

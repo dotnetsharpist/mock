@@ -7,12 +7,12 @@ import PricingPaymentModal from '@/components/PricingPaymentModal.vue'
 import AuthRequiredModal from '@/components/AuthRequiredModal.vue'
 import { useAuthStore } from '@/stores/auth'
 import { usePricingPlans } from '@/composables/usePricingPlans'
-import { CLICK_PAYMENT_ENABLED } from '@/utils/payment'
+import { formatProviders, WORKING_PAYMENT_PROVIDERS } from '@/utils/payment'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
 const { plans } = usePricingPlans()
-const billingNoteKey = CLICK_PAYMENT_ENABLED ? 'pricing.billingNoteWithClick' : 'pricing.billingNote'
+const billingNoteKey = WORKING_PAYMENT_PROVIDERS.length ? 'pricing.billingNoteOnline' : 'pricing.billingNote'
 
 const isPaymentOpen = ref(false)
 const isAuthModalOpen = ref(false)
@@ -184,7 +184,7 @@ const closeAuthModal = () => {
 
         <!-- Billing note -->
         <p class="mt-8 text-center font-mono-custom text-[11px] uppercase tracking-[0.14em] text-[#a39e94]">
-          {{ t(billingNoteKey) }}
+          {{ t(billingNoteKey, { providers: formatProviders(t('pricing.payment.online.or')) }) }}
         </p>
       </div>
     </section>
