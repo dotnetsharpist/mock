@@ -376,6 +376,11 @@ Signed in, every "Bosh sahifa" link and the logo lead to `PLATFORM_HOME`
 page would only offer "Platformaga kirish" again. Signed out, they lead to `/`.
 The exception is "Chiqish" (sign out), which lands on `/` on purpose.
 
+Opening the site at `/` with a token in localStorage (typing milliymock.uz, a
+fresh tab, a bookmark) redirects to `PLATFORM_HOME` too — `router.beforeEach`,
+first navigation of the page load only. In-app trips to `/` are left alone,
+because sign-out navigates to `/` before it clears the token.
+
 ## Activity pings
 
 `utils/presence.js` (started in `main.js`) tells the API that a signed-in user
