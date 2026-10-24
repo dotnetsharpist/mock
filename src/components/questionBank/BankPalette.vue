@@ -2,7 +2,10 @@
 // The question map of a session: one square per question, marked by where the
 // student stands on it. Opens above the footer; picking a number jumps there.
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppIcon from '@/components/app/AppIcon.vue'
+
+const { t } = useI18n()
 
 const props = defineProps({
   // [{ id, state: 'correct' | 'wrong' | 'answered' | 'none' }], in session order
@@ -47,14 +50,14 @@ const cellClass = (state, showResults) => {
     <div
       class="fixed inset-x-3 bottom-[84px] z-[260] mx-auto max-w-[460px] rounded-2xl border border-app-border bg-app-surface p-4 shadow-[0_18px_40px_rgba(10,10,10,0.14)] sm:p-5"
       role="dialog"
-      aria-label="Savollar xaritasi"
+      :aria-label="t('bank.palette.label')"
     >
       <div class="flex items-center justify-between">
-        <p class="text-[15px] font-bold text-app-ink">Savollar</p>
+        <p class="text-[15px] font-bold text-app-ink">{{ t('bank.labels.questions') }}</p>
         <button
           type="button"
           class="flex h-8 w-8 items-center justify-center rounded-full text-app-muted hover:bg-app-tile hover:text-app-ink"
-          aria-label="Yopish"
+          :aria-label="t('common.close')"
           @click="emit('close')"
         >
           <AppIcon name="close" :size="16" />
@@ -79,11 +82,11 @@ const cellClass = (state, showResults) => {
 
       <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-[12px] text-app-muted">
         <template v-if="showResults">
-          <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded border border-app-good bg-app-good-bg"></span>To‘g‘ri</span>
-          <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded border border-app-bad bg-app-bad-bg"></span>Xato</span>
+          <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded border border-app-good bg-app-good-bg"></span>{{ t('bank.labels.correct') }}</span>
+          <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded border border-app-bad bg-app-bad-bg"></span>{{ t('bank.labels.wrong') }}</span>
         </template>
-        <span v-else class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded bg-app-ink"></span>Javob berilgan</span>
-        <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded border border-app-border"></span>Javobsiz</span>
+        <span v-else class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded bg-app-ink"></span>{{ t('bank.labels.answered') }}</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded border border-app-border"></span>{{ t('bank.labels.unanswered') }}</span>
       </div>
     </div>
   </Teleport>

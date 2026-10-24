@@ -32,23 +32,29 @@ defineEmits(['openMenu'])
 const router = useRouter()
 const authStore = useAuthStore()
 const balanceStore = useBalanceStore()
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 
 const info = computed(() => authStore.userInfo || null)
 const tangaBalance = computed(() => balanceStore.available)
 
+// An error is either the server's own message, shown as sent, or one of ours,
+// kept as a message key so that switching the language on this very page
+// re-renders it: { text } | { key } | null.
+const fromError = (error, key) => (error instanceof Error ? { text: error.message } : { key })
+const errorText = (value) => (value?.key ? t(value.key) : value?.text || '')
+
 const isLoading = ref(false)
-const loadError = ref('')
+const loadError = ref(null)
 
 async function loadProfile() {
   if (!authStore.isAuthenticated) return
   isLoading.value = true
-  loadError.value = ''
+  loadError.value = null
   try {
     await authStore.getUserInfo()
     balanceStore.refresh().catch(() => {})
   } catch (error) {
-    loadError.value = error instanceof Error ? error.message : 'Profilni yuklab bo‘lmadi.'
+    loadError.value = fromError(error, 'settingsPage.loadFailed')
   } finally {
     isLoading.value = false
   }
@@ -61,7 +67,7 @@ onMounted(() => {
 // ——— Editing ————————————————————————————————————————————————————————————
 const isEditing = ref(false)
 const isSaving = ref(false)
-const saveError = ref('')
+const saveError = ref(null)
 const saveSuccess = ref(false)
 const form = reactive({ firstName: '', lastName: '', fatherName: '', phoneNumber: '' })
 
@@ -86,7 +92,7 @@ function startEdit() {
   form.fatherName = info.value?.fatherName || ''
   // Default to the country code so only the operator + subscriber digits are typed.
   form.phoneNumber = formatPhone(info.value?.phoneNumber) || '+998'
-  saveError.value = ''
+  saveError.value = null
   saveSuccess.value = false
   isEditing.value = true
 }
@@ -94,7 +100,7 @@ function startEdit() {
 function cancelEdit() {
   if (isSaving.value) return
   isEditing.value = false
-  saveError.value = ''
+  saveError.value = null
 }
 
 async function saveProfile() {
@@ -106,18 +112,18 @@ async function saveProfile() {
   // All three print on the certificate — required, so saving here cannot blank
   // out a name the way a partial update would.
   if (!firstName || !lastName || !fatherName) {
-    saveError.value = 'Iltimos, barcha maydonlarni to‘ldiring.'
+    saveError.value = { key: 'testPage.profileValidation' }
     return
   }
 
   // Uzbek numbers are 12 digits: 998 + 9 subscriber digits.
   if (!/^998\d{9}$/.test(phoneDigits)) {
-    saveError.value = 'Iltimos, telefon raqamini to‘g‘ri kiriting (+998 XX XXX XX XX).'
+    saveError.value = { key: 'settingsPage.phoneInvalid' }
     return
   }
 
   isSaving.value = true
-  saveError.value = ''
+  saveError.value = null
   saveSuccess.value = false
 
   try {
@@ -125,7 +131,7 @@ async function saveProfile() {
     isEditing.value = false
     saveSuccess.value = true
   } catch (error) {
-    saveError.value = error instanceof Error ? error.message : 'Ma’lumotlarni saqlab bo‘lmadi.'
+    saveError.value = fromError(error, 'testPage.profileSaveError')
   } finally {
     isSaving.value = false
   }
@@ -133,22 +139,28 @@ async function saveProfile() {
 
 const displayValue = (value) => {
   if (value === null || value === undefined || value === '') return '—'
-  if (typeof value === 'boolean') return value ? 'Ha' : 'Yo‘q'
+  if (typeof value === 'boolean') return value ? t('settingsPage.yes') : t('settingsPage.no')
   return String(value)
 }
 
+// The name labels are the same words ProfileGateModal uses (testPage.*).
 const profileFields = computed(() => [
-  { key: 'firstName', label: 'Ism', value: info.value?.firstName, editable: true },
-  { key: 'lastName', label: 'Familiya', value: info.value?.lastName, editable: true },
-  { key: 'fatherName', label: 'Otasining ismi', value: info.value?.fatherName, editable: true },
+  { key: 'firstName', label: t('testPage.firstName'), value: info.value?.firstName, editable: true },
+  { key: 'lastName', label: t('testPage.lastName'), value: info.value?.lastName, editable: true },
+  {
+    key: 'fatherName',
+    label: t('testPage.fatherName'),
+    value: info.value?.fatherName,
+    editable: true,
+  },
   {
     key: 'phoneNumber',
-    label: 'Telefon raqami',
+    label: t('settingsPage.phone'),
     value: info.value?.phoneNumber ? formatPhone(info.value.phoneNumber) : null,
     editable: true,
     type: 'phone',
   },
-  { key: 'email', label: 'Email', value: info.value?.email, editable: false },
+  { key: 'email', label: t('settingsPage.email'), value: info.value?.email, editable: false },
 ])
 
 // The API does not always return fullName — for this account it comes back
@@ -171,6 +183,8 @@ const initials = computed(() => {
 })
 
 // ——— Language ————————————————————————————————————————————————————————————
+// Each language is named in itself, not translated: someone who can't read the
+// current interface still has to be able to find their own.
 const LANGUAGES = [
   { value: 'uz', label: 'O‘zbekcha' },
   { value: 'ru', label: 'Русский' },
@@ -194,8 +208,8 @@ async function signOut() {
 
 <template>
   <AppTopbar
-    title="Sozlamalar"
-    subtitle="Profil ma’lumotlari, til va hisobingiz."
+    :title="t('appShell.topbar.settings')"
+    :subtitle="t('settingsPage.subtitle')"
     :user="user"
     @open-menu="$emit('openMenu')"
   />
@@ -223,24 +237,30 @@ async function signOut() {
             class="mt-3 inline-flex rounded-full px-3 py-1 text-[11px] font-semibold"
             :class="info?.emailConfirmed ? 'bg-app-good-bg text-app-good' : 'bg-app-tile text-app-muted'"
           >
-            {{ info?.emailConfirmed ? 'Email tasdiqlangan' : 'Email tasdiqlanmagan' }}
+            {{
+              info?.emailConfirmed
+                ? t('settingsPage.emailConfirmed')
+                : t('settingsPage.emailNotConfirmed')
+            }}
           </span>
         </template>
 
         <div class="mt-5 w-full rounded-xl border border-app-border bg-app-sunken p-4">
-          <p class="text-[12px] text-app-muted">Balans</p>
+          <p class="text-[12px] text-app-muted">{{ t('settingsPage.balance') }}</p>
           <p class="mt-1.5 flex items-center justify-center gap-2">
             <CoinIcon :size="18" class="text-app-coin" />
             <span class="text-[24px] font-bold leading-none tabular-nums text-app-ink">
               {{ tangaBalance }}
             </span>
-            <span class="text-[13px] font-semibold text-app-muted">tanga</span>
+            <span class="text-[13px] font-semibold text-app-muted">
+              {{ t('settingsPage.tangaUnit', Number(tangaBalance) || 0) }}
+            </span>
           </p>
           <RouterLink
             to="/tanga"
             class="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-app-border bg-app-surface px-4 py-2 text-[13px] font-semibold text-app-ink transition-colors hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
           >
-            Hisobni to‘ldirish
+            {{ t('appShell.topbar.topUp') }}
             <AppIcon name="arrowRight" :size="14" />
           </RouterLink>
         </div>
@@ -253,10 +273,10 @@ async function signOut() {
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="text-[16px] font-bold tracking-[-0.01em] text-app-ink">
-              Profil ma’lumotlari
+              {{ t('settingsPage.profileHeading') }}
             </h2>
             <p class="mt-0.5 text-[13px] text-app-muted">
-              Ism, familiya va otangizning ismi sertifikatga chiqadi.
+              {{ t('settingsPage.profileHint') }}
             </p>
           </div>
           <button
@@ -265,7 +285,7 @@ async function signOut() {
             class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-app-border bg-app-surface px-3.5 py-2 text-[13px] font-semibold text-app-ink transition-colors hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
             @click="startEdit"
           >
-            Tahrirlash
+            {{ t('settingsPage.edit') }}
           </button>
         </div>
 
@@ -273,13 +293,13 @@ async function signOut() {
           v-if="loadError"
           class="mb-4 rounded-xl bg-app-bad-bg px-4 py-3 text-[13px] font-medium text-app-bad"
         >
-          {{ loadError }}
+          {{ errorText(loadError) }}
         </p>
         <p
           v-if="saveSuccess && !isEditing"
           class="mb-4 rounded-xl bg-app-good-bg px-4 py-3 text-[13px] font-medium text-app-good"
         >
-          Ma’lumotlar saqlandi.
+          {{ t('settingsPage.saved') }}
         </p>
 
         <form @submit.prevent="saveProfile">
@@ -313,7 +333,9 @@ async function signOut() {
             </div>
           </dl>
 
-          <p v-if="saveError" class="mt-4 text-[13px] font-medium text-app-bad">{{ saveError }}</p>
+          <p v-if="saveError" class="mt-4 text-[13px] font-medium text-app-bad">
+            {{ errorText(saveError) }}
+          </p>
 
           <div v-if="isEditing" class="mt-5 flex flex-col gap-2.5 sm:flex-row sm:justify-end">
             <button
@@ -322,14 +344,14 @@ async function signOut() {
               class="rounded-lg border border-app-border bg-app-surface px-5 py-2.5 text-[13px] font-semibold text-app-ink transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-60"
               @click="cancelEdit"
             >
-              Bekor qilish
+              {{ t('common.cancel') }}
             </button>
             <button
               type="submit"
               :disabled="isSaving"
               class="rounded-lg bg-app-ink px-5 py-2.5 text-[13px] font-semibold text-app-surface transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {{ isSaving ? 'Saqlanmoqda…' : 'Saqlash' }}
+              {{ isSaving ? t('settingsPage.saving') : t('settingsPage.save') }}
             </button>
           </div>
         </form>
@@ -337,8 +359,10 @@ async function signOut() {
 
       <!-- ═══ Language ═══ -->
       <AppCard>
-        <h2 class="text-[16px] font-bold tracking-[-0.01em] text-app-ink">Til</h2>
-        <p class="mt-0.5 text-[13px] text-app-muted">Interfeys tili.</p>
+        <h2 class="text-[16px] font-bold tracking-[-0.01em] text-app-ink">
+          {{ t('common.language') }}
+        </h2>
+        <p class="mt-0.5 text-[13px] text-app-muted">{{ t('settingsPage.languageHint') }}</p>
         <div class="mt-4 flex flex-wrap gap-2">
           <button
             v-for="language in LANGUAGES"
@@ -363,15 +387,17 @@ async function signOut() {
            on the page, and the floating support button owns the bottom-right
            corner — right-aligned, it was rendered unclickable behind it. -->
       <AppCard>
-        <h2 class="text-[16px] font-bold tracking-[-0.01em] text-app-ink">Hisobdan chiqish</h2>
-        <p class="mt-0.5 text-[13px] text-app-muted">Bu qurilmada seansingiz yopiladi.</p>
+        <h2 class="text-[16px] font-bold tracking-[-0.01em] text-app-ink">
+          {{ t('settingsPage.signOutHeading') }}
+        </h2>
+        <p class="mt-0.5 text-[13px] text-app-muted">{{ t('settingsPage.signOutHint') }}</p>
         <button
           type="button"
           class="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-app-border bg-app-surface px-3.5 py-2 text-[13px] font-semibold text-app-bad transition-colors hover:bg-app-bad-bg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
           @click="isSignOutOpen = true"
         >
           <AppIcon name="logout" :size="15" />
-          Chiqish
+          {{ t('appShell.topbar.signOut') }}
         </button>
       </AppCard>
     </div>
@@ -386,10 +412,10 @@ async function signOut() {
           aria-labelledby="signout-title"
         >
           <h2 id="signout-title" class="text-[17px] font-bold tracking-[-0.01em] text-app-ink">
-            Hisobdan chiqasizmi?
+            {{ t('settingsPage.signOutConfirmTitle') }}
           </h2>
           <p class="mt-2 text-[14px] leading-[1.6] text-app-muted">
-            Testlaringiz va natijalaringiz saqlanib qoladi — qayta kirganingizda joyida bo‘ladi.
+            {{ t('settingsPage.signOutConfirmText') }}
           </p>
           <div class="mt-5 flex flex-col gap-2.5 sm:flex-row sm:justify-end">
             <button
@@ -397,14 +423,14 @@ async function signOut() {
               class="rounded-lg border border-app-border bg-app-surface px-5 py-2.5 text-[13px] font-semibold text-app-ink transition-colors hover:bg-app-tile"
               @click="isSignOutOpen = false"
             >
-              Bekor qilish
+              {{ t('common.cancel') }}
             </button>
             <button
               type="button"
               class="rounded-lg bg-app-ink px-5 py-2.5 text-[13px] font-semibold text-app-surface transition-opacity hover:opacity-90"
               @click="signOut"
             >
-              Chiqish
+              {{ t('appShell.topbar.signOut') }}
             </button>
           </div>
         </div>

@@ -6,72 +6,91 @@
 // `api` is the backend SubjectType enum value; `aliases` cover the other
 // spellings the admin panel may have stored, matched case-insensitively, so a
 // test is never dropped just because its subject string is worded differently.
+//
+// `label`, `fullLabel` and `description` are read through t() on every access
+// rather than stored, so a screen that renders `subject.label` follows a
+// language switch without each caller knowing the message keys. Names that
+// messages.js already has (subjects.*) are read from there; the rest live in
+// locales/appHome.js under subjectsCatalog.
+import { t } from '@/i18n'
+
+const withCopy = (entry) => {
+  const copy = {
+    label: { enumerable: true, configurable: true, get: () => t(entry.labelKey) },
+    description: { enumerable: true, configurable: true, get: () => t(entry.descriptionKey) },
+  }
+  if (entry.fullLabelKey) {
+    copy.fullLabel = { enumerable: true, configurable: true, get: () => t(entry.fullLabelKey) }
+  }
+  return Object.defineProperties(entry, copy)
+}
+
 export const SUBJECTS = {
-  math: {
-    label: 'Matematika',
+  math: withCopy({
+    labelKey: 'subjects.math.subjectValue',
     icon: 'calculator',
     api: 'Math',
     aliases: ['math', 'matematika', 'математика'],
-    description: 'Algebra, geometriya, arifmetika va boshqa bo‘limlar',
-  },
-  motherTongue: {
-    label: 'Ona tili',
+    descriptionKey: 'subjectsCatalog.math.description',
+  }),
+  motherTongue: withCopy({
+    labelKey: 'subjects.motherTongue.subjectValue',
     // The official name; rows and the subject page heading use this.
-    fullLabel: 'Ona tili va adabiyot',
+    fullLabelKey: 'subjectsCatalog.motherTongue.fullLabel',
     icon: 'book',
     api: 'MotherTongue',
     aliases: ['mothertongue', 'mother tongue', 'ona tili', 'onatili', 'родной язык'],
-    description: 'Grammatika, imlo, uslubiyat va matn tahlili',
-  },
-  physics: {
-    label: 'Fizika',
+    descriptionKey: 'subjectsCatalog.motherTongue.description',
+  }),
+  physics: withCopy({
+    labelKey: 'subjects.physics.subjectValue',
     icon: 'atom',
     api: 'Physics',
     aliases: ['physics', 'fizika', 'физика'],
-    description: 'Mexanika, termodinamika, elektr va optika',
-  },
-  chemistry: {
-    label: 'Kimyo',
+    descriptionKey: 'subjectsCatalog.physics.description',
+  }),
+  chemistry: withCopy({
+    labelKey: 'subjectsCatalog.chemistry.label',
     icon: 'flask',
     api: 'Chemistry',
     aliases: ['chemistry', 'kimyo', 'химия'],
-    description: 'Noorganik, organik kimyo va kimyoviy reaksiyalar',
-  },
-  history: {
-    label: 'Tarix',
+    descriptionKey: 'subjectsCatalog.chemistry.description',
+  }),
+  history: withCopy({
+    labelKey: 'subjects.history.subjectValue',
     icon: 'landmark',
     api: 'History',
     aliases: ['history', 'tarix', 'история'],
-    description: 'O‘zbekiston tarixi va jahon tarixi',
-  },
-  geography: {
-    label: 'Geografiya',
+    descriptionKey: 'subjectsCatalog.history.description',
+  }),
+  geography: withCopy({
+    labelKey: 'subjectsCatalog.geography.label',
     icon: 'globe',
     api: 'Geography',
     aliases: ['geography', 'geografiya', 'география'],
-    description: 'Tabiiy geografiya va iqtisodiy geografiya',
-  },
-  english: {
-    label: 'Ingliz tili',
+    descriptionKey: 'subjectsCatalog.geography.description',
+  }),
+  english: withCopy({
+    labelKey: 'subjectsCatalog.english.label',
     icon: 'languages',
     api: 'English',
     aliases: ['english', 'ingliz tili', 'ingliztili', 'английский'],
-    description: 'Grammar, vocabulary, reading va listening',
-  },
-  informatics: {
-    label: 'Informatika',
+    descriptionKey: 'subjectsCatalog.english.description',
+  }),
+  informatics: withCopy({
+    labelKey: 'subjectsCatalog.informatics.label',
     icon: 'monitor',
     api: 'Informatics',
     aliases: ['informatics', 'informatika', 'информатика'],
-    description: 'Algoritmlar, dasturlash va axborot texnologiyalari',
-  },
-  biology: {
-    label: 'Biologiya',
+    descriptionKey: 'subjectsCatalog.informatics.description',
+  }),
+  biology: withCopy({
+    labelKey: 'subjects.biology.subjectValue',
     icon: 'leaf',
     api: 'Biology',
     aliases: ['biology', 'biologiya', 'биология'],
-    description: 'Botanika, zoologiya, odam va uning salomatligi',
-  },
+    descriptionKey: 'subjectsCatalog.biology.description',
+  }),
 }
 
 // Display order of the Fanlar grid. Subjects the backend has no tests for are
@@ -90,14 +109,28 @@ export const SUBJECT_ORDER = [
 
 // What a subject unknown to this registry falls back to, so a test whose
 // subject string we do not recognise is still shown rather than silently lost.
+// The raw string is the backend's and stays as sent; only the stand-in for a
+// missing one is ours to translate.
 export const unknownSubject = (raw) => ({
-  label: String(raw || 'Boshqa'),
+  get label() {
+    return raw ? String(raw) : t('subjectsCatalog.other')
+  },
   icon: 'tests',
   description: '',
   isUnknown: true,
 })
 
 export const getSubject = (key) => SUBJECTS[key] ?? null
+
+// Every name a test title may open with, longest first: the ones on screen,
+// plus the Uzbek ones, because titles are typed in the admin panel in Uzbek
+// whatever the interface language ("Tarix - Milliy Sertifikat 04.04.2026").
+export function subjectTitleNames(subject) {
+  const names = [subject.fullLabel, subject.label]
+  if (subject.fullLabelKey) names.push(t(subject.fullLabelKey, {}, { locale: 'uz' }))
+  if (subject.labelKey) names.push(t(subject.labelKey, {}, { locale: 'uz' }))
+  return [...new Set(names.filter(Boolean))]
+}
 
 // Backend subject string → registry key. Exact enum match first, then aliases,
 // both case-insensitive. Returns null when nothing matches.
@@ -118,8 +151,17 @@ export function subjectKeyFromApi(value) {
 // a finished test is offered again, not swapped for its result. Results live on
 // Natijalar. The one exception is a half-finished attempt, which resumes rather
 // than restarting so the student does not lose their answers.
+//
+// Getters, like the labels above, so a row reading ACTION_BY_STATE[state]
+// during render picks up the current language.
 export const ACTION_BY_STATE = {
-  new: 'Testni boshlash',
-  progress: 'Davom etish',
-  done: 'Testni boshlash',
+  get new() {
+    return t('appUi.startTest')
+  },
+  get progress() {
+    return t('appUi.continueTest')
+  },
+  get done() {
+    return t('appUi.startTest')
+  },
 }

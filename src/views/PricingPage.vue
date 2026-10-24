@@ -130,7 +130,7 @@ const closeAuthModal = () => {
                     <circle cx="12" cy="12" r="8.5" />
                     <path d="M12 7.5v9M9.4 9.6c0-1.2 1.1-1.8 2.6-1.8s2.6.7 2.6 1.9-1 1.6-2.6 1.6-2.6.5-2.6 1.7 1.1 1.9 2.6 1.9 2.6-.6 2.6-1.8" stroke-linecap="round" />
                   </svg>
-                  {{ plan.tokens }} {{ t('pricing.tokenSuffix') }}
+                  {{ t('common.tangaCount', plan.tokens) }}
                 </span>
               </div>
 
@@ -184,7 +184,7 @@ const closeAuthModal = () => {
 
         <!-- Billing note -->
         <p class="mt-8 text-center font-mono-custom text-[11px] uppercase tracking-[0.14em] text-[#a39e94]">
-          {{ t(billingNoteKey, { providers: formatProviders(t('pricing.payment.online.or')) }) }}
+          {{ t(billingNoteKey, { providers: formatProviders() }) }}
         </p>
       </div>
     </section>

@@ -11,6 +11,7 @@
 // each would leave ~55px per label on a 390px screen and every one would be
 // truncated.
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AppIcon from './AppIcon.vue'
 
 defineProps({
@@ -21,14 +22,15 @@ defineProps({
 
 const emit = defineEmits(['toggleMenu'])
 const route = useRoute()
+const { t } = useI18n()
 
 // Same paths as the sidebar — the platform's own, never one that redirects
-// here, or the tab could never highlight as current.
+// here, or the tab could never highlight as current. Labels are message keys.
 const tabs = [
-  { label: 'Bosh sahifa', icon: 'home', to: '/dashboard' },
-  { label: 'Testlar', icon: 'tests', to: '/testlar' },
-  { label: 'Essay', icon: 'essay', to: '/essay' },
-  { label: 'Natijalar', icon: 'results', to: '/natijalarim' },
+  { label: 'appShell.nav.home', icon: 'home', to: '/dashboard' },
+  { label: 'appShell.nav.tests', icon: 'tests', to: '/testlar' },
+  { label: 'appShell.tabs.essay', icon: 'essay', to: '/essay' },
+  { label: 'appShell.nav.results', icon: 'results', to: '/natijalarim' },
 ]
 
 const isActive = (to) => route.path === to || route.path.startsWith(`${to}/`)
@@ -43,7 +45,7 @@ const isActive = (to) => route.path === to || route.path.startsWith(`${to}/`)
   <Teleport to="body">
     <nav
       class="fixed inset-x-0 bottom-0 z-[210] border-t border-app-border bg-app-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
-      aria-label="Asosiy bo‘limlar"
+      :aria-label="t('appShell.tabs.label')"
     >
       <div class="mx-auto flex max-w-[520px] items-stretch">
         <RouterLink
@@ -59,7 +61,7 @@ const isActive = (to) => route.path === to || route.path.startsWith(`${to}/`)
           :aria-current="isActive(tab.to) ? 'page' : undefined"
         >
           <AppIcon :name="tab.icon" :size="21" />
-          <span class="max-w-full truncate">{{ tab.label }}</span>
+          <span class="max-w-full truncate">{{ t(tab.label) }}</span>
         </RouterLink>
 
         <button
@@ -70,7 +72,7 @@ const isActive = (to) => route.path === to || route.path.startsWith(`${to}/`)
           @click="emit('toggleMenu')"
         >
           <AppIcon name="menu" :size="21" />
-          <span>Ko‘proq</span>
+          <span>{{ t('appShell.tabs.more') }}</span>
         </button>
       </div>
     </nav>

@@ -3,11 +3,15 @@
 // where you are, the clock and per-question actions), the question, and a
 // footer bar with the navigation. No sidebar — practising is a focus mode,
 // like the test page.
+import { useI18n } from 'vue-i18n'
 import AppIcon from '@/components/app/AppIcon.vue'
+
+const { t } = useI18n()
 
 defineProps({
   backTo: { type: [String, Object], required: true },
-  backLabel: { type: String, default: 'Orqaga' },
+  // Empty means the default "back", looked up at render.
+  backLabel: { type: String, default: '' },
   title: { type: String, default: '' },
   subtitle: { type: String, default: '' },
   // 0…1, drawn as a hairline under the header; null hides it.
@@ -26,7 +30,7 @@ defineProps({
           class="flex h-10 shrink-0 items-center gap-2 rounded-full pl-2 pr-3 text-[14px] font-medium text-app-muted transition-colors hover:bg-app-tile hover:text-app-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
         >
           <AppIcon name="arrowLeft" :size="18" />
-          <span class="hidden sm:inline">{{ backLabel }}</span>
+          <span class="hidden sm:inline">{{ backLabel || t('bank.actions.back') }}</span>
         </RouterLink>
 
         <div class="min-w-0 flex-1 text-center sm:text-left">

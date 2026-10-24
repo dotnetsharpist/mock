@@ -11,6 +11,7 @@
 // essay page shows the analysis. They used to share one section behind a tab
 // switch, which meant each page was half about something else.
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BrowserFrame from './BrowserFrame.vue'
 import boshSahifaShot from '@/assets/platforma/bosh-sahifa.webp'
 import essayShot from '@/assets/platforma/essay-tahlil.webp'
@@ -23,29 +24,33 @@ const props = defineProps({
   },
 })
 
+const { t } = useI18n()
+
 // The heading and blurb belong to the screen, not to the section: a single
 // sentence covering both a dashboard and an essay checker says nothing about
-// either.
+// either. `copy` names the screen's alt, heading and blurb in landing.preview.
 const screens = {
   'bosh-sahifa': {
     url: 'milliymock.uz/dashboard',
     image: boshSahifaShot,
-    alt: 'MilliyMock platformasining bosh sahifasi',
-    heading: 'Platformani amalda ko‘ring',
-    blurb:
-      'Yechilgan testlar, to‘plangan ballar va o‘sish grafigi — hammasi bitta boshqaruv panelida.',
+    copy: 'landing.preview.dashboard',
   },
   essay: {
     url: 'milliymock.uz/natijalar',
     image: essayShot,
-    alt: 'AI tekshirgan inshoning tahlili',
-    heading: 'Inshoyingiz qanday tekshiriladi',
-    blurb:
-      'Sun’iy intellekt har bir xatoni matn ustida belgilaydi, izohlaydi va yakuniy insho ballini chiqaradi.',
+    copy: 'landing.preview.essay',
   },
 }
 
-const active = computed(() => screens[props.screen] ?? screens['bosh-sahifa'])
+const active = computed(() => {
+  const screen = screens[props.screen] ?? screens['bosh-sahifa']
+  return {
+    ...screen,
+    alt: t(`${screen.copy}.alt`),
+    heading: t(`${screen.copy}.heading`),
+    blurb: t(`${screen.copy}.blurb`),
+  }
+})
 </script>
 
 <template>

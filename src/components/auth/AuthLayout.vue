@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { PLATFORM_HOME, usePlatformEntry } from '@/composables/usePlatformEntry'
+import LanguageSwitch from '@/components/LanguageSwitch.vue'
 import logoMarkDark from '@/assets/logo-mark.png'
 import logoMark from '@/assets/logo-removed.png'
 
@@ -57,13 +58,18 @@ const homePath = computed(() => (hasSession.value ? PLATFORM_HOME : '/'))
 
     <!-- Form panel -->
     <div class="relative flex min-h-screen flex-col px-4 py-7 sm:px-8">
-      <router-link
-        :to="homePath"
-        class="inline-flex items-center gap-2 text-sm font-medium text-[#8a857c] transition hover:text-[#1a1814]"
-      >
-        <span class="text-base">←</span>
-        <span>{{ t('login.home') }}</span>
-      </router-link>
+      <!-- The language switch lives here too: a visitor sent to /register
+           from a platform link has no other chrome to switch with. -->
+      <div class="flex items-center justify-between gap-4">
+        <router-link
+          :to="homePath"
+          class="inline-flex items-center gap-2 text-sm font-medium text-[#8a857c] transition hover:text-[#1a1814]"
+        >
+          <span class="text-base">←</span>
+          <span>{{ t('login.home') }}</span>
+        </router-link>
+        <LanguageSwitch tone="landing" />
+      </div>
 
       <div class="flex flex-1 items-center justify-center py-8">
         <div class="auth-form w-full max-w-md">

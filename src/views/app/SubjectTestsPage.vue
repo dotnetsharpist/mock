@@ -6,6 +6,7 @@
 // Everything here is derived from the live catalogue in stores/testCatalog.js.
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AppTopbar from '@/components/app/AppTopbar.vue'
 import AppCard from '@/components/app/AppCard.vue'
 import AppIcon from '@/components/app/AppIcon.vue'
@@ -27,6 +28,7 @@ defineEmits(['openMenu'])
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const catalog = useTestCatalogStore()
 
 // Destructured so the template auto-unwraps the refs.
@@ -71,23 +73,26 @@ const hasPremium = computed(() => allTests.value.some((test) => test.isPremium))
 
 // State filters. A test in progress is neither finished nor untouched, so the
 // three states map one-to-one onto the three labels.
+//
+// Labels are message keys, translated where they render, so a language switch
+// re-labels the toolbar while the page is open.
 const STATE_FILTERS = [
-  { key: 'all', label: 'Hammasi' },
-  { key: 'done', label: 'Yakunlangan' },
-  { key: 'progress', label: 'Yechilmagan' },
-  { key: 'new', label: 'Boshlanmagan' },
+  { key: 'all', labelKey: 'testsPage.subject.states.all' },
+  { key: 'done', labelKey: 'testsPage.subject.states.done' },
+  { key: 'progress', labelKey: 'testsPage.subject.states.progress' },
+  { key: 'new', labelKey: 'testsPage.subject.states.new' },
 ]
 
 const TYPE_FILTERS = [
-  { key: 'all', label: 'Barcha testlar' },
-  { key: 'free', label: 'Bepul' },
-  { key: 'premium', label: 'Premium' },
+  { key: 'all', labelKey: 'testsPage.subject.types.all' },
+  { key: 'free', labelKey: 'testsPage.subject.types.free' },
+  { key: 'premium', labelKey: 'testsPage.subject.types.premium' },
 ]
 
 const SORTS = [
-  { key: 'new', label: 'Sana: yangi → eski' },
-  { key: 'old', label: 'Sana: eski → yangi' },
-  { key: 'popular', label: 'Ishtirokchilar: ko‘p → kam' },
+  { key: 'new', labelKey: 'testsPage.subject.sorts.new' },
+  { key: 'old', labelKey: 'testsPage.subject.sorts.old' },
+  { key: 'popular', labelKey: 'testsPage.subject.sorts.popular' },
 ]
 
 const search = ref('')
@@ -180,49 +185,49 @@ const goToPage = (value) => {
 const emptyCopy = computed(() => {
   if (!allTests.value.length) {
     return {
-      title: 'Bu fandan test qo‘shilmagan',
-      description: 'Testlar qo‘shilgach, ular shu yerda ochiladi.',
+      title: t('testsPage.subject.empty.noTests.title'),
+      description: t('testsPage.subject.empty.noTests.description'),
     }
   }
   // A search that found nothing is the user's own doing — say what to change.
   if (search.value.trim()) {
     return {
-      title: 'Hech narsa topilmadi',
-      description: `«${search.value.trim()}» bo‘yicha test yo‘q. Boshqa nom yoki sana bilan qidiring.`,
+      title: t('testsPage.subject.empty.noMatch.title'),
+      description: t('testsPage.subject.empty.noMatch.description', { query: search.value.trim() }),
     }
   }
   if (typeFilter.value !== 'all' || stateFilter.value !== 'all') {
     return {
-      title: 'Bu shartga mos test yo‘q',
-      description: 'Filtrlarni o‘zgartirib ko‘ring.',
+      title: t('testsPage.subject.empty.filtered.title'),
+      description: t('testsPage.subject.empty.filtered.description'),
     }
   }
-  return { title: 'Test yo‘q', description: '' }
+  return { title: t('testsPage.subject.empty.none'), description: '' }
 })
 
 const errorCopy = computed(() =>
   catalog.errorKind === 'network'
-    ? { title: 'Internetda uzilish bor', description: 'Ulanishni tekshiring va qayta urinib ko‘ring.' }
-    : { title: 'Testlarni yuklab bo‘lmadi', description: 'Biroz kuting va qayta urinib ko‘ring.' },
+    ? { title: t('appUi.loadErrors.offline'), description: t('appUi.loadErrors.checkAndRetry') }
+    : { title: t('testsPage.subject.loadFailed'), description: t('appUi.loadErrors.waitAndRetry') },
 )
 
 // AppSelect speaks {value,label}; these lists are keyed by `key` because the
 // keys are also the filter's own vocabulary elsewhere in this file.
-const asOptions = (list) => list.map((item) => ({ value: item.key, label: item.label }))
-const typeOptions = asOptions(TYPE_FILTERS)
-const sortOptions = asOptions(SORTS)
+const asOptions = (list) => list.map((item) => ({ value: item.key, label: t(item.labelKey) }))
+const typeOptions = computed(() => asOptions(TYPE_FILTERS))
+const sortOptions = computed(() => asOptions(SORTS))
 </script>
 
 <template>
   <AppTopbar
-    :title="subject ? `${subject.label} testlari` : 'Fan topilmadi'"
-    :subtitle="
+    :title="
       subject
-        ? `${subject.label} fanidan testlarni yeching va bilimlaringizni sinang.`
-        : ''
+        ? t('testsPage.subject.title', { subject: subject.label })
+        : t('testsPage.subject.notFoundTitle')
     "
+    :subtitle="subject ? t('testsPage.subject.subtitle', { subject: subject.label }) : ''"
     back-to="/testlar"
-    back-label="Testlar"
+    :back-label="t('appShell.nav.tests')"
     :user="user"
     @open-menu="$emit('openMenu')"
   />
@@ -255,7 +260,7 @@ const sortOptions = asOptions(SORTS)
           <SkeletonBlock class="mt-5 h-10 w-full !rounded-lg" />
         </div>
       </div>
-      <p class="sr-only" role="status">Testlar yuklanmoqda</p>
+      <p class="sr-only" role="status">{{ t('testsPage.subject.loading') }}</p>
     </template>
 
     <AppCard v-else-if="catalog.errorKind">
@@ -265,9 +270,9 @@ const sortOptions = asOptions(SORTS)
     <AppCard v-else-if="!subject">
       <EmptyState
         icon="tests"
-        title="Bunday fan yo‘q"
-        description="Havola eskirgan bo‘lishi mumkin. Fanlar ro‘yxatidan tanlang."
-        action-label="Fanlarga qaytish"
+        :title="t('testsPage.subject.notFound.title')"
+        :description="t('testsPage.subject.notFound.description')"
+        :action-label="t('testsPage.subject.notFound.action')"
         action-to="/testlar"
       />
     </AppCard>
@@ -277,7 +282,7 @@ const sortOptions = asOptions(SORTS)
       <div v-if="allTests.length" class="mb-5 space-y-3">
         <div class="flex flex-wrap items-center gap-3">
           <label class="relative min-w-[220px] flex-1 sm:max-w-[340px]">
-            <span class="sr-only">Testni qidirish</span>
+            <span class="sr-only">{{ t('testsPage.subject.searchLabel') }}</span>
             <AppIcon
               name="search"
               :size="16"
@@ -286,7 +291,7 @@ const sortOptions = asOptions(SORTS)
             <input
               v-model="search"
               type="search"
-              placeholder="Test nomi yoki sana"
+              :placeholder="t('testsPage.subject.searchPlaceholder')"
               class="w-full rounded-full border border-app-border bg-app-surface py-2.5 pl-10 pr-4 text-[14px] text-app-ink placeholder:text-app-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
             />
           </label>
@@ -300,7 +305,7 @@ const sortOptions = asOptions(SORTS)
             v-model="typeFilter"
             :options="typeOptions"
             icon="filter"
-            aria-label="Test turi"
+            :aria-label="t('testsPage.subject.typeLabel')"
             class="hidden sm:block sm:w-[180px]"
           />
         </div>
@@ -320,7 +325,7 @@ const sortOptions = asOptions(SORTS)
               :aria-pressed="stateFilter === filter.key"
               @click="stateFilter = filter.key"
             >
-              {{ filter.label }}
+              {{ t(filter.labelKey) }}
             </button>
           </div>
 
@@ -328,7 +333,7 @@ const sortOptions = asOptions(SORTS)
             v-model="sort"
             :options="sortOptions"
             icon="sort"
-            aria-label="Tartiblash"
+            :aria-label="t('testsPage.subject.sortLabel')"
             class="sm:w-[230px]"
           />
         </div>
@@ -357,14 +362,20 @@ const sortOptions = asOptions(SORTS)
         v-if="visibleTests.length"
         class="mt-6 flex flex-wrap items-center justify-between gap-4"
       >
-        <p class="text-[13px] text-app-muted">Jami {{ visibleTests.length }} ta test</p>
+        <p class="text-[13px] text-app-muted">
+          {{ t('testsPage.subject.total', visibleTests.length) }}
+        </p>
 
-        <nav v-if="pageCount > 1" class="flex items-center gap-1.5" aria-label="Sahifalar">
+        <nav
+          v-if="pageCount > 1"
+          class="flex items-center gap-1.5"
+          :aria-label="t('testsPage.subject.pages')"
+        >
           <button
             type="button"
             class="flex h-9 w-9 items-center justify-center rounded-lg border border-app-border bg-app-surface text-app-ink transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40"
             :disabled="page === 1"
-            aria-label="Oldingi sahifa"
+            :aria-label="t('testsPage.subject.previousPage')"
             @click="goToPage(page - 1)"
           >
             <AppIcon name="arrowLeft" :size="16" />
@@ -392,7 +403,7 @@ const sortOptions = asOptions(SORTS)
             type="button"
             class="flex h-9 w-9 items-center justify-center rounded-lg border border-app-border bg-app-surface text-app-ink transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40"
             :disabled="page === pageCount"
-            aria-label="Keyingi sahifa"
+            :aria-label="t('testsPage.subject.nextPage')"
             @click="goToPage(page + 1)"
           >
             <AppIcon name="arrowRight" :size="16" />

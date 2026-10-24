@@ -8,6 +8,7 @@
 // passes the result in; until it lands the card renders its own quiet
 // "hisoblanmoqda" state rather than an empty space that later jumps.
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppIcon from './AppIcon.vue'
 import StatusBadge from './StatusBadge.vue'
 import { SUBJECTS, unknownSubject } from './subjects.js'
@@ -19,6 +20,8 @@ const props = defineProps({
 })
 
 defineEmits(['open', 'retake'])
+
+const { t } = useI18n()
 
 const subject = computed(
   () => SUBJECTS[props.result.subjectKey] ?? unknownSubject(props.result.subjectRaw),
@@ -64,7 +67,7 @@ const submittedOn = computed(() => {
 
 const meta = computed(() =>
   [
-    props.result.questionCount ? `${props.result.questionCount} savol` : '',
+    props.result.questionCount ? t('resultUi.questions', props.result.questionCount) : '',
     subject.value.label,
     submittedOn.value,
   ]
@@ -88,10 +91,10 @@ const meta = computed(() =>
         <!-- Graded like any other result, but the student did not hand it in:
              the clock ran out first. -->
         <StatusBadge v-if="result.expired" tone="neutral" class="!px-2 !py-0.5 !text-[10px]">
-          VAQT TUGADI
+          {{ t('resultUi.expired') }}
         </StatusBadge>
         <StatusBadge v-if="result.isPremium" tone="neutral" class="!px-2 !py-0.5 !text-[10px]">
-          PREMIUM
+          {{ t('mathCard.premium') }}
         </StatusBadge>
       </div>
     </div>
@@ -105,7 +108,7 @@ const meta = computed(() =>
          baseline, and mt-auto would collapse the gap. -->
     <div class="mb-4 mt-4">
       <template v-if="isInProgress">
-        <StatusBadge tone="info">Yechilmoqda</StatusBadge>
+        <StatusBadge tone="info">{{ t('resultUi.inProgress') }}</StatusBadge>
       </template>
 
       <template v-else-if="hasScore">
@@ -123,7 +126,7 @@ const meta = computed(() =>
              wonder. The full certificate wording is a sentence; this is the
              short form of it. -->
         <p v-if="!isCertified" class="mt-2 text-[12px] font-medium text-app-bad">
-          Sertifikat uchun yetarli emas
+          {{ t('resultUi.noCertificate') }}
         </p>
       </template>
 
@@ -142,7 +145,7 @@ const meta = computed(() =>
         class="rounded-lg px-2 py-1.5 text-[12.5px] font-semibold text-app-muted transition-colors hover:bg-app-tile hover:text-app-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:cursor-not-allowed disabled:opacity-60"
         @click="$emit('retake', result)"
       >
-        {{ isInProgress ? 'Davom etish' : 'Qayta ishlash' }}
+        {{ isInProgress ? t('resultUi.continue') : t('resultUi.retake') }}
       </button>
 
       <button
@@ -151,7 +154,7 @@ const meta = computed(() =>
         class="inline-flex items-center gap-1.5 rounded-full border border-app-border px-3.5 py-1.5 text-[12.5px] font-bold text-app-ink transition-colors hover:border-app-ink hover:bg-app-ink hover:text-app-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
         @click="$emit('open', result)"
       >
-        Ko‘rish
+        {{ t('mathCard.viewResult') }}
         <AppIcon name="arrowRight" :size="13" />
       </button>
     </div>

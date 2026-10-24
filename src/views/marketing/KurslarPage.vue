@@ -15,32 +15,23 @@
 // screenshot: no course UI exists yet, and shipping a picture of one would
 // promise a product nobody has built. It carries its own arcs and dot grid, so
 // the section adds no decoration of its own.
+import { useI18n } from 'vue-i18n'
 import LandingCta from '@/components/marketing/LandingCta.vue'
 import { usePlatformEntry } from '@/composables/usePlatformEntry'
 import kurslarFigure from '@/assets/landing/kurslar-figure.png'
 
+const { t } = useI18n()
 const { enter } = usePlatformEntry()
 
 // The announcement channel the footer already links to. "Xabardor bo'lish" has
 // to lead somewhere real, and this is where a launch would actually be posted.
 const CHANNEL_URL = 'https://t.me/milliymockuz'
 
+// `id` names the plan's title and body in kurslarPage.plans.
 const plans = [
-  {
-    title: 'Video darslar',
-    body: 'Har bir fan bo‘yicha mavzular ketma-ketligi — imtihonda uchraydigan qismlarni boshidan oxirigacha yopadi.',
-    icon: 'player',
-  },
-  {
-    title: 'Mavzu bo‘yicha mashq',
-    body: 'Dars ortidan o‘sha mavzuning savollari. Zaif joyingiz qayerdaligi darsdan keyin darrov ko‘rinadi.',
-    icon: 'book',
-  },
-  {
-    title: 'Kurs ichida natija kuzatuvi',
-    body: 'Qaysi mavzuni tugatdingiz, qaysi biri qoldi — testlar natijalari bilan bitta joyda.',
-    icon: 'chart',
-  },
+  { id: 'video', icon: 'player' },
+  { id: 'practice', icon: 'book' },
+  { id: 'progress', icon: 'chart' },
 ]
 </script>
 
@@ -86,19 +77,17 @@ const plans = [
           <!-- Copy. The old "Tez orada" badge is gone: the heading already says
                the courses are not ready, so the pill said it twice. -->
           <div>
-            <p class="mb-[16px] text-[14px] font-medium tracking-[0.04em] text-muted">— Kurslar</p>
+            <p class="mb-[16px] text-[14px] font-medium tracking-[0.04em] text-muted">{{ t('kurslarPage.eyebrow') }}</p>
 
             <h1
               class="mb-[20px] text-[38px] font-bold leading-[1.06] tracking-[-0.03em] sm:text-[52px] lg:text-[60px]"
             >
-              Kurslar ustida <br class="hidden sm:block" />
-              <span class="text-accent">ishlanmoqda</span>
+              {{ t('kurslarPage.titleStart') }} <br class="hidden sm:block" />
+              <span class="text-accent">{{ t('kurslarPage.titleHighlight') }}</span>
             </h1>
 
             <p class="mb-[32px] max-w-[480px] text-[17px] leading-[1.7] text-muted">
-              Milliy sertifikatga to‘liq tayyorlaydigan kurslarni tayyorlayapmiz. Tayyor
-              bo‘lgach, shu sahifada ochiladi — sana e’lon qilinganda birinchi bo‘lib
-              platformada bilasiz.
+              {{ t('kurslarPage.lead') }}
             </p>
 
             <div class="flex flex-wrap items-center gap-[14px]">
@@ -121,12 +110,12 @@ const plans = [
                   <path d="M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7" />
                   <path d="M10.3 20a1.94 1.94 0 0 0 3.4 0" />
                 </svg>
-                E’lonlardan xabardor bo‘lish
+                {{ t('kurslarPage.notify') }}
               </a>
 
               <RouterLink
                 :to="enter"
-                aria-label="Testlarni ko‘rish"
+                :aria-label="t('kurslarPage.seeTests')"
                 class="hidden h-[52px] w-[52px] items-center justify-center rounded-full border border-hairline-strong bg-white text-ink sm:inline-flex transition-transform duration-200 hover:scale-[1.06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink motion-reduce:hover:scale-100"
               >
                 <svg
@@ -165,7 +154,7 @@ const plans = [
         <h2
           class="mb-[36px] flex items-center gap-[14px] font-display text-[26px] font-semibold leading-[1.15] tracking-[-0.015em] sm:text-[32px] lg:text-[38px]"
         >
-          Kurslarda nima bo‘ladi?
+          {{ t('kurslarPage.plansTitle') }}
           <svg
             class="hidden h-[22px] w-[62px] shrink-0 text-accent sm:block"
             viewBox="0 0 62 22"
@@ -187,7 +176,7 @@ const plans = [
         <dl class="grid grid-cols-1 gap-[20px] sm:grid-cols-3 lg:gap-[40px]">
           <div
             v-for="(plan, index) in plans"
-            :key="plan.title"
+            :key="plan.id"
             class="relative rounded-[20px] border border-hairline bg-white/60 px-[24px] pb-[26px] pt-[20px]"
           >
             <span
@@ -229,8 +218,12 @@ const plans = [
               </span>
 
               <div>
-                <dt class="mb-[8px] text-[18px] font-bold leading-[1.25]">{{ plan.title }}</dt>
-                <dd class="text-[15px] leading-[1.6] text-muted">{{ plan.body }}</dd>
+                <dt class="mb-[8px] text-[18px] font-bold leading-[1.25]">
+                  {{ t(`kurslarPage.plans.${plan.id}.title`) }}
+                </dt>
+                <dd class="text-[15px] leading-[1.6] text-muted">
+                  {{ t(`kurslarPage.plans.${plan.id}.body`) }}
+                </dd>
               </div>
             </div>
 
@@ -259,11 +252,10 @@ const plans = [
       >
         <div class="max-w-[560px]">
           <h2 class="mb-[10px] text-[22px] font-bold leading-[1.2] sm:text-[26px]">
-            Kutib turmang — tayyorgarlikni bugun boshlang
+            {{ t('kurslarPage.meanwhileTitle') }}
           </h2>
           <p class="text-[16px] leading-[1.65] text-muted">
-            Real imtihon formatidagi testlar va insho tekshirish allaqachon ishlaydi.
-            Kurslar chiqqanda natijalaringiz joyida turadi.
+            {{ t('kurslarPage.meanwhileText') }}
           </p>
         </div>
 
@@ -271,7 +263,7 @@ const plans = [
           :to="enter"
           class="inline-flex shrink-0 items-center gap-[10px] rounded-[12px] bg-ink px-[26px] py-[14px] text-[16px] font-medium text-white transition-transform duration-200 hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink motion-reduce:hover:scale-100"
         >
-          Testlarni ko‘rish <span aria-hidden="true">→</span>
+          {{ t('kurslarPage.seeTests') }} <span aria-hidden="true">→</span>
         </RouterLink>
       </div>
     </section>

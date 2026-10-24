@@ -25,6 +25,7 @@
 // Scoring: 12 mezon (c1–c12) × 0–2 ball = 24 ball (ESSAY_BAND_MAX). The
 // overall band total is expected from the backend alongside the analysis.
 import { AI_REVIEW_MODES, getAiReviewMode } from '@/utils/aiReview'
+import { t } from '@/i18n'
 
 export const ESSAY_BAND_MAX = 24
 // The official certificate scale: the 24-band total is projected linearly
@@ -94,32 +95,36 @@ export function rescaleEssayTotals({ totalScore, maxScore, questions, essayRevie
 }
 
 // Judgment criteria (holistic bands) — labels for known keys; unknown keys
-// fall back to the raw key so new criteria never break the UI.
+// fall back to the raw key so new criteria never break the UI. Labels are
+// i18n keys (`essayAnalysis.criteria`), worded when the view model is built —
+// inside the section's computed, so a language switch re-words them.
 export const judgmentCriteriaMeta = {
-  c1_style: { label: 'Uslub', short: 'C1' },
-  c2_viewpoints: { label: 'Nuqtai nazar', short: 'C2' },
-  c3_content: { label: 'Mazmun va dalillar', short: 'C3' },
-  c4_composition: { label: 'Kompozitsiya', short: 'C4' },
+  c1_style: { labelKey: 'essayAnalysis.criteria.c1_style', short: 'C1' },
+  c2_viewpoints: { labelKey: 'essayAnalysis.criteria.c2_viewpoints', short: 'C2' },
+  c3_content: { labelKey: 'essayAnalysis.criteria.c3_content', short: 'C3' },
+  c4_composition: { labelKey: 'essayAnalysis.criteria.c4_composition', short: 'C4' },
 }
 
 // Error criteria: display order, label and highlight color (light theme).
 // `block: true` renders as a sentence-level left-rail block (whole-sentence
 // structure errors); the rest render as inline highlighter marks.
 export const errorCriteriaMeta = {
-  c5_structure: { label: 'Gap qurilishi', color: '#5b7ea3', block: true },
-  c6_repetition: { label: 'Takror', color: '#b8703c' },
-  c7_spelling: { label: 'Imlo', color: '#c25d52' },
-  c8_punctuation: { label: 'Tinish belgilari', color: '#c08a3e' },
-  c9_affix: { label: "Qo'shimchalar", color: '#7d6bb0' },
-  c10_word_style: { label: "So'z qo'llash", color: '#4f8f88' },
-  c12_register: { label: "Uslubiy me'yor", color: '#b56b93' },
+  c5_structure: { labelKey: 'essayAnalysis.criteria.c5_structure', color: '#5b7ea3', block: true },
+  c6_repetition: { labelKey: 'essayAnalysis.criteria.c6_repetition', color: '#b8703c' },
+  c7_spelling: { labelKey: 'essayAnalysis.criteria.c7_spelling', color: '#c25d52' },
+  c8_punctuation: { labelKey: 'essayAnalysis.criteria.c8_punctuation', color: '#c08a3e' },
+  c9_affix: { labelKey: 'essayAnalysis.criteria.c9_affix', color: '#7d6bb0' },
+  c10_word_style: { labelKey: 'essayAnalysis.criteria.c10_word_style', color: '#4f8f88' },
+  c12_register: { labelKey: 'essayAnalysis.criteria.c12_register', color: '#b56b93' },
 }
 
 const FALLBACK_CAT_META = { label: '', color: '#8a857c', block: false }
 
 // Meta for a category key, safe for unknown keys (label falls back to the key).
+// The label is worded on every call, so call it at render.
 export function catMeta(cat) {
-  return errorCriteriaMeta[cat] || { ...FALLBACK_CAT_META, label: String(cat) }
+  const meta = errorCriteriaMeta[cat]
+  return meta ? { ...meta, label: t(meta.labelKey) } : { ...FALLBACK_CAT_META, label: String(cat) }
 }
 
 // Raw AI response → view model. Never throws on malformed input.
@@ -159,7 +164,7 @@ export function normalizeEssayAnalysis(raw) {
     const meta = judgmentCriteriaMeta[key]
     return {
       key,
-      label: meta?.label || key,
+      label: meta ? t(meta.labelKey) : key,
       short: meta?.short || key.toUpperCase(),
       reasoning: String(value?.reasoning || ''),
       band: Number.isFinite(band) ? band : 0,

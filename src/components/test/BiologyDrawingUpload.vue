@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 // Drawing-upload block for Biology's AI-checked questions (41–43). The written
 // answer parts (a/b/c) are rendered by the shared TestQuestionGroup above this;
@@ -11,6 +12,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update-uploads'])
+
+const { t } = useI18n()
 
 const MAX_PAGES = 6
 const MAX_FILE_MB = 25
@@ -54,16 +57,17 @@ const addFiles = async (fileList) => {
   for (const file of files) {
     const looksImage =
       file.type.startsWith('image/') || /\.(jpe?g|png|heic|heif|webp)$/i.test(file.name || '')
+    const name = file.name || t('testFlow.drawing.fileFallbackName')
     if (!looksImage) {
-      uploadError.value = 'Faqat rasm fayllarini yuklash mumkin.'
+      uploadError.value = t('testFlow.drawing.errorOnlyImages')
       continue
     }
     if (props.uploads.length >= MAX_PAGES) {
-      uploadError.value = `Ko'pi bilan ${MAX_PAGES} ta rasm yuklash mumkin.`
+      uploadError.value = t('testFlow.drawing.errorMaxImages', { max: MAX_PAGES })
       break
     }
     if (file.size > MAX_FILE_BYTES) {
-      uploadError.value = `"${file.name || 'rasm'}" hajmi ${MAX_FILE_MB} MB dan katta.`
+      uploadError.value = t('testFlow.drawing.errorTooLarge', { name, mb: MAX_FILE_MB })
       continue
     }
     try {
@@ -71,10 +75,10 @@ const addFiles = async (fileList) => {
       const id = `draw-${++uploadSeq}-${file.lastModified || file.size}`
       emit('update-uploads', props.order, [
         ...props.uploads,
-        { id, name: file.name || 'chizma', dataUrl },
+        { id, name: file.name || t('testFlow.drawing.drawingFallbackName'), dataUrl },
       ])
     } catch {
-      uploadError.value = `"${file.name || 'rasm'}" ni o'qib bo'lmadi.`
+      uploadError.value = t('testFlow.drawing.errorDecodeFailed', { name })
     }
   }
 }
@@ -109,9 +113,9 @@ const removeUpload = (id) => {
           <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 3v3m0 12v3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1M3 12h3m12 0h3M5.6 18.4l2.1-2.1m8.6-8.6 2.1-2.1" />
           </svg>
-          AI tekshiradi
+          {{ t('testPage.aiReview.badge') }}
         </span>
-        Chizmani rasm ko'rinishida yuklang
+        {{ t('testFlow.drawing.label') }}
       </label>
       <span class="font-mono-custom text-[10px] font-normal uppercase tracking-[0.14em] text-[#8a857c] sm:text-[11px]">
         {{ uploads.length }} / {{ MAX_PAGES }}
@@ -132,7 +136,7 @@ const removeUpload = (id) => {
           <path d="m3 15 5-4 4 3 3-2 6 5" />
         </svg>
       </div>
-      <p class="text-[14px] font-medium text-[#1a1814] sm:text-[15px]">Chizma rasmini bu yerga tashlang</p>
+      <p class="text-[14px] font-medium text-[#1a1814] sm:text-[15px]">{{ t('testFlow.drawing.dropTitle') }}</p>
       <div class="mt-3.5 flex flex-wrap items-center justify-center gap-2.5">
         <button
           type="button"
@@ -143,7 +147,7 @@ const removeUpload = (id) => {
             <path d="M14.5 4h-5L8 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-4l-1.5-2Z" />
             <circle cx="12" cy="13" r="3.4" />
           </svg>
-          Rasmga olish
+          {{ t('testPage.aiReview.takePhoto') }}
         </button>
         <button
           type="button"
@@ -154,11 +158,11 @@ const removeUpload = (id) => {
             <path d="M12 16V4m0 0 4 4m-4-4-4 4" />
             <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
           </svg>
-          Fayl tanlash
+          {{ t('testPage.aiReview.pickPhoto') }}
         </button>
       </div>
       <p class="font-mono-custom mt-3.5 text-[10px] font-normal uppercase tracking-[0.14em] text-[#9b958c]">
-        JPG / PNG / HEIC · ko'pi bilan {{ MAX_PAGES }} ta
+        {{ t('testFlow.drawing.hint', { max: MAX_PAGES }) }}
       </p>
       <input ref="fileInput" type="file" accept="image/*" multiple class="hidden" @change="onFilesPicked" />
       <input ref="cameraInput" type="file" accept="image/*" capture="environment" class="hidden" @change="onFilesPicked" />
@@ -174,13 +178,13 @@ const removeUpload = (id) => {
       >
         <img :src="upload.dataUrl" :alt="upload.name" class="h-40 w-full object-cover" />
         <span class="font-mono-custom absolute left-2 top-2 rounded-md bg-black/75 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-white">
-          Chizma {{ index + 1 }}
+          {{ t('testFlow.drawing.badge', { n: index + 1 }) }}
         </span>
         <button
           type="button"
           @click="removeUpload(upload.id)"
           class="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border border-[#e0ddd7] bg-white text-[#6b6760] shadow-[0_2px_8px_rgba(15,23,42,0.12)] transition hover:border-black hover:text-black"
-          aria-label="Rasmni o'chirish"
+          :aria-label="t('testFlow.drawing.remove')"
         >
           <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
             <path d="M6 6l12 12M18 6 6 18" />
@@ -197,7 +201,7 @@ const removeUpload = (id) => {
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <path d="M12 5v14M5 12h14" />
         </svg>
-        <span class="text-[13px] font-medium">Yana qo'shish</span>
+        <span class="text-[13px] font-medium">{{ t('testFlow.drawing.addMore') }}</span>
       </button>
     </div>
   </div>

@@ -1,5 +1,26 @@
 import { createI18n } from 'vue-i18n'
-import messages from './messages'
+import baseMessages from './messages'
+
+// Each screen group keeps its strings in its own file under ./locales — one
+// `{ uz: {...}, ru: {...} }` per file, under top-level keys no other file uses —
+// so translating one area never means editing the same 1,500-line file as
+// another. They are folded into the base messages here.
+const localeModules = import.meta.glob('./locales/*.js', { eager: true, import: 'default' })
+
+const messages = Object.values(localeModules).reduce(
+  (merged, module) => {
+    for (const lang of Object.keys(merged)) {
+      for (const [key, value] of Object.entries(module[lang] || {})) {
+        if (key in merged[lang]) {
+          throw new Error(`i18n: "${lang}.${key}" is defined twice`)
+        }
+        merged[lang][key] = value
+      }
+    }
+    return merged
+  },
+  { uz: { ...baseMessages.uz }, ru: { ...baseMessages.ru } },
+)
 
 const fallbackLocale = 'uz'
 
@@ -61,4 +82,11 @@ const setLocale = (nextLocale) => {
 
 setLocale(i18n.global.locale.value)
 
-export { i18n, setLocale }
+// For code outside components (composables, utils, stores). Inside a computed
+// or a render it is as reactive as `t` from useI18n — it reads the same locale.
+const t = (...args) => i18n.global.t(...args)
+
+// The BCP 47 tag for Intl / toLocale* calls.
+const intlLocale = () => (i18n.global.locale.value === 'ru' ? 'ru-RU' : 'uz-UZ')
+
+export { i18n, setLocale, t, intlLocale }

@@ -2,9 +2,12 @@
 // "Xato haqida xabar berish" — a student flags a wrong key, a broken formula or
 // an unclear question; it lands in the admin panel's report queue.
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BankDialog from './BankDialog.vue'
 import { REPORT_CATEGORIES } from './bankLabels.js'
 import { questionBankApi } from '@/utils/questionBankApi'
+
+const { t } = useI18n()
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -50,9 +53,9 @@ async function send() {
 <template>
   <BankDialog
     :open="open"
-    title="Xato haqida xabar berish"
+    :title="t('bank.actions.report')"
     icon="flag"
-    :confirm-label="busy ? 'Yuborilmoqda…' : 'Yuborish'"
+    :confirm-label="busy ? t('bank.actions.sending') : t('bank.actions.send')"
     :busy="busy"
     :confirm-disabled="!canSend"
     :error="error"
@@ -60,11 +63,11 @@ async function send() {
     @close="emit('close')"
   >
     <p class="text-[14px] leading-[1.6] text-app-muted">
-      Savolda xato topdingizmi? Xabaringiz tekshiruvchilarga boradi.
+      {{ t('bank.report.intro') }}
     </p>
 
     <fieldset class="mt-4">
-      <legend class="text-[13px] font-semibold text-app-ink">Nima xato?</legend>
+      <legend class="text-[13px] font-semibold text-app-ink">{{ t('bank.report.what') }}</legend>
       <div class="mt-2 space-y-1.5">
         <label
           v-for="item in REPORT_CATEGORIES"
@@ -86,12 +89,12 @@ async function send() {
     </fieldset>
 
     <label class="mt-4 block">
-      <span class="text-[13px] font-semibold text-app-ink">Batafsil</span>
+      <span class="text-[13px] font-semibold text-app-ink">{{ t('bank.report.details') }}</span>
       <textarea
         v-model="message"
         rows="4"
         :maxlength="MAX_LENGTH"
-        placeholder="Masalan: B javob ham to‘g‘ri, chunki…"
+        :placeholder="t('bank.report.placeholder')"
         class="mt-2 w-full resize-none rounded-xl border border-app-border bg-app-surface px-3.5 py-3 text-[14px] leading-[1.6] text-app-ink outline-none placeholder:text-app-muted focus:border-app-ink"
       ></textarea>
       <span class="mt-1 block text-right text-[12px] text-app-muted">{{ message.length }}/{{ MAX_LENGTH }}</span>

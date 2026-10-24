@@ -51,9 +51,14 @@ const currentExplanation = ref(null)
 const activeAttemptId = ref(null)
 const hasSubmittedResult = ref(false)
 const isFinalizingSubmission = ref(false)
-// Subject display name for the certificate (e.g. "Matematika"). The test-detail
+// The test's backend subject (e.g. "Math"); null until resolved. The test-detail
 // endpoint omits the subject, so we resolve it from the test list by id.
-const testSubjectName = ref('')
+const testSubject = ref(null)
+// Its display name for the certificate (e.g. "Matematika"), read at render so
+// it follows a language switch.
+const testSubjectName = computed(() =>
+  testSubject.value === null ? '' : subjectDisplayName(testSubject.value),
+)
 
 let reportCloseTimeout = null
 let previousBodyOverflow = ''
@@ -515,7 +520,7 @@ const filteredQuestions = computed(() => {
     const questionTextRaw = questionTranslation?.text || getEntityText(sourceQuestion)
 
     const titleSource =
-      stripHtml(questionTextRaw) || `Savol ${displayLabel}`
+      stripHtml(questionTextRaw) || t('explanation.questionNumber', { n: displayLabel })
 
     const questionPlain = stripHtml(questionTextRaw)
 
@@ -1068,7 +1073,7 @@ async function resolveTestSubjectName(testId) {
   // Cached when the student came from Testlar — no request needed.
   const cached = catalog.subjectOf(testId)
   if (cached) {
-    testSubjectName.value = subjectDisplayName(cached)
+    testSubject.value = cached
     return
   }
 
@@ -1079,7 +1084,8 @@ async function resolveTestSubjectName(testId) {
     const payload = await response.json()
     const list = Array.isArray(payload?.data) ? payload.data : []
     const match = list.find((item) => String(item.id) === String(testId))
-    testSubjectName.value = subjectDisplayName(match?.subject)
+    // No match still resolves: subjectDisplayName falls back to the default.
+    testSubject.value = match?.subject ?? ''
   } catch {
     // Leave empty → the certificate falls back to its default subject.
   }
@@ -1119,7 +1125,7 @@ function reconcileBiologyPolling({ initial = false } = {}) {
       continue
     }
     if (!initial && !seenBiologyReviewGroupIds.has(questionGroupId)) {
-      message.success('AI tekshiruvi tayyor!')
+      message.success(t('explanation.aiReviewReady'))
     }
     seenBiologyReviewGroupIds.add(questionGroupId)
   }
@@ -1155,7 +1161,7 @@ async function loadResults() {
   const attemptId = requestedAttemptId.value || activeAttemptId.value
 
   if (!attemptId) {
-    testLoadError.value = 'Urinish identifikatori topilmadi.'
+    testLoadError.value = t('explanation.errors.missingAttemptId')
     return
   }
 
@@ -1195,7 +1201,7 @@ async function loadResults() {
     }
 
     testLoadError.value =
-      error instanceof Error ? error.message : 'Natijani yuklashda xatolik yuz berdi.'
+      error instanceof Error ? error.message : t('explanation.errors.loadFailed')
   } finally {
     isLoadingTest.value = false
   }
@@ -1206,7 +1212,7 @@ async function finalizeTestSubmission() {
   const attemptId = requestedAttemptId.value || activeAttemptId.value
 
   if (!testId || !attemptId) {
-    throw new Error('Test yoki urinish identifikatori topilmadi.')
+    throw new Error(t('explanation.errors.missingIds'))
   }
 
   activeAttemptId.value = Number(attemptId)
@@ -1265,7 +1271,7 @@ async function initializeExplanationPage() {
     }
   } catch (error) {
     testLoadError.value =
-      error instanceof Error ? error.message : 'Testni topshirishda xatolik yuz berdi.'
+      error instanceof Error ? error.message : t('explanation.errors.submitFailed')
     // Submission failed — don't leave a zeroed, official-looking certificate
     // open on top of the (otherwise hidden) error. Close it so the failure is
     // actually visible to the user instead of a fake empty result.
@@ -1302,7 +1308,7 @@ async function loadExplanation(questionId) {
     }
   } catch (error) {
     explanationError.value =
-      error instanceof Error ? error.message : 'Tushuntirishni yuklashda xatolik yuz berdi.'
+      error instanceof Error ? error.message : t('explanation.errors.explanationFailed')
   } finally {
     isLoadingExplanation.value = false
   }
@@ -1707,14 +1713,14 @@ function complexityBadgeClass(complexity) {
 
 function complexityLabel(complexity) {
   if (complexity === 'Easy') {
-    return 'Oson'
+    return t('explanationPage.complexity.Easy')
   }
 
   if (complexity === 'Medium') {
-    return "O‘rta"
+    return t('explanationPage.complexity.Medium')
   }
 
-  return 'Qiyin'
+  return t('explanationPage.complexity.Hard')
 }
 
 function statusDotClass(status) {
@@ -1754,14 +1760,14 @@ function answerFeedbackClass(status) {
 
 function answerFeedbackText(question) {
   if (question.status === 'correct') {
-    return `To'g'ri! Javob: ${question.correctAnswer}`
+    return t('explanation.feedback.correct', { answer: question.correctAnswer })
   }
 
   if (question.status === 'omitted') {
-    return `Siz bu savolni o'tkazib yubordingiz. To'g'ri javob: ${question.correctAnswer}`
+    return t('explanation.feedback.omitted', { answer: question.correctAnswer })
   }
 
-  return `Noto'g'ri. To'g'ri javob: ${question.correctAnswer}`
+  return t('explanation.feedback.incorrect', { answer: question.correctAnswer })
 }
 </script>
 
@@ -1776,20 +1782,20 @@ function answerFeedbackText(question) {
 
     <div class="relative z-10 mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 sm:pt-10 lg:px-8">
       <div class="mb-4 flex items-center gap-1.5 text-xs text-[#a39e94] sm:mb-6">
-        <RouterLink :to="PLATFORM_HOME" class="cursor-default transition-colors hover:text-[#8a857c] cursor-pointer">Bosh sahifa</RouterLink>
+        <RouterLink :to="PLATFORM_HOME" class="cursor-default transition-colors hover:text-[#8a857c] cursor-pointer">{{ t('appShell.nav.home') }}</RouterLink>
         <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="m9 18 6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
-        <span class="text-[#6b6760]">Natijalar Tahlili</span>
+        <span class="text-[#6b6760]">{{ t('explanation.title') }}</span>
       </div>
 
       <div class="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 class="text-[clamp(22px,5vw,30px)] font-extrabold leading-[1.15] tracking-[-0.05em] text-[#1a1814]">
-            Natijalar Tahlili
+            {{ t('explanation.title') }}
           </h1>
           <p class="mt-1.5 text-sm text-[#a39e94]">
-            {{ testStore.currentTest?.title || "Test natijasi" }}
+            {{ testStore.currentTest?.title || t('explanation.resultFallback') }}
           </p>
         </div>
 
@@ -1809,7 +1815,7 @@ function answerFeedbackText(question) {
                 <circle cx="12" cy="12" r="3" />
               </svg>
             </span>
-            Sertifikatni ko'rish
+            {{ t('explanation.viewCertificate') }}
           </button>
         </div>
       </div>
@@ -1836,14 +1842,14 @@ function answerFeedbackText(question) {
               {{ scorePercent }}%
             </text>
             <text x="55" y="67" text-anchor="middle" fill="#a39e94" font-size="9.5" font-weight="500">
-              Ball
+              {{ t('testPage.scoreLabel') }}
             </text>
           </svg>
 
           <div class="text-center sm:mt-2">
-            <span class="text-[11px] font-medium uppercase tracking-[0.3px] text-[#a39e94]">Umumiy Ball</span>
+            <span class="text-[11px] font-medium uppercase tracking-[0.3px] text-[#a39e94]">{{ t('explanation.totalScore') }}</span>
             <p class="mt-1 text-sm font-semibold text-[#1a1814] sm:hidden">
-              {{ correctCount }}/{{ totalQuestions }} savol to'g'ri
+              {{ t('explanation.correctOfTotal', { correct: correctCount, total: totalQuestions }) }}
             </p>
           </div>
         </div>
@@ -1907,8 +1913,8 @@ function answerFeedbackText(question) {
 
           <div class="rounded-2xl border border-[#e0ddd7] bg-white px-4 py-4 shadow-[0_1px_4px_rgba(0,0,0,0.04)] sm:px-5">
             <div class="mb-3 flex items-center justify-between">
-              <span class="text-xs font-medium text-[#a39e94]">Jami Savollar</span>
-              <span class="text-sm font-bold text-[#1a1814]">{{ totalQuestions }} ta</span>
+              <span class="text-xs font-medium text-[#a39e94]">{{ t('explanation.totalQuestions') }}</span>
+              <span class="text-sm font-bold text-[#1a1814]">{{ t('explanation.totalQuestionsCount', { n: totalQuestions }) }}</span>
             </div>
 
             <div class="flex h-2 overflow-hidden rounded-full bg-[#ece8e0]">
@@ -2266,7 +2272,7 @@ function answerFeedbackText(question) {
           class="flex flex-col items-center justify-center gap-3 py-16"
         >
           <span class="inline-block h-6 w-6 animate-spin rounded-full border-2 border-[#e0ddd7] border-t-[#4a463f]" />
-          <p v-if="isFinalizingSubmission" class="text-sm text-[#8a857c]">Test topshirilmoqda...</p>
+          <p v-if="isFinalizingSubmission" class="text-sm text-[#8a857c]">{{ t('explanation.submitting') }}</p>
         </div>
 
         <div v-else-if="testLoadError" class="flex flex-col items-center justify-center gap-3 py-16">
@@ -2276,7 +2282,7 @@ function answerFeedbackText(question) {
             class="inline-flex items-center justify-center rounded-full border border-[#e0ddd7] px-4 py-1.5 text-xs font-semibold text-[#1a1814] transition hover:border-[#1a1814] hover:bg-[#1a1814] hover:text-white"
             @click="initializeExplanationPage"
           >
-            Qaytadan urinish
+            {{ t('explanation.retry') }}
           </button>
         </div>
 
@@ -2284,7 +2290,7 @@ function answerFeedbackText(question) {
           v-else-if="filteredQuestions.length === 0 && !hasEssayReview && !essayPending && !hasBiologySection"
           class="flex items-center justify-center py-16"
         >
-          <p class="text-sm text-[#d8d3ca]">Ma'lumot topilmadi</p>
+          <p class="text-sm text-[#d8d3ca]">{{ t('explanation.noData') }}</p>
         </div>
       </section>
 
@@ -2319,25 +2325,25 @@ function answerFeedbackText(question) {
       >
         <div class="flex flex-wrap items-center gap-3">
           <span class="font-mono-custom text-[11px] font-semibold tracking-[0.18em] text-[#bcb6a9]">IV</span>
-          <h2 class="text-xl font-bold tracking-[-0.01em] text-[#1a1814]">Insho tahlili</h2>
+          <h2 class="text-xl font-bold tracking-[-0.01em] text-[#1a1814]">{{ t('explanation.essay.title') }}</h2>
           <span class="font-mono-custom rounded-full border border-[#d8d3ca] bg-white px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-[#8a857c]">
-            AI tekshiruvi
+            {{ t('explanation.essay.aiBadge') }}
           </span>
         </div>
 
         <div class="mt-5 flex items-start gap-3 rounded-[18px] border border-[#e5ded3] bg-[#fffdfa] px-5 py-4 shadow-[0_10px_30px_rgba(26,24,20,0.05)]">
           <span class="mt-0.5 inline-block h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-[#e0ddd7] border-t-[#4a463f]" />
           <div class="min-w-0">
-            <p class="text-[14px] font-semibold text-[#1a1814]">Insho tahlili tayyorlanmoqda</p>
+            <p class="text-[14px] font-semibold text-[#1a1814]">{{ t('explanation.essay.pendingTitle') }}</p>
             <p class="mt-0.5 text-[13px] leading-relaxed text-[#8a857c]">
-              AI inshongizni baholamoqda. Tahlil tayyor bo‘lgach, shu sahifada ko‘rinadi — birozdan so‘ng qayta yangilang.
+              {{ t('explanation.essay.pendingText') }}
             </p>
           </div>
         </div>
 
         <details class="group mt-5 overflow-hidden rounded-[18px] bg-white ring-1 ring-[#eeeae2] shadow-[0_10px_30px_rgba(26,24,20,0.05)]">
           <summary class="flex cursor-pointer items-center justify-between px-5 py-4 text-[14px] font-semibold text-[#1a1814] transition hover:bg-[#faf8f4]">
-            <span>Sizning insho javobingiz</span>
+            <span>{{ t('explanation.essay.yourEssay') }}</span>
             <svg class="h-4 w-4 text-[#8a857c] transition-transform duration-200 group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
@@ -2363,14 +2369,14 @@ function answerFeedbackText(question) {
               <div class="min-w-0 flex-1 pr-4">
                 <TestInlineMathText
                   tag="p"
-                  :text="currentQuestion.groupTitle || testStore.currentTest?.title || 'Test natijasi'"
+                  :text="currentQuestion.groupTitle || testStore.currentTest?.title || t('explanation.resultFallback')"
                   wrapper-class="line-clamp-2 break-words text-[11px] font-medium uppercase tracking-[0.5px] text-[#a39e94]"
                 />
               </div>
 
               <div class="flex shrink-0 items-center gap-2">
                 <span class="hidden rounded-full bg-[#faf8f4] px-3 py-1 text-xs font-medium text-[#8a857c] sm:inline-flex">
-                  Savol {{ currentQuestion.displayIndex }}
+                  {{ t('explanation.questionNumber', { n: currentQuestion.displayIndex }) }}
                 </span>
                 <button
                   type="button"
@@ -2392,7 +2398,7 @@ function answerFeedbackText(question) {
                 :class="activeTab === 'question' ? 'bg-[#1a1814] text-white' : 'bg-[#faf8f4] text-[#8a857c]'"
                 @click="activeTab = 'question'"
               >
-                Savol
+                {{ t('testPage.questionLabel') }}
               </button>
               <button
                 type="button"
@@ -2400,7 +2406,7 @@ function answerFeedbackText(question) {
                 :class="activeTab === 'answer' ? 'bg-[#1a1814] text-white' : 'bg-[#faf8f4] text-[#8a857c]'"
                 @click="activeTab = 'answer'"
               >
-                Javob
+                {{ t('explanation.answerTab') }}
               </button>
             </div>
           </div>
@@ -2415,7 +2421,7 @@ function answerFeedbackText(question) {
                     :text="currentQuestion.groupTitle"
                     wrapper-class="mb-2 break-words text-[11px] font-semibold uppercase tracking-[0.18em] text-[#a39e94]"
                   />
-                  <h3 class="mb-3.5 text-[15px] font-bold text-[#1a1814]">Savol {{ currentQuestion.displayIndex }}</h3>
+                  <h3 class="mb-3.5 text-[15px] font-bold text-[#1a1814]">{{ t('explanation.questionNumber', { n: currentQuestion.displayIndex }) }}</h3>
                   <TestInlineMathText
                     v-if="currentQuestion.questionText"
                     tag="div"
@@ -2423,7 +2429,7 @@ function answerFeedbackText(question) {
                     wrapper-class="mb-5 break-words text-sm leading-[1.7] text-[#6b6760]"
                   />
                   <p v-else class="mb-5 text-sm italic text-[#a39e94]">
-                    Savol matni mavjud emas.
+                    {{ t('explanation.noQuestionText') }}
                   </p>
 
                   <div
@@ -2432,7 +2438,7 @@ function answerFeedbackText(question) {
                   >
                     <img
                       :src="currentQuestion.imageUrl"
-                      :alt="`Savol ${currentQuestion.displayIndex}`"
+                      :alt="t('explanation.questionNumber', { n: currentQuestion.displayIndex })"
                       class="max-h-[420px] w-auto max-w-full"
                     />
                   </div>
@@ -2441,7 +2447,7 @@ function answerFeedbackText(question) {
 
               <div class="review-scrollbar min-w-0 overflow-y-auto bg-[#faf8f4] px-8 py-6">
                 <div class="min-w-0">
-                  <h3 class="mb-4 text-[15px] font-bold text-[#1a1814]">Javob variantlari</h3>
+                  <h3 class="mb-4 text-[15px] font-bold text-[#1a1814]">{{ t('explanation.answerOptions') }}</h3>
 
                   <div v-if="currentQuestion.answerOptions?.length" class="mb-5">
                     <div
@@ -2456,16 +2462,16 @@ function answerFeedbackText(question) {
                         v-if="showAnswer && option.letter === currentQuestion.correctAnswer"
                         class="ml-2 text-xs font-semibold text-green-600"
                       >
-                        To'g'ri
+                        {{ t('explanation.correctMark') }}
                       </span>
                     </div>
                   </div>
 
                   <div v-else class="mb-5">
-                    <span class="text-[13px] text-[#8a857c]">Sizning javobingiz:</span>
+                    <span class="text-[13px] text-[#8a857c]">{{ t('explanationPage.yourAnswer') }}:</span>
                     <div class="mt-2">
                       <span v-if="currentQuestion.status === 'omitted'" class="text-sm italic text-[#a39e94]">
-                        - (O'tkazilgan)
+                        {{ t('explanation.omittedAnswer') }}
                       </span>
                       <TestInlineMathText
                         v-else
@@ -2485,11 +2491,11 @@ function answerFeedbackText(question) {
                   </div>
 
                   <div>
-                    <h4 class="mb-2.5 text-sm font-bold text-[#1a1814]">Tushuntirish</h4>
+                    <h4 class="mb-2.5 text-sm font-bold text-[#1a1814]">{{ t('explanation.explanationTitle') }}</h4>
 
                     <div v-if="isLoadingExplanation" class="flex items-center gap-2 py-2 text-[13px] text-[#a39e94]">
                       <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[#e0ddd7] border-t-[#6b6760]" />
-                      <span>Yuklanmoqda...</span>
+                      <span>{{ t('explanation.loading') }}</span>
                     </div>
 
                     <p v-else-if="explanationError" class="text-[13px] text-red-600">
@@ -2510,12 +2516,12 @@ function answerFeedbackText(question) {
                         rel="noopener noreferrer"
                         class="inline-flex items-center gap-2 rounded-full border border-[#e0ddd7] bg-[#faf8f4] px-4 py-2 text-[13px] font-semibold text-[#1a1814] transition hover:border-[#1a1814] hover:bg-[#f0ece4]"
                       >
-                        <span>Video izohni ko'rish</span>
+                        <span>{{ t('explanation.watchVideo') }}</span>
                       </a>
                     </template>
 
                     <p v-else class="text-[13px] italic text-[#a39e94]">
-                      Tushuntirish mavjud emas.
+                      {{ t('explanation.noExplanation') }}
                     </p>
                   </div>
                 </div>
@@ -2531,7 +2537,7 @@ function answerFeedbackText(question) {
                     :text="currentQuestion.groupTitle"
                     wrapper-class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#a39e94]"
                   />
-                  <h3 class="mb-3.5 text-[15px] font-bold text-[#1a1814]">Savol {{ currentQuestion.displayIndex }}</h3>
+                  <h3 class="mb-3.5 text-[15px] font-bold text-[#1a1814]">{{ t('explanation.questionNumber', { n: currentQuestion.displayIndex }) }}</h3>
                   <TestInlineMathText
                     v-if="currentQuestion.questionText"
                     tag="div"
@@ -2539,7 +2545,7 @@ function answerFeedbackText(question) {
                     wrapper-class="mb-5 break-words text-sm leading-[1.7] text-[#6b6760]"
                   />
                   <p v-else class="mb-5 text-sm italic text-[#a39e94]">
-                    Savol matni mavjud emas.
+                    {{ t('explanation.noQuestionText') }}
                   </p>
 
                   <div
@@ -2548,7 +2554,7 @@ function answerFeedbackText(question) {
                   >
                     <img
                       :src="currentQuestion.imageUrl"
-                      :alt="`Savol ${currentQuestion.displayIndex}`"
+                      :alt="t('explanation.questionNumber', { n: currentQuestion.displayIndex })"
                       class="max-h-[360px] w-auto max-w-full"
                     />
                   </div>
@@ -2557,7 +2563,7 @@ function answerFeedbackText(question) {
 
               <div v-else class="bg-[#faf8f4] px-4 py-5">
                 <div>
-                  <h3 class="mb-4 text-[15px] font-bold text-[#1a1814]">Javob variantlari</h3>
+                  <h3 class="mb-4 text-[15px] font-bold text-[#1a1814]">{{ t('explanation.answerOptions') }}</h3>
 
                   <div v-if="currentQuestion.answerOptions?.length" class="mb-5">
                     <div
@@ -2572,16 +2578,16 @@ function answerFeedbackText(question) {
                         v-if="showAnswer && option.letter === currentQuestion.correctAnswer"
                         class="ml-2 text-xs font-semibold text-green-600"
                       >
-                        To'g'ri
+                        {{ t('explanation.correctMark') }}
                       </span>
                     </div>
                   </div>
 
                   <div v-else class="mb-5">
-                    <span class="text-[13px] text-[#8a857c]">Sizning javobingiz:</span>
+                    <span class="text-[13px] text-[#8a857c]">{{ t('explanationPage.yourAnswer') }}:</span>
                     <div class="mt-2">
                       <span v-if="currentQuestion.status === 'omitted'" class="text-sm italic text-[#a39e94]">
-                        - (O'tkazilgan)
+                        {{ t('explanation.omittedAnswer') }}
                       </span>
                       <TestInlineMathText
                         v-else
@@ -2601,11 +2607,11 @@ function answerFeedbackText(question) {
                   </div>
 
                   <div>
-                    <h4 class="mb-2.5 text-sm font-bold text-[#1a1814]">Tushuntirish</h4>
+                    <h4 class="mb-2.5 text-sm font-bold text-[#1a1814]">{{ t('explanation.explanationTitle') }}</h4>
 
                     <div v-if="isLoadingExplanation" class="flex items-center gap-2 py-2 text-[13px] text-[#a39e94]">
                       <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[#e0ddd7] border-t-[#6b6760]" />
-                      <span>Yuklanmoqda...</span>
+                      <span>{{ t('explanation.loading') }}</span>
                     </div>
 
                     <p v-else-if="explanationError" class="text-[13px] text-red-600">
@@ -2626,12 +2632,12 @@ function answerFeedbackText(question) {
                         rel="noopener noreferrer"
                         class="inline-flex items-center gap-2 rounded-full border border-[#e0ddd7] bg-[#faf8f4] px-4 py-2 text-[13px] font-semibold text-[#1a1814] transition hover:border-[#1a1814] hover:bg-[#f0ece4]"
                       >
-                        <span>Video izohni ko'rish</span>
+                        <span>{{ t('explanation.watchVideo') }}</span>
                       </a>
                     </template>
 
                     <p v-else class="text-[13px] italic text-[#a39e94]">
-                      Tushuntirish mavjud emas.
+                      {{ t('explanation.noExplanation') }}
                     </p>
                   </div>
                 </div>
@@ -2660,12 +2666,12 @@ function answerFeedbackText(question) {
                     <path d="M5 10L8 13L15 6" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 </div>
-                <span class="text-sm text-[#6b6760]">To'g'ri javobni ko'rsatish</span>
+                <span class="text-sm text-[#6b6760]">{{ t('explanation.showCorrect') }}</span>
               </label>
 
               <div class="flex items-center gap-2">
                 <span class="mr-auto text-xs font-medium text-[#a39e94] sm:hidden">
-                  Savol {{ currentQuestion.displayIndex }}
+                  {{ t('explanation.questionNumber', { n: currentQuestion.displayIndex }) }}
                 </span>
 
                 <button
@@ -2678,7 +2684,7 @@ function answerFeedbackText(question) {
                   <svg class="h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="m15 18-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
-                  <span>Oldingi</span>
+                  <span>{{ t('explanation.previous') }}</span>
                 </button>
 
                 <button
@@ -2688,7 +2694,7 @@ function answerFeedbackText(question) {
                   :disabled="currentQuestionIndex >= totalQuestions - 1"
                   @click="showNextQuestion"
                 >
-                  <span>Keyingi</span>
+                  <span>{{ t('explanation.next') }}</span>
                   <svg class="h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="m9 18 6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
@@ -2733,22 +2739,22 @@ function answerFeedbackText(question) {
                 />
               </svg>
             </div>
-            <h2 class="mb-2 text-lg font-bold text-[#1a1814]">Xabar yuborildi!</h2>
-            <p class="text-sm text-[#a39e94]">Muammoingiz ko'rib chiqiladi.</p>
+            <h2 class="mb-2 text-lg font-bold text-[#1a1814]">{{ t('explanation.report.sentTitle') }}</h2>
+            <p class="text-sm text-[#a39e94]">{{ t('explanation.report.sentText') }}</p>
           </div>
 
           <template v-else>
-            <h2 class="mb-1 text-xl font-bold text-[#1a1814]">Muammo haqida xabar bering</h2>
+            <h2 class="mb-1 text-xl font-bold text-[#1a1814]">{{ t('explanation.report.title') }}</h2>
             <p class="mb-6 text-sm text-[#a39e94]">
-              {{ reportingQuestion ? `Savol ${reportingQuestion.displayIndex}` : `Savol #${reportingQuestionId}` }}
+              {{ reportingQuestion ? t('explanation.questionNumber', { n: reportingQuestion.displayIndex }) : t('explanation.questionId', { id: reportingQuestionId }) }}
             </p>
 
             <div class="mb-4">
-              <label class="mb-2 block text-sm font-semibold text-[#6b6760]">Izoh</label>
+              <label class="mb-2 block text-sm font-semibold text-[#6b6760]">{{ t('explanation.report.comment') }}</label>
               <textarea
                 v-model="reportComment"
                 rows="4"
-                placeholder="Muammoni tasvirlab bering..."
+                :placeholder="t('explanation.report.placeholder')"
                 class="w-full resize-none rounded-xl border-[1.5px] border-[#e0ddd7] bg-white px-3.5 py-3 text-sm leading-[1.6] text-[#1a1814] outline-none transition focus:border-[#1a1814]"
               />
             </div>
@@ -2772,7 +2778,7 @@ function answerFeedbackText(question) {
                   <path d="M4 16.5A3.5 3.5 0 0 0 7.5 20h9a3.5 3.5 0 0 0 0-7H16" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
                 <span class="text-sm" :class="reportFileName ? 'font-semibold text-[#1a1814]' : 'text-[#a39e94]'">
-                  {{ reportFileName || 'Fayl yuklash uchun bosing' }}
+                  {{ reportFileName || t('explanation.report.attach') }}
                 </span>
                 <span v-if="!reportFileName" class="mt-1 text-[11px] text-[#d8d3ca]">PNG, JPG, PDF</span>
               </label>
@@ -2792,7 +2798,7 @@ function answerFeedbackText(question) {
               :disabled="!reportComment.trim()"
               @click="submitReport"
             >
-              Yuborish
+              {{ t('explanation.report.submit') }}
             </button>
           </template>
         </div>
@@ -2810,7 +2816,7 @@ function answerFeedbackText(question) {
           <button
             type="button"
             class="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-white hover:text-black"
-            aria-label="Yuklab olish"
+            :aria-label="t('explanation.download')"
             @click="downloadCertificate"
           >
             <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2820,7 +2826,7 @@ function answerFeedbackText(question) {
           <button
             type="button"
             class="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-white hover:text-black"
-            aria-label="Yopish"
+            :aria-label="t('common.close')"
             @click="closeCertificateModal"
           >
             <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -2843,7 +2849,7 @@ function answerFeedbackText(question) {
           >
             <span class="h-9 w-9 animate-spin rounded-full border-2 border-white/25 border-t-white"></span>
             <span class="font-mono-custom text-[11px] font-medium uppercase tracking-[0.2em] text-white/70">
-              Sertifikat tayyorlanmoqda
+              {{ t('explanation.certificatePreparing') }}
             </span>
           </div>
 

@@ -3,6 +3,7 @@
 // student's progress through it. Only subjects that actually have published
 // questions are shown, the same rule Testlar follows for tests.
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppTopbar from '@/components/app/AppTopbar.vue'
 import AppIcon from '@/components/app/AppIcon.vue'
 import AppCard from '@/components/app/AppCard.vue'
@@ -15,6 +16,8 @@ defineProps({
   user: { type: Object, required: true },
 })
 defineEmits(['openMenu'])
+
+const { t } = useI18n()
 
 const isLoading = ref(true)
 const errorKind = ref('')
@@ -57,15 +60,15 @@ onMounted(load)
 
 const errorCopy = computed(() =>
   errorKind.value === 'network'
-    ? { title: 'Internetda uzilish bor', description: 'Ulanishni tekshiring va sahifani yangilang.' }
-    : { title: 'Savollar bankini yuklab bo‘lmadi', description: 'Biroz kuting va qayta urinib ko‘ring.' },
+    ? { title: t('bank.home.networkTitle'), description: t('bank.home.networkText') }
+    : { title: t('bank.home.errorTitle'), description: t('bank.home.errorText') },
 )
 </script>
 
 <template>
   <AppTopbar
-    title="Savollar banki"
-    subtitle="Mavzular bo‘yicha savollar yeching va xatolaringiz ustida ishlang."
+    :title="t('bank.title')"
+    :subtitle="t('bank.home.subtitle')"
     :user="user"
     @open-menu="$emit('openMenu')"
   />
@@ -85,7 +88,7 @@ const errorCopy = computed(() =>
           <SkeletonBlock class="mt-3 h-3 w-32" />
         </div>
       </div>
-      <p class="sr-only" role="status">Savollar banki yuklanmoqda</p>
+      <p class="sr-only" role="status">{{ t('bank.home.loading') }}</p>
     </template>
 
     <AppCard v-else-if="errorKind">
@@ -95,13 +98,13 @@ const errorCopy = computed(() =>
     <AppCard v-else-if="!entries.length">
       <EmptyState
         icon="layers"
-        title="Hozircha savol qo‘shilmagan"
-        description="Savollar qo‘shilgach, fanlar shu yerda ro‘yxatga chiqadi."
+        :title="t('bank.home.emptyTitle')"
+        :description="t('bank.home.emptyText')"
       />
     </AppCard>
 
     <section v-else>
-      <h2 class="sr-only text-[18px] font-bold tracking-[-0.015em] text-app-ink sm:not-sr-only">Fanlar</h2>
+      <h2 class="sr-only text-[18px] font-bold tracking-[-0.015em] text-app-ink sm:not-sr-only">{{ t('bank.home.subjects') }}</h2>
       <div class="mt-3.5 grid grid-cols-1 gap-3 sm:mt-5 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
         <RouterLink
           v-for="entry in entries"
@@ -118,7 +121,7 @@ const errorCopy = computed(() =>
             <div class="min-w-0 flex-1">
               <p class="text-[16px] font-bold tracking-[-0.01em] text-app-ink">{{ entry.subject.label }}</p>
               <p class="mt-0.5 text-[13px] text-app-muted">
-                {{ entry.total }} ta savol · {{ entry.topics }} ta mavzu
+                {{ t('bank.labels.questionCount', entry.total) }} · {{ t('bank.labels.topicCount', entry.topics) }}
               </p>
             </div>
             <AppIcon name="chevronRight" :size="18" class="shrink-0 text-app-muted" />
@@ -132,11 +135,11 @@ const errorCopy = computed(() =>
               ></div>
             </div>
             <p class="mt-2.5 text-[13px] text-app-muted">
-              <template v-if="entry.answered">
-                <span class="font-semibold text-app-ink">{{ entry.answered }}</span> ta yechilgan ·
-                {{ entry.correct }} tasi to‘g‘ri
-              </template>
-              <template v-else>Hali boshlanmagan</template>
+              <i18n-t v-if="entry.answered" keypath="bank.home.progress" scope="global">
+                <template #answered><span class="font-semibold text-app-ink">{{ entry.answered }}</span></template>
+                <template #correct>{{ entry.correct }}</template>
+              </i18n-t>
+              <template v-else>{{ t('bank.home.notStarted') }}</template>
             </p>
           </div>
         </RouterLink>

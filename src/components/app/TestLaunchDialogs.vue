@@ -7,6 +7,7 @@
 // border — rather than the naive-ui modal the public pages use, so it belongs
 // to this design system (docs/DESIGN.md).
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppIcon from './AppIcon.vue'
 import CoinIcon from './CoinIcon.vue'
 
@@ -22,26 +23,44 @@ const props = defineProps({
 
 const emit = defineEmits(['confirm', 'close', 'topup'])
 
+const { t } = useI18n()
+
 const isOpen = computed(() => Boolean(props.mode && props.test))
 
 const copy = computed(() => {
   if (props.mode === 'purchase') {
     return {
       icon: 'coins',
-      title: 'Premium test',
-      confirmLabel: props.busy ? 'Sotib olinmoqda…' : 'Sotib olish',
+      title: t('testLaunch.premiumTitle'),
+      confirmLabel: props.busy ? t('testLaunch.buying') : t('pricing.buy'),
     }
   }
   if (props.mode === 'topup') {
-    return { icon: 'coins', title: 'Tanga yetarli emas', confirmLabel: 'Hisobni to‘ldirish' }
+    return {
+      icon: 'coins',
+      title: t('testLaunch.notEnoughTitle'),
+      confirmLabel: t('appShell.topbar.topUp'),
+    }
   }
   return {
     icon: 'tests',
     // Re-taking is a different decision from taking it the first time — say so,
     // so a student does not restart a finished test by accident.
-    title: props.test?.state === 'done' ? 'Qaytadan boshlaymizmi?' : 'Testni boshlaymizmi?',
-    confirmLabel: props.busy ? 'Ochilmoqda…' : 'Boshlash',
+    title:
+      props.test?.state === 'done' ? t('testLaunch.restartTitle') : t('testLaunch.startTitle'),
+    confirmLabel: props.busy ? t('appUi.opening') : t('testLaunch.start'),
   }
+})
+
+// "40 savol, 180 daqiqa" — the duration only when the test has one. Each count
+// is its own message so Russian can agree both nouns with their numbers.
+const startDetails = computed(() => {
+  if (!props.test) return ''
+  const parts = [t('appUi.questionCount', props.test.questionCount)]
+  if (props.test.durationMinutes) {
+    parts.push(t('testLaunch.minutes', props.test.durationMinutes))
+  }
+  return parts.join(', ')
 })
 </script>
 
@@ -68,31 +87,29 @@ const copy = computed(() => {
 
         <p class="mt-2 text-[14px] leading-[1.6] text-app-muted">
           <template v-if="mode === 'start'">
-            «{{ test.title }}» — {{ test.questionCount }} savol<template
-              v-if="test.durationMinutes"
-            >, {{ test.durationMinutes }} daqiqa</template>.
-            <template v-if="test.state === 'done'">
-              Bu testni avval yechgansiz; yangi urinish boshlanadi.
+            {{ t('testLaunch.summary', { title: test.title, details: startDetails }) }}
+            {{ test.state === 'done' ? t('testLaunch.retakeNote') : t('testLaunch.timerNote') }}
+          </template>
+          <i18n-t
+            v-else
+            :keypath="mode === 'purchase' ? 'testLaunch.purchaseBody' : 'testLaunch.topUpBody'"
+            tag="span"
+            scope="global"
+          >
+            <template #title>{{ test.title }}</template>
+            <template #cost>
+              <span class="font-semibold text-app-ink">{{ t('common.tangaCount', cost) }}</span>
             </template>
-            <template v-else>Boshlangach vaqt hisoblanadi.</template>
-          </template>
-          <template v-else-if="mode === 'purchase'">
-            «{{ test.title }}» ni ochish uchun
-            <span class="font-semibold text-app-ink">{{ cost }} tanga</span> sarflanadi.
-          </template>
-          <template v-else>
-            Bu testni ochish uchun
-            <span class="font-semibold text-app-ink">{{ cost }} tanga</span> kerak.
-          </template>
+          </i18n-t>
         </p>
 
         <p
           v-if="mode !== 'start'"
           class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-app-sunken px-3 py-1.5 text-[13px] text-app-muted"
         >
-          Hisobingizda
+          {{ t('testLaunch.balance') }}
           <CoinIcon :size="14" class="text-app-coin" />
-          <span class="font-semibold text-app-ink">{{ balance }} tanga</span>
+          <span class="font-semibold text-app-ink">{{ t('common.tangaCount', balance) }}</span>
         </p>
 
         <p v-if="error" class="mt-3 text-[13px] text-app-bad">{{ error }}</p>
@@ -104,7 +121,7 @@ const copy = computed(() => {
             class="rounded-full border border-app-border bg-app-surface px-5 py-2.5 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:opacity-60"
             @click="emit('close')"
           >
-            Bekor qilish
+            {{ t('common.cancel') }}
           </button>
           <button
             type="button"

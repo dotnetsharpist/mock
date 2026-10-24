@@ -4,34 +4,36 @@
 // (`/api/question-bank/*`).
 import { apiFetch, getTestApiBaseUrl, isNetworkError, readJsonBody } from '@/utils/api'
 import { useAuthStore } from '@/stores/auth'
+import { t } from '@/i18n'
 
-// The backend answers in English; students read Uzbek. Known messages are
-// translated one to one, anything else falls back to a line chosen by status.
+// The backend answers in English; students read Uzbek or Russian. Known
+// messages map one to one onto a message key (i18n/locales/questionBank.js),
+// anything else falls back to a line chosen by status. The text is looked up
+// as the error is built, in the language on screen at that moment.
 const SERVER_MESSAGES = {
-  'Question not found': 'Savol topilmadi yoki olib tashlangan.',
-  'Session not found': 'Mashq topilmadi.',
-  'Answer the question to see its solution': 'Yechimni ko‘rish uchun avval javob bering.',
-  'This question was saved by another request; refresh and try again':
-    'Saqlash bir vaqtda ikki marta bosildi. Sahifani yangilab, qayta urinib ko‘ring.',
-  'Unknown report category': 'Xato turini tanlang.',
-  'Describe what is wrong with the question': 'Savolda nima xato ekanini yozing.',
-  'You have already reported this question': 'Siz bu savol haqida allaqachon xabar bergansiz.',
-  'Choose an option': 'Variantni tanlang.',
-  'The option does not belong to this question': 'Bu variant savolga tegishli emas.',
-  'Type an answer': 'Javobingizni yozing.',
-  'This session is already finished': 'Bu mashq allaqachon yakunlangan.',
-  'This question is not part of the session': 'Bu savol mashqqa kirmaydi.',
-  'This question is already answered in this session': 'Bu savolga mashqda javob berib bo‘lgansiz.',
-  'No questions match these filters': 'Tanlangan filtrlarga mos savol yo‘q.',
-  'Count must be positive': 'Savollar sonini kiriting.',
+  'Question not found': 'bank.errors.questionNotFound',
+  'Session not found': 'bank.errors.sessionNotFound',
+  'Answer the question to see its solution': 'bank.errors.answerFirst',
+  'This question was saved by another request; refresh and try again': 'bank.errors.concurrentSave',
+  'Unknown report category': 'bank.errors.unknownCategory',
+  'Describe what is wrong with the question': 'bank.errors.describeProblem',
+  'You have already reported this question': 'bank.errors.alreadyReported',
+  'Choose an option': 'bank.errors.chooseOption',
+  'The option does not belong to this question': 'bank.errors.foreignOption',
+  'Type an answer': 'bank.errors.typeAnswer',
+  'This session is already finished': 'bank.errors.sessionFinished',
+  'This question is not part of the session': 'bank.errors.notInSession',
+  'This question is already answered in this session': 'bank.errors.alreadyAnswered',
+  'No questions match these filters': 'bank.errors.noMatches',
+  'Count must be positive': 'bank.errors.countPositive',
 }
 
 const STATUS_MESSAGES = {
-  400: 'So‘rovda xato bor. Maydonlarni tekshiring.',
-  401: 'Sessiya tugagan. Qaytadan kiring.',
-  403: 'Bu amalga ruxsat yo‘q.',
-  404: 'Topilmadi.',
-  409: 'Bu amal boshqa so‘rov bilan to‘qnashdi. Qayta urinib ko‘ring.',
+  400: 'bank.errors.status400',
+  401: 'bank.errors.status401',
+  403: 'bank.errors.status403',
+  404: 'bank.errors.status404',
+  409: 'bank.errors.status409',
 }
 
 export class BankApiError extends Error {
@@ -47,14 +49,14 @@ export class BankApiError extends Error {
 
 function messageFor(status, serverMessage) {
   const known = SERVER_MESSAGES[String(serverMessage || '').trim()]
-  if (known) return known
+  if (known) return t(known)
   if (String(serverMessage || '').startsWith('The answer cannot be longer than')) {
-    return 'Javob juda uzun — 200 belgidan oshmasin.'
+    return t('bank.errors.answerTooLong')
   }
   if (String(serverMessage || '').startsWith('The message cannot be longer than')) {
-    return 'Xabar juda uzun — 1000 belgidan oshmasin.'
+    return t('bank.errors.messageTooLong')
   }
-  return STATUS_MESSAGES[status] || 'Nimadir xato ketdi. Biroz kutib, qayta urinib ko‘ring.'
+  return t(STATUS_MESSAGES[status] || 'bank.errors.generic')
 }
 
 // Arrays repeat the key (`skillIds=1&skillIds=2`), which is how ASP.NET binds
@@ -87,9 +89,7 @@ async function request(method, path, { query, body } = {}) {
     )
   } catch (error) {
     throw new BankApiError(
-      isNetworkError(error)
-        ? 'Internetda uzilish bor. Ulanishni tekshiring.'
-        : 'Server bilan bog‘lanib bo‘lmadi. Biroz kutib, qayta urinib ko‘ring.',
+      isNetworkError(error) ? t('bank.errors.network') : t('bank.errors.unreachable'),
       { kind: isNetworkError(error) ? 'network' : 'http' },
     )
   }

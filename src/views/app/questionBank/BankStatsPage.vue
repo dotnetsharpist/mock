@@ -4,6 +4,7 @@
 // weak, daily activity, past sessions — and the reset that wipes it all.
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AppTopbar from '@/components/app/AppTopbar.vue'
 import AppCard from '@/components/app/AppCard.vue'
 import AppIcon from '@/components/app/AppIcon.vue'
@@ -14,10 +15,10 @@ import { toneForScore } from '@/components/app/score.js'
 import BankDialog from '@/components/questionBank/BankDialog.vue'
 import {
   DIFFICULTIES,
-  MODE_LABELS,
   bankSubject,
   formatBankDate,
   formatDuration,
+  modeLabel,
   percent,
 } from '@/components/questionBank/bankLabels.js'
 import { questionBankApi } from '@/utils/questionBankApi'
@@ -27,6 +28,7 @@ defineProps({
 })
 defineEmits(['openMenu'])
 
+const { t } = useI18n()
 const route = useRoute()
 const subjectKey = computed(() => String(route.params.subject || ''))
 const subject = computed(() => bankSubject(subjectKey.value))
@@ -82,7 +84,15 @@ const openDomains = reactive({})
 // 53 columns cover the 365 days the API returns. Cells stretch to fill the
 // card; on a phone the grid scrolls and opens on the newest weeks.
 const WEEKS = 53
-const WEEKDAYS = ['Du', '', 'Ch', '', 'Ju', '', 'Ya']
+const weekdays = computed(() => [
+  t('bank.stats.weekdays.mon'),
+  '',
+  t('bank.stats.weekdays.wed'),
+  '',
+  t('bank.stats.weekdays.fri'),
+  '',
+  t('bank.stats.weekdays.sun'),
+])
 
 // Daily rows are dated in Tashkent time (UTC+5), so "today" is too.
 const tashkentToday = () => {
@@ -139,6 +149,11 @@ const levelClass = (count) => {
   return 'bg-app-ink'
 }
 
+const dayTitle = (day) =>
+  day.count
+    ? t('bank.stats.dayAnswersCorrect', { date: day.label, n: day.count, correct: day.correct }, day.count)
+    : t('bank.stats.dayAnswers', { date: day.label, n: day.count }, day.count)
+
 // ── Reset ────────────────────────────────────────────────────────────────
 const resetOpen = ref(false)
 const resetBusy = ref(false)
@@ -161,10 +176,10 @@ async function resetProgress() {
 
 <template>
   <AppTopbar
-    :title="subject ? `${subject.label} — statistika` : 'Fan topilmadi'"
-    :subtitle="subject ? 'Savollar bankidagi natijalaringiz.' : ''"
+    :title="subject ? t('bank.stats.title', { subject: subject.label }) : t('bank.labels.subjectNotFound')"
+    :subtitle="subject ? t('bank.stats.subtitle') : ''"
     :back-to="subject ? listPath : '/savollar-banki'"
-    :back-label="subject ? `${subject.label} savollari` : 'Savollar banki'"
+    :back-label="subject ? t('bank.stats.backToSubject', { subject: subject.label }) : t('bank.title')"
     :user="user"
     @open-menu="$emit('openMenu')"
   />
@@ -173,9 +188,9 @@ async function resetProgress() {
     <AppCard v-if="!subject">
       <EmptyState
         icon="layers"
-        title="Bunday fan yo‘q"
-        description="Fanlar ro‘yxatidan tanlang."
-        action-label="Savollar banki"
+        :title="t('bank.labels.noSuchSubject')"
+        :description="t('bank.stats.noSuchText')"
+        :action-label="t('bank.title')"
         action-to="/savollar-banki"
       />
     </AppCard>
@@ -191,15 +206,15 @@ async function resetProgress() {
     </template>
 
     <AppCard v-else-if="loadError">
-      <EmptyState icon="close" title="Statistikani yuklab bo‘lmadi" :description="loadError" />
+      <EmptyState icon="close" :title="t('bank.stats.loadError')" :description="loadError" />
     </AppCard>
 
     <AppCard v-else-if="!hasActivity">
       <EmptyState
         icon="stats"
-        title="Hali statistika yo‘q"
-        description="Bir nechta savol yeching — natijalaringiz shu yerda paydo bo‘ladi."
-        action-label="Savollarni yechish"
+        :title="t('bank.stats.emptyTitle')"
+        :description="t('bank.stats.emptyText')"
+        :action-label="t('bank.stats.emptyAction')"
         :action-to="listPath"
       />
     </AppCard>
@@ -207,7 +222,7 @@ async function resetProgress() {
     <template v-else-if="stats">
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div class="rounded-2xl border border-app-border bg-app-surface p-4 shadow-app-card sm:p-5">
-          <p class="text-[13px] font-medium text-app-muted">Yechilgan savollar</p>
+          <p class="text-[13px] font-medium text-app-muted">{{ t('bank.stats.answeredQuestions') }}</p>
           <p class="mt-1.5 text-[24px] font-bold tabular-nums text-app-ink sm:text-[28px]">
             {{ stats.answeredQuestionCount }}<span class="text-[15px] font-semibold text-app-muted">/{{ totalQuestions }}</span>
           </p>
@@ -216,31 +231,32 @@ async function resetProgress() {
           </div>
         </div>
         <div class="rounded-2xl border border-app-border bg-app-surface p-4 shadow-app-card sm:p-5">
-          <p class="text-[13px] font-medium text-app-muted">Birinchi urinishda</p>
+          <p class="text-[13px] font-medium text-app-muted">{{ t('bank.labels.firstTry') }}</p>
           <p class="mt-1.5 text-[24px] font-bold tabular-nums sm:text-[28px]" :class="stats.firstTryAccuracy >= 70 ? 'text-app-good' : 'text-app-bad'">
             {{ stats.firstTryAccuracy }}%
           </p>
-          <p class="mt-1 text-[12.5px] text-app-muted">{{ stats.firstTryCorrectCount }} ta savol birinchi urinishda to‘g‘ri</p>
+          <p class="mt-1 text-[12.5px] text-app-muted">{{ t('bank.stats.firstTryCorrect', { n: stats.firstTryCorrectCount }) }}</p>
         </div>
         <div class="rounded-2xl border border-app-border bg-app-surface p-4 shadow-app-card sm:p-5">
-          <p class="text-[13px] font-medium text-app-muted">Hozirgi natija</p>
+          <p class="text-[13px] font-medium text-app-muted">{{ t('bank.stats.currentAccuracy') }}</p>
           <p class="mt-1.5 text-[24px] font-bold tabular-nums sm:text-[28px]" :class="stats.currentAccuracy >= 70 ? 'text-app-good' : 'text-app-bad'">
             {{ stats.currentAccuracy }}%
           </p>
-          <p class="mt-1 text-[12.5px] text-app-muted">
-            <RouterLink :to="`${listPath}?status=Incorrect`" class="underline underline-offset-2 hover:text-app-ink">
-              {{ stats.mistakeCount }} ta xato
-            </RouterLink>
-            ustida ishlash kerak
-          </p>
+          <i18n-t keypath="bank.stats.mistakesToFix" tag="p" class="mt-1 text-[12.5px] text-app-muted" scope="global">
+            <template #mistakes>
+              <RouterLink :to="`${listPath}?status=Incorrect`" class="underline underline-offset-2 hover:text-app-ink">
+                {{ t('bank.stats.mistakeLink', stats.mistakeCount) }}
+              </RouterLink>
+            </template>
+          </i18n-t>
         </div>
         <div class="rounded-2xl border border-app-border bg-app-surface p-4 shadow-app-card sm:p-5">
           <p class="flex items-center justify-between text-[13px] font-medium text-app-muted">
-            Ketma-ket kunlar
+            {{ t('bank.stats.streak') }}
             <AppIcon name="flame" :size="16" />
           </p>
           <p class="mt-1.5 text-[24px] font-bold tabular-nums text-app-ink sm:text-[28px]">{{ stats.currentStreakDays }}</p>
-          <p class="mt-1 text-[12.5px] text-app-muted">Eng uzuni: {{ stats.longestStreakDays }} kun</p>
+          <p class="mt-1 text-[12.5px] text-app-muted">{{ t('bank.stats.longestStreak', stats.longestStreakDays) }}</p>
         </div>
       </div>
 
@@ -248,14 +264,14 @@ async function resetProgress() {
         <!-- Activity -->
         <AppCard>
           <div class="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 class="text-[17px] font-bold text-app-ink">Faollik</h2>
+            <h2 class="text-[17px] font-bold text-app-ink">{{ t('bank.stats.activity') }}</h2>
             <p class="text-[13px] text-app-muted">
-              So‘nggi yilda {{ activeDays }} kun · jami {{ stats.attemptCount }} ta javob
+              {{ t('bank.stats.activitySummary', { days: activeDays, answers: stats.attemptCount }) }}
             </p>
           </div>
           <div class="mt-4 flex gap-1.5">
             <div class="flex shrink-0 flex-col justify-between py-px text-[10px] text-app-muted" aria-hidden="true">
-              <span v-for="(day, i) in WEEKDAYS" :key="i" class="leading-none">{{ day }}</span>
+              <span v-for="(day, i) in weekdays" :key="i" class="leading-none">{{ day }}</span>
             </div>
             <div ref="activityScroller" class="min-w-0 flex-1 overflow-x-auto pb-1">
               <div class="flex min-w-[640px] gap-[3px]">
@@ -265,29 +281,29 @@ async function resetProgress() {
                     :key="day.key"
                     class="aspect-square w-full rounded-[3px]"
                     :class="day.future ? 'bg-transparent' : levelClass(day.count)"
-                    :title="day.future ? '' : `${day.label}: ${day.count} ta javob${day.count ? `, ${day.correct} tasi to‘g‘ri` : ''}`"
+                    :title="day.future ? '' : dayTitle(day)"
                   ></span>
                 </div>
               </div>
             </div>
           </div>
           <div class="mt-3 flex items-center justify-end gap-1.5 text-[11px] text-app-muted" aria-hidden="true">
-            Kam
+            {{ t('bank.stats.less') }}
             <span class="h-[11px] w-[11px] rounded-[3px] bg-app-tile"></span>
             <span class="h-[11px] w-[11px] rounded-[3px] bg-app-ink/25"></span>
             <span class="h-[11px] w-[11px] rounded-[3px] bg-app-ink/45"></span>
             <span class="h-[11px] w-[11px] rounded-[3px] bg-app-ink/70"></span>
             <span class="h-[11px] w-[11px] rounded-[3px] bg-app-ink"></span>
-            Ko‘p
+            {{ t('bank.stats.more') }}
           </div>
           <p class="mt-4 text-[13px] text-app-muted">
-            O‘rtacha bir savolga {{ formatDuration(stats.averageTimeSeconds) }} sarflaysiz.
+            {{ t('bank.stats.averageTime', { time: formatDuration(stats.averageTimeSeconds) }) }}
           </p>
         </AppCard>
 
         <!-- By difficulty -->
         <AppCard>
-          <h2 class="text-[17px] font-bold text-app-ink">Qiyinlik bo‘yicha</h2>
+          <h2 class="text-[17px] font-bold text-app-ink">{{ t('bank.stats.byDifficulty') }}</h2>
           <ul class="mt-4 space-y-4">
             <li v-for="row in difficultyRows" :key="row.value">
               <div class="flex items-baseline justify-between gap-2">
@@ -297,7 +313,7 @@ async function resetProgress() {
                     {{ row.firstTryCorrectCount }}/{{ row.answeredQuestionCount }} ·
                     <span class="font-semibold" :class="row.firstTryAccuracy >= 70 ? 'text-app-good' : 'text-app-bad'">{{ row.firstTryAccuracy }}%</span>
                   </template>
-                  <template v-else>yechilmagan</template>
+                  <template v-else>{{ t('bank.stats.notSolved') }}</template>
                 </span>
               </div>
               <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-app-border" aria-hidden="true">
@@ -308,7 +324,7 @@ async function resetProgress() {
                 ></div>
               </div>
               <p v-if="row.answeredQuestionCount" class="mt-1.5 text-[12px] text-app-muted">
-                O‘rtacha {{ formatDuration(row.averageTimeSeconds) }}
+                {{ t('bank.stats.average', { time: formatDuration(row.averageTimeSeconds) }) }}
               </p>
             </li>
           </ul>
@@ -318,8 +334,8 @@ async function resetProgress() {
       <div class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start">
         <!-- By domain -->
         <AppCard :padded="false">
-          <h2 class="px-5 pb-1 pt-5 text-[17px] font-bold text-app-ink">Bo‘limlar bo‘yicha</h2>
-          <p class="px-5 text-[13px] text-app-muted">Aniqlik — birinchi urinishdagi natija.</p>
+          <h2 class="px-5 pb-1 pt-5 text-[17px] font-bold text-app-ink">{{ t('bank.stats.byDomain') }}</h2>
+          <p class="px-5 text-[13px] text-app-muted">{{ t('bank.stats.accuracyNote') }}</p>
           <ul class="mt-3 divide-y divide-app-border">
             <li v-for="domain in stats.byDomain" :key="domain.bankDomainId">
               <button
@@ -368,7 +384,7 @@ async function resetProgress() {
                   <RouterLink
                     :to="`${listPath}?skill=${skill.bankSkillId}`"
                     class="shrink-0 rounded-full p-1.5 text-app-muted hover:bg-app-tile hover:text-app-ink"
-                    :aria-label="`${skill.name} savollarini ochish`"
+                    :aria-label="t('bank.stats.openSkill', { name: skill.name })"
                   >
                     <AppIcon name="arrowRight" :size="15" />
                   </RouterLink>
@@ -381,8 +397,8 @@ async function resetProgress() {
         <div class="space-y-6">
           <!-- Weak topics -->
           <AppCard>
-            <h2 class="text-[17px] font-bold text-app-ink">Zaif mavzular</h2>
-            <p class="mt-1 text-[13px] text-app-muted">Kamida 3 ta savol yechilgan mavzular ichida eng pasti.</p>
+            <h2 class="text-[17px] font-bold text-app-ink">{{ t('bank.stats.weakTopics') }}</h2>
+            <p class="mt-1 text-[13px] text-app-muted">{{ t('bank.stats.weakTopicsNote') }}</p>
             <ul v-if="stats.weakSkills.length" class="mt-4 space-y-2">
               <li v-for="skill in stats.weakSkills" :key="skill.bankSkillId">
                 <RouterLink
@@ -391,7 +407,7 @@ async function resetProgress() {
                 >
                   <span class="min-w-0 flex-1">
                     <span class="block truncate text-[14px] font-semibold text-app-ink">{{ skill.name }}</span>
-                    <span class="block truncate text-[12px] text-app-muted">{{ skill.domainName }} · {{ skill.answeredQuestionCount }} ta yechilgan</span>
+                    <span class="block truncate text-[12px] text-app-muted">{{ skill.domainName }} · {{ t('bank.stats.solvedCount', { n: skill.answeredQuestionCount }) }}</span>
                   </span>
                   <StatusBadge :tone="toneForScore(skill.firstTryAccuracy)" class="!px-2.5 !py-1 !text-[12px]">
                     {{ skill.firstTryAccuracy }}%
@@ -400,13 +416,13 @@ async function resetProgress() {
               </li>
             </ul>
             <p v-else class="mt-4 rounded-xl bg-app-sunken px-4 py-3 text-[13px] text-app-muted">
-              Hozircha yetarli ma’lumot yo‘q — har bir mavzudan kamida 3 ta savol yeching.
+              {{ t('bank.stats.notEnoughData') }}
             </p>
           </AppCard>
 
           <!-- Sessions -->
           <AppCard>
-            <h2 class="text-[17px] font-bold text-app-ink">Mashqlar tarixi</h2>
+            <h2 class="text-[17px] font-bold text-app-ink">{{ t('bank.stats.sessionHistory') }}</h2>
             <ul v-if="sessions.length" class="mt-3 space-y-1">
               <li v-for="session in sessions" :key="session.id">
                 <RouterLink
@@ -415,7 +431,7 @@ async function resetProgress() {
                 >
                   <span class="min-w-0 flex-1">
                     <span class="block text-[13.5px] font-semibold text-app-ink">
-                      {{ MODE_LABELS[session.mode] }} · {{ session.totalCount }} savol
+                      {{ t('bank.labels.sessionLine', { mode: modeLabel(session.mode), n: session.totalCount }, session.totalCount) }}
                     </span>
                     <span class="block text-[12px] text-app-muted">{{ formatBankDate(session.startedAt) }}</span>
                   </span>
@@ -423,26 +439,26 @@ async function resetProgress() {
                     :tone="session.finishedAt ? toneForScore(percent(session.correctCount, session.totalCount)) : 'info'"
                     class="!px-2.5 !py-1 !text-[12px]"
                   >
-                    {{ session.finishedAt ? `${session.correctCount}/${session.totalCount}` : 'Davom etish' }}
+                    {{ session.finishedAt ? `${session.correctCount}/${session.totalCount}` : t('bank.actions.continue') }}
                   </StatusBadge>
                 </RouterLink>
               </li>
             </ul>
-            <p v-else class="mt-3 text-[13px] text-app-muted">Hali mashq boshlanmagan.</p>
+            <p v-else class="mt-3 text-[13px] text-app-muted">{{ t('bank.stats.noSessions') }}</p>
           </AppCard>
 
           <!-- Reset -->
           <AppCard>
-            <h2 class="text-[15px] font-bold text-app-ink">Natijalarni tozalash</h2>
+            <h2 class="text-[15px] font-bold text-app-ink">{{ t('bank.stats.resetTitle') }}</h2>
             <p class="mt-1 text-[13px] leading-[1.6] text-app-muted">
-              {{ subject.label }} bo‘yicha barcha javoblar, mashqlar va statistika o‘chadi. Saqlangan savollar qoladi.
+              {{ t('bank.stats.resetText', { subject: subject.label }) }}
             </p>
             <button
               type="button"
               class="mt-3 rounded-full border border-app-bad/40 px-4 py-2 text-[13px] font-semibold text-app-bad transition-colors hover:bg-app-bad-bg"
               @click="resetError = ''; resetOpen = true"
             >
-              Tozalash
+              {{ t('bank.actions.clear') }}
             </button>
           </AppCard>
         </div>
@@ -451,9 +467,9 @@ async function resetProgress() {
 
     <BankDialog
       :open="resetOpen"
-      title="Natijalarni tozalaysizmi?"
+      :title="t('bank.stats.resetConfirmTitle')"
       icon="trash"
-      :confirm-label="resetBusy ? 'Tozalanmoqda…' : 'Ha, tozalash'"
+      :confirm-label="resetBusy ? t('bank.stats.resetting') : t('bank.stats.resetConfirm')"
       :busy="resetBusy"
       :error="resetError"
       danger
@@ -461,8 +477,7 @@ async function resetProgress() {
       @close="resetOpen = false"
     >
       <p class="text-[14px] leading-[1.6] text-app-muted">
-        {{ subject?.label }} bo‘yicha barcha javoblaringiz, mashqlar tarixi va statistika butunlay o‘chiriladi.
-        Buni ortga qaytarib bo‘lmaydi.
+        {{ t('bank.stats.resetWarning', { subject: subject?.label ?? '' }) }}
       </p>
     </BankDialog>
   </main>

@@ -24,6 +24,7 @@
 // (→ /login).
 import { apiFetch, getTestApiBaseUrl, readJsonBody } from '@/utils/api'
 import { useAuthStore } from '@/stores/auth'
+import { t } from '@/i18n'
 
 export const PAYMENT_PROVIDER_CLICK = 'Click'
 export const PAYMENT_PROVIDER_PAYME = 'Payme'
@@ -47,11 +48,14 @@ export const WORKING_PAYMENT_PROVIDERS = PAYMENT_PROVIDERS.filter(
 )
 
 // "Click yoki Payme" / "Click или Payme": the gateways that work, as the copy
-// names them. `or` is the locale's word (i18n `pricing.payment.online.or`);
+// names them. `or` is the locale's word (i18n `pricing.payment.online.or`),
+// read at call time so the sentence follows a language switch;
 // Intl.ListFormat can't do it — Chrome ships no Uzbek list patterns and
-// prints "Click or Payme".
-export function formatProviders(or) {
-  return WORKING_PAYMENT_PROVIDERS.join(` ${or} `)
+// prints "Click or Payme". Three or more read "A, B yoki C".
+export function formatProviders(or = t('pricing.payment.online.or')) {
+  const names = WORKING_PAYMENT_PROVIDERS
+  if (names.length < 3) return names.join(` ${or} `)
+  return `${names.slice(0, -1).join(', ')} ${or} ${names[names.length - 1]}`
 }
 
 // The name to print for a payment's `provider`, as the backend spells it.
@@ -67,10 +71,13 @@ export const PAYMENT_STATUS = {
   cancelled: 'Cancelled',
 }
 
-// "35 000 so'm" — the shape the i18n plans have always printed prices in.
+// "35 000 so'm" / "35 000 сум" — the shape the i18n plans have always printed
+// prices in. Both languages group thousands with a plain space, so only the
+// currency word comes from i18n (`paymentApp.som`). Call it at render (or in
+// a computed) so the word follows a language switch.
 export function formatSom(amount) {
   const value = Math.round(Number(amount) || 0)
-  return `${String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} so'm`
+  return t('paymentApp.som', { amount: String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') })
 }
 
 function authHeaders() {

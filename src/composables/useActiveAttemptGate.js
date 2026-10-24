@@ -14,6 +14,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
+import { t } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useTestStore } from '@/stores/test'
 import { normalizeActiveAttempt } from '@/utils/attemptStatus'
@@ -85,14 +86,14 @@ export function useActiveAttemptGate({ onFinished } = {}) {
       await testStore.submitTestAttempt(attempt.testAttemptId)
     } catch (error) {
       console.error(error)
-      finishError.value = 'Testni yakunlab bo‘lmadi. Qayta urinib ko‘ring.'
+      finishError.value = t('attemptGate.finishFailed')
       return
     } finally {
       isFinishing.value = false
     }
 
     authStore.forgetActiveAttempt(attempt.testAttemptId)
-    message.success('Test yakunlandi. Natijasini keyinroq «Natijalar» sahifasida ko‘rishingiz mumkin.', {
+    message.success(t('attemptGate.finished'), {
       duration: 6000,
     })
 

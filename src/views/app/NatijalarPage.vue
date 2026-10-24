@@ -15,6 +15,7 @@
 // is never the source of *which* tests are listed: an attempt on a test that
 // has since been unpublished must still appear here.
 import { computed, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import AppTopbar from '@/components/app/AppTopbar.vue'
 import AppCard from '@/components/app/AppCard.vue'
@@ -42,6 +43,7 @@ defineProps({
 })
 defineEmits(['openMenu'])
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const testStore = useTestStore()
@@ -189,7 +191,7 @@ const results = computed(() => {
       // The launcher reads `id`/`state`/`attemptId` and the premium flags, so
       // this shape is what it already knows how to open.
       id: testId,
-      title: String(entry.test?.title || known?.title || '').trim() || 'Nomsiz test',
+      title: String(entry.test?.title || known?.title || '').trim() || t('resultsPage.untitledTest'),
       // Never blanket an unknown subject to a default here: this list mixes
       // every subject, and a wrong guess both mislabels the row and hides it
       // from its real filter.
@@ -334,22 +336,24 @@ const openResult = (row) => {
 const retake = (row) => openLaunch(row)
 
 const TABS = [
-  { id: 'tests', label: 'Testlar' },
-  { id: 'essays', label: 'Insholar' },
+  { id: 'tests', labelKey: 'resultsPage.tabs.tests' },
+  { id: 'essays', labelKey: 'resultsPage.tabs.essays' },
 ]
 
-const errorCopy = computed(() =>
-  errorKind.value === 'network'
-    ? { title: 'Internetda uzilish bor', description: 'Ulanishni tekshiring va qayta urinib ko‘ring.' }
-    : { title: 'Natijalarni yuklab bo‘lmadi', description: 'Biroz kuting va qayta urinib ko‘ring.' },
-)
+const errorCopy = computed(() => {
+  const kind = errorKind.value === 'network' ? 'network' : 'fetch'
+  return {
+    title: t(`resultsPage.errors.${kind}.title`),
+    description: t(`resultsPage.errors.${kind}.description`),
+  }
+})
 
 </script>
 
 <template>
   <AppTopbar
-    title="Natijalar"
-    subtitle="Topshirilgan testlaringiz va ularning natijalari."
+    :title="t('navbar.result')"
+    :subtitle="t('resultsPage.subtitle')"
     :user="user"
     @open-menu="$emit('openMenu')"
   />
@@ -370,7 +374,7 @@ const errorCopy = computed(() =>
         :aria-pressed="activeView === tab.id"
         @click="selectView(tab.id)"
       >
-        {{ tab.label }}
+        {{ t(tab.labelKey) }}
         <span
           class="ml-1.5 tabular-nums"
           :class="activeView === tab.id ? 'text-app-surface/60' : 'text-app-muted'"
@@ -398,7 +402,7 @@ const errorCopy = computed(() =>
             <SkeletonBlock class="mt-6 h-8 w-full !rounded-lg" />
           </div>
         </div>
-        <p class="sr-only" role="status">Natijalar yuklanmoqda</p>
+        <p class="sr-only" role="status">{{ t('resultsPage.loading') }}</p>
       </template>
 
       <AppCard v-else-if="errorKind">
@@ -414,7 +418,7 @@ const errorCopy = computed(() =>
             v-model="selectedSubject"
             :options="subjectOptions"
             icon="filter"
-            aria-label="Fan bo‘yicha saralash"
+            :aria-label="t('resultsPage.filterLabel')"
             class="sm:hidden"
           />
 
@@ -459,8 +463,8 @@ const errorCopy = computed(() =>
         <AppCard v-else>
           <EmptyState
             icon="results"
-            title="Bu fandan natija yo‘q"
-            description="Boshqa fanni tanlang yoki shu fandan test ishlang."
+            :title="t('resultsPage.emptySubject.title')"
+            :description="t('resultsPage.emptySubject.description')"
           />
         </AppCard>
 
@@ -469,14 +473,14 @@ const errorCopy = computed(() =>
           v-if="visibleResults.length"
           class="mt-5 flex flex-wrap items-center justify-between gap-4"
         >
-          <p class="text-[13px] text-app-muted">Jami {{ visibleResults.length }} ta test</p>
+          <p class="text-[13px] text-app-muted">{{ t('resultsPage.total', visibleResults.length) }}</p>
 
-          <nav v-if="pageCount > 1" class="flex items-center gap-1.5" aria-label="Sahifalar">
+          <nav v-if="pageCount > 1" class="flex items-center gap-1.5" :aria-label="t('resultsPage.pages')">
             <button
               type="button"
               class="flex h-9 w-9 items-center justify-center rounded-lg border border-app-border bg-app-surface text-app-ink transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40"
               :disabled="page === 1"
-              aria-label="Oldingi sahifa"
+              :aria-label="t('resultsPage.prevPage')"
               @click="goToPage(page - 1)"
             >
               <AppIcon name="arrowLeft" :size="16" />
@@ -504,7 +508,7 @@ const errorCopy = computed(() =>
               type="button"
               class="flex h-9 w-9 items-center justify-center rounded-lg border border-app-border bg-app-surface text-app-ink transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40"
               :disabled="page === pageCount"
-              aria-label="Keyingi sahifa"
+              :aria-label="t('resultsPage.nextPage')"
               @click="goToPage(page + 1)"
             >
               <AppIcon name="arrowRight" :size="16" />
@@ -516,9 +520,9 @@ const errorCopy = computed(() =>
       <AppCard v-else>
         <EmptyState
           icon="results"
-          title="Hali test ishlamagansiz"
-          description="Birinchi testni yeching — natijangiz shu yerda saqlanadi."
-          action-label="Testlarni ko‘rish"
+          :title="t('resultsPage.emptyTests.title')"
+          :description="t('resultsPage.emptyTests.description')"
+          :action-label="t('resultsPage.emptyTests.action')"
           action-to="/testlar"
         />
       </AppCard>
@@ -542,9 +546,9 @@ const errorCopy = computed(() =>
       <AppCard v-else>
         <EmptyState
           icon="essay"
-          title="Hali insho tekshirmagansiz"
-          description="Mavzu tanlang, insho yozing yoki rasmini yuklang — AI tekshirib beradi."
-          action-label="Insho tekshirish"
+          :title="t('resultsPage.emptyEssays.title')"
+          :description="t('essayPage.subtitle')"
+          :action-label="t('resultsPage.emptyEssays.action')"
           action-to="/essay"
         />
       </AppCard>
@@ -553,7 +557,7 @@ const errorCopy = computed(() =>
            student who cleared their browser deserves to know why the list is
            empty. Goes when the checkings move server-side. -->
       <p v-if="essayCheckings.length" class="mt-4 text-[13px] text-app-muted">
-        Insho tahlillari shu qurilmada saqlanadi.
+        {{ t('resultsPage.deviceNote') }}
       </p>
     </template>
 

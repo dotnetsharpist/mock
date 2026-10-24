@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { useAuthStore } from './auth'
 import { useTestCatalogStore } from './testCatalog'
+import { t } from '@/i18n'
 import { apiFetch, getTestApiBaseUrl } from '@/utils/api'
 import { AI_REVIEW_MODES, isBiologyOpenResponseGroup } from '@/utils/aiReview'
 import { ATTEMPT_STATUS, normalizeRemainingSeconds } from '@/utils/attemptStatus'
@@ -245,7 +246,8 @@ export const useTestStore = defineStore('test', () => {
       const payload = await response.json()
 
       if (!response.ok || payload?.code !== 200 || !payload?.data) {
-        const error = new Error(payload?.message || 'Could not start the test.')
+        const error = new Error(payload?.message || t('mathCard.startError'))
+        error.fromServer = Boolean(payload?.message)
         // UserTestAttemptService refuses to mint an attempt while the phone is
         // unconfirmed. That's the one gate that actually matters, so callers
         // send the user to /complete-profile instead of showing a dead error.
@@ -278,8 +280,10 @@ export const useTestStore = defineStore('test', () => {
 
       return { test: currentTest.value, attempt: currentAttempt.value }
     } catch (error) {
-      errorMessage.value =
-        error instanceof Error ? error.message : 'Could not start the test.'
+      // The server's own message when it sent one. Anything else — no message,
+      // a dropped connection ("Failed to fetch"), a non-JSON reply — gets ours,
+      // in the current language.
+      errorMessage.value = error?.fromServer ? error.message : t('mathCard.startError')
       throw error
     } finally {
       isLoading.value = false

@@ -27,6 +27,7 @@ import { isPremiumTest, isTestPurchased, testTokenCost } from '@/utils/premium'
 import { COMPLETE_PROFILE_PATH, PHONE_VERIFY_REDIRECTS_ENABLED } from '@/utils/postAuth'
 import { useProfileGate } from '@/composables/useProfileGate'
 import { useActiveAttemptGate } from '@/composables/useActiveAttemptGate'
+import { t } from '@/i18n'
 
 // onAttemptFinished: the screen's own refresh, for when the gate's dialog has
 // just finished an open attempt (its row is now a result).
@@ -51,7 +52,18 @@ export function useTestLauncher({ onAttemptFinished } = {}) {
   const pending = ref(null)
   const dialog = ref('') // '' | 'start' | 'purchase' | 'topup'
   const busyTestId = ref(null)
-  const errorMessage = ref('')
+  // The test store's own message when it has one, or ours. Ours is kept as a
+  // flag rather than text so a language switch with the dialog open re-renders
+  // it; the store's is shown as it came.
+  const storeError = ref('')
+  const hasOwnError = ref(false)
+  const errorMessage = computed(() =>
+    hasOwnError.value ? t('testLaunch.openFailed') : storeError.value,
+  )
+  const clearError = () => {
+    storeError.value = ''
+    hasOwnError.value = false
+  }
 
   const cost = computed(() => (pending.value ? testTokenCost(pending.value) : 0))
   const balance = computed(() => balanceStore.available)
@@ -59,12 +71,12 @@ export function useTestLauncher({ onAttemptFinished } = {}) {
   const close = () => {
     dialog.value = ''
     pending.value = null
-    errorMessage.value = ''
+    clearError()
   }
 
   // Entry point — the row's action button.
   async function open(test) {
-    errorMessage.value = ''
+    clearError()
 
     // A finished test is offered again rather than swapped for its result:
     // Testlar is for taking tests, Natijalar is where results are read. Only a
@@ -116,7 +128,7 @@ export function useTestLauncher({ onAttemptFinished } = {}) {
     const test = pending.value
     if (!test) return
 
-    errorMessage.value = ''
+    clearError()
     busyTestId.value = test.id
 
     try {
@@ -157,7 +169,8 @@ export function useTestLauncher({ onAttemptFinished } = {}) {
       if (/insufficient/i.test(error?.message || '')) {
         dialog.value = 'topup'
       } else {
-        errorMessage.value = testStore.errorMessage || 'Testni ochib bo‘lmadi.'
+        storeError.value = testStore.errorMessage || ''
+        hasOwnError.value = !storeError.value
       }
     } finally {
       busyTestId.value = null

@@ -24,6 +24,7 @@
 //   state and may poll.
 import { apiFetch, getTestApiBaseUrl } from '@/utils/api'
 import { useAuthStore } from '@/stores/auth'
+import { t } from '@/i18n'
 
 export async function fetchEssayAnalysis(testAttemptId) {
   const authStore = useAuthStore()
@@ -41,7 +42,7 @@ export async function fetchEssayAnalysis(testAttemptId) {
   const payload = await response.json().catch(() => null)
 
   if (!response.ok || payload?.code !== 200 || !payload?.data) {
-    const error = new Error(payload?.message || 'Insho tahlilini olib bo‘lmadi.')
+    const error = new Error(payload?.message || t('essayAnalysis.loadFailed'))
     error.code = payload?.code ?? response.status
     throw error
   }

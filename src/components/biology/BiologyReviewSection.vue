@@ -25,7 +25,10 @@
 // `no_solution` (nothing uploaded) — and every official zero condition show the
 // verdict's human explanation instead of a breakdown.
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { formatScore, normalizeBiologyReview, readScore } from '@/utils/biologyReview'
+
+const { t } = useI18n()
 
 const props = defineProps({
   entries: { type: Array, default: () => [] },
@@ -65,7 +68,13 @@ const maxTotal = computed(() =>
 
 const groupLabel = (questionGroupId) => {
   const label = props.resolveGroupLabel(questionGroupId)
-  return label ? `${label}-topshiriq` : 'Ochiq javob'
+  return label ? t('biologyReview.groupLabel', { label }) : t('biologyReview.groupFallback')
+}
+
+// "4.5 ball" — a fractional weight takes the "few" form in Russian (4.5 балла).
+const weightLabel = (weight) => {
+  const score = readScore(weight)
+  return t('biologyReview.weight', { score: formatScore(weight) }, Number.isInteger(score) ? score : 2)
 }
 
 const groupImages = (questionGroupId) => {
@@ -110,15 +119,13 @@ const explanationClass = (review) => EXPLANATION_TONES[review.verdict.tone] || E
       <div>
         <div class="flex flex-wrap items-center gap-3">
           <span class="font-mono-custom text-[11px] font-semibold tracking-[0.18em] text-[#bcb6a9]">IV</span>
-          <h2 class="text-xl font-bold tracking-[-0.01em] text-[#1a1814]">Ochiq javob tahlili</h2>
+          <h2 class="text-xl font-bold tracking-[-0.01em] text-[#1a1814]">{{ t('biologyReview.title') }}</h2>
           <span class="font-mono-custom rounded-full border border-[#d8d3ca] bg-white px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-[#8a857c]">
-            AI tekshiruvi
+            {{ t('biologyReview.aiBadge') }}
           </span>
         </div>
         <p class="mt-2 max-w-3xl text-[13px] leading-relaxed text-[#8a857c]">
-          Yozgan javoblaringiz va yuklagan yechim rasmlaringiz sun’iy intellekt tomonidan mezonlar
-          bo‘yicha baholanadi. Har bir mezon uchun izoh va yechimingizdan olingan iqtibos
-          ko‘rsatiladi.
+          {{ t('biologyReview.intro') }}
         </p>
       </div>
 
@@ -127,12 +134,12 @@ const explanationClass = (review) => EXPLANATION_TONES[review.verdict.tone] || E
           <p class="text-[30px] font-bold leading-none tracking-[-0.03em] tabular-nums text-[#1a1814]">
             {{ formatScore(earnedTotal) }}<span class="text-[16px] font-semibold text-[#a39e94]">/{{ formatScore(maxTotal) }}</span>
           </p>
-          <p class="font-mono-custom mt-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#8a857c]">Umumiy ball</p>
+          <p class="font-mono-custom mt-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#8a857c]">{{ t('biologyReview.totalScore') }}</p>
         </div>
         <span class="h-9 w-px bg-[#d8d3ca]"></span>
         <div>
           <p class="text-[30px] font-bold leading-none tracking-[-0.03em] tabular-nums text-[#1a1814]">{{ normalizedEntries.length }}</p>
-          <p class="font-mono-custom mt-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#8a857c]">Topshiriq</p>
+          <p class="font-mono-custom mt-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#8a857c]">{{ t('biologyReview.tasks') }}</p>
         </div>
       </div>
     </div>
@@ -224,26 +231,26 @@ const explanationClass = (review) => EXPLANATION_TONES[review.verdict.tone] || E
               v-if="entry.review.methodBlockVoided"
               class="inline-flex items-center gap-1.5 rounded-full border border-[#e8d8b4] bg-[#fdf8ef] px-3 py-1.5 text-[12px] font-semibold text-[#a8752c]"
             >
-              Formula yo‘q yoki xato — metodik qism 0 ball
+              {{ t('biologyReview.methodVoided') }}
             </span>
           </div>
 
           <!-- The AI's overall note -->
           <div v-if="entry.review.globalNotes" class="mt-5 rounded-[18px] bg-[#faf8f4] px-5 py-4 ring-1 ring-[#eeeae2]">
-            <p class="font-mono-custom mb-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#8a857c]">Umumiy xulosa</p>
+            <p class="font-mono-custom mb-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#8a857c]">{{ t('biologyReview.globalNotes') }}</p>
             <p class="text-[13.5px] leading-relaxed text-[#3a362f]">{{ entry.review.globalNotes }}</p>
           </div>
 
           <!-- Criterion-by-criterion breakdown (graded reviews only) -->
           <details v-if="entry.review.isGraded && entry.review.groups.length" class="group mt-5 overflow-hidden rounded-[18px] ring-1 ring-[#eeeae2]">
             <summary class="flex cursor-pointer flex-wrap items-center justify-between gap-3 px-5 py-4 transition hover:bg-[#faf8f4]">
-              <span class="text-[14px] font-semibold text-[#1a1814]">Mezonlar bo‘yicha tahlil</span>
+              <span class="text-[14px] font-semibold text-[#1a1814]">{{ t('biologyReview.breakdown') }}</span>
               <span class="flex items-center gap-3">
                 <span class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] font-medium tabular-nums text-[#a39e94]">
-                  <span>{{ entry.review.counts.total }} mezon</span>
-                  <span class="text-[#4f7a55]">{{ entry.review.counts.full }} to‘liq</span>
-                  <span v-if="entry.review.counts.partial" class="text-[#c08a3e]">{{ entry.review.counts.partial }} qisman</span>
-                  <span v-if="entry.review.counts.zero" class="text-[#c25d52]">{{ entry.review.counts.zero }} bajarilmagan</span>
+                  <span>{{ t('biologyReview.counts.total', entry.review.counts.total) }}</span>
+                  <span class="text-[#4f7a55]">{{ t('biologyReview.counts.full', { n: entry.review.counts.full }) }}</span>
+                  <span v-if="entry.review.counts.partial" class="text-[#c08a3e]">{{ t('biologyReview.counts.partial', { n: entry.review.counts.partial }) }}</span>
+                  <span v-if="entry.review.counts.zero" class="text-[#c25d52]">{{ t('biologyReview.counts.zero', { n: entry.review.counts.zero }) }}</span>
                 </span>
                 <svg class="h-4 w-4 shrink-0 text-[#8a857c] transition-transform duration-200 group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                   <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
@@ -276,7 +283,7 @@ const explanationClass = (review) => EXPLANATION_TONES[review.verdict.tone] || E
                         {{ element.verdict.label }}
                       </span>
                       <span v-if="element.weight !== null" class="font-mono-custom text-[10.5px] font-medium tabular-nums text-[#a39e94]">
-                        {{ formatScore(element.weight) }} ball
+                        {{ weightLabel(element.weight) }}
                       </span>
                     </div>
 
@@ -299,7 +306,7 @@ const explanationClass = (review) => EXPLANATION_TONES[review.verdict.tone] || E
           <!-- The photos the student handed in for this task -->
           <details v-if="groupImages(entry.questionGroupId).length" class="group mt-4 overflow-hidden rounded-[18px] ring-1 ring-[#eeeae2]">
             <summary class="flex cursor-pointer items-center justify-between px-5 py-4 text-[14px] font-semibold text-[#1a1814] transition hover:bg-[#faf8f4]">
-              <span>Sizning javobingiz ({{ groupImages(entry.questionGroupId).length }} ta rasm)</span>
+              <span>{{ t('biologyReview.yourAnswer', { n: groupImages(entry.questionGroupId).length }) }}</span>
               <svg class="h-4 w-4 text-[#8a857c] transition-transform duration-200 group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
@@ -313,7 +320,7 @@ const explanationClass = (review) => EXPLANATION_TONES[review.verdict.tone] || E
                 rel="noopener"
                 class="block overflow-hidden rounded-[14px] ring-1 ring-[#eeeae2] transition hover:ring-[#1a1814]"
               >
-                <img :src="imageUrl" :alt="`Yechim rasmi ${index + 1}`" class="w-full object-contain" />
+                <img :src="imageUrl" :alt="t('biologyReview.imageAlt', { n: index + 1 })" class="w-full object-contain" />
               </a>
             </div>
           </details>
@@ -329,7 +336,7 @@ const explanationClass = (review) => EXPLANATION_TONES[review.verdict.tone] || E
               {{ groupLabel(entry.questionGroupId) }}
             </span>
             <span class="rounded-full border border-[#e8d8b4] bg-[#fdf8ef] px-2.5 py-1 text-[11px] font-semibold text-[#a8752c]">
-              Tekshirilmoqda
+              {{ t('biologyReview.checking.badge') }}
             </span>
           </div>
 
@@ -337,10 +344,10 @@ const explanationClass = (review) => EXPLANATION_TONES[review.verdict.tone] || E
             <span class="mt-0.5 inline-block h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-[#e0ddd7] border-t-[#4a463f]" />
             <div class="min-w-0">
               <p class="text-[14px] font-semibold text-[#1a1814]">
-                Yechimingiz AI tomonidan tekshirilmoqda — odatda 2–3 daqiqa.
+                {{ t('biologyReview.checking.title') }}
               </p>
               <p class="mt-0.5 text-[13px] leading-relaxed text-[#8a857c]">
-                Hozircha 1–40 savollar natijalarini ko‘rib chiqishingiz mumkin.
+                {{ t('biologyReview.checking.hint') }}
               </p>
             </div>
           </div>
@@ -356,7 +363,7 @@ const explanationClass = (review) => EXPLANATION_TONES[review.verdict.tone] || E
               {{ groupLabel(entry.questionGroupId) }}
             </span>
             <span class="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-600">
-              Tekshirib bo‘lmadi
+              {{ t('biologyReview.failed.badge') }}
             </span>
           </div>
 
@@ -365,17 +372,16 @@ const explanationClass = (review) => EXPLANATION_TONES[review.verdict.tone] || E
               <path d="M12 9v4m0 4h.01M10.3 3.86l-8.5 14.7A2 2 0 0 0 3.53 21h16.94a2 2 0 0 0 1.73-3L13.7 3.86a2 2 0 0 0-3.4 0Z" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
             <div class="min-w-0">
-              <p class="text-[14px] font-semibold text-[#1a1814]">Bu yechimni AI tekshira olmadi</p>
+              <p class="text-[14px] font-semibold text-[#1a1814]">{{ t('biologyReview.failed.title') }}</p>
               <p class="mt-0.5 text-[13px] leading-relaxed text-[#8a857c]">
-                Javobingiz yuborilgan, lekin tekshiruv yakunlanmadi va bu topshiriq uchun ball
-                qo‘shilmadi. Muammo deb hisoblasangiz, qo‘llab-quvvatlash xizmatiga murojaat qiling.
+                {{ t('biologyReview.failed.description') }}
               </p>
             </div>
           </div>
 
           <details v-if="groupImages(entry.questionGroupId).length" class="group mt-4 overflow-hidden rounded-[18px] ring-1 ring-[#eeeae2]">
             <summary class="flex cursor-pointer items-center justify-between px-5 py-4 text-[14px] font-semibold text-[#1a1814] transition hover:bg-[#faf8f4]">
-              <span>Sizning javobingiz ({{ groupImages(entry.questionGroupId).length }} ta rasm)</span>
+              <span>{{ t('biologyReview.yourAnswer', { n: groupImages(entry.questionGroupId).length }) }}</span>
               <svg class="h-4 w-4 text-[#8a857c] transition-transform duration-200 group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
@@ -389,7 +395,7 @@ const explanationClass = (review) => EXPLANATION_TONES[review.verdict.tone] || E
                 rel="noopener"
                 class="block overflow-hidden rounded-[14px] ring-1 ring-[#eeeae2] transition hover:ring-[#1a1814]"
               >
-                <img :src="imageUrl" :alt="`Yechim rasmi ${index + 1}`" class="w-full object-contain" />
+                <img :src="imageUrl" :alt="t('biologyReview.imageAlt', { n: index + 1 })" class="w-full object-contain" />
               </a>
             </div>
           </details>
@@ -405,13 +411,12 @@ const explanationClass = (review) => EXPLANATION_TONES[review.verdict.tone] || E
               {{ groupLabel(entry.questionGroupId) }}
             </span>
             <span class="rounded-full border border-[#e0ddd7] bg-[#faf8f4] px-2.5 py-1 text-[11px] font-semibold text-[#8a857c]">
-              O‘tkazib yuborilgan
+              {{ t('biologyReview.skipped.badge') }}
             </span>
           </div>
 
           <p class="mt-4 text-[13px] leading-relaxed text-[#8a857c]">
-            Bu topshiriqqa javob yozilmagan va yechim rasmi yuklanmagan, shuning uchun AI tekshiruvi
-            o‘tkazilmadi.
+            {{ t('biologyReview.skipped.description') }}
           </p>
         </article>
       </template>

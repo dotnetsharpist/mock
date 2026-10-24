@@ -7,6 +7,7 @@
 // shared integration surface, so the grading UI cannot drift between the two
 // places it appears.
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppTopbar from '@/components/app/AppTopbar.vue'
 import AppCard from '@/components/app/AppCard.vue'
 import AppIcon from '@/components/app/AppIcon.vue'
@@ -20,6 +21,7 @@ import {
   MAX_IMAGE_COUNT,
   MAX_TOPIC_LENGTH,
   useEssayCenter,
+  wordEssayMessage,
 } from '@/composables/useEssayCenter'
 import { useWindowFileDrop } from '@/composables/useWindowFileDrop'
 
@@ -27,6 +29,8 @@ defineProps({
   user: { type: Object, required: true },
 })
 defineEmits(['openMenu'])
+
+const { t } = useI18n()
 
 const {
   view,
@@ -64,6 +68,7 @@ onMounted(fetchTopics)
 // ——— Add-topic dialog ————————————————————————————————————————————————
 const isAddOpen = ref(false)
 const draftTopic = ref('')
+// An i18n message or the server's words — see wordEssayMessage.
 const addError = ref('')
 
 const openAdd = () => {
@@ -105,14 +110,14 @@ const { isDragging } = useWindowFileDrop(
 <template>
   <AppTopbar
     v-if="view === 'list'"
-    title="Essay tekshirish"
-    subtitle="Mavzu tanlang, insho yozing yoki rasmini yuklang — AI tekshirib beradi."
+    :title="t('essayPage.title')"
+    :subtitle="t('essayPage.subtitle')"
     :user="user"
     @open-menu="$emit('openMenu')"
   />
   <AppTopbar
     v-else
-    :title="view === 'writer' ? 'Insho yozish' : 'Insho tahlili'"
+    :title="view === 'writer' ? t('essayPage.writerTitle') : t('essayPage.reviewTitle')"
     back-to=""
     back-label=""
     :user="user"
@@ -148,14 +153,14 @@ const { isDragging } = useWindowFileDrop(
       </div>
 
       <AppCard v-else-if="topicsError">
-        <EmptyState icon="close" title="Mavzularni yuklab bo‘lmadi" :description="topicsError" />
+        <EmptyState icon="close" :title="t('essayPage.topicsLoadFailed')" :description="topicsError" />
         <div class="flex justify-center pb-4">
           <button
             type="button"
             class="rounded-full bg-app-ink px-5 py-2.5 text-[13px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
             @click="fetchTopics"
           >
-            Qayta urinish
+            {{ t('essayPage.retry') }}
           </button>
         </div>
       </AppCard>
@@ -174,9 +179,9 @@ const { isDragging } = useWindowFileDrop(
             <AppIcon name="plus" :size="20" />
           </span>
           <span>
-            <span class="block text-[14px] font-semibold text-app-ink">O‘z mavzuingizni qo‘shing</span>
+            <span class="block text-[14px] font-semibold text-app-ink">{{ t('essayPage.addOwn.title') }}</span>
             <span class="mt-1 block max-w-[210px] text-[12.5px] leading-[1.5] text-app-muted">
-              Internetdan topgan yoki o‘zingiz tuzgan mavzu bo‘yicha yozing
+              {{ t('essayPage.addOwn.hint') }}
             </span>
           </span>
         </button>
@@ -198,7 +203,7 @@ const { isDragging } = useWindowFileDrop(
               type="button"
               class="flex h-8 w-8 items-center justify-center rounded-full border border-app-border text-app-muted transition-colors hover:border-app-bad/40 hover:bg-app-bad-bg hover:text-app-bad focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:opacity-40"
               :disabled="deletingTopicId === topic.id"
-              :aria-label="`Mavzuni o‘chirish: ${topic.text}`"
+              :aria-label="t('essayPage.removeTopic', { topic: topic.text })"
               @click="removeTopic(topic)"
             >
               <AppIcon name="trash" :size="15" />
@@ -226,7 +231,7 @@ const { isDragging } = useWindowFileDrop(
               class="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-app-ink px-3.5 py-2 text-[13px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
               @click="startTopic(topic)"
             >
-              Boshlash
+              {{ t('essayPage.start') }}
               <AppIcon name="arrowRight" :size="14" />
             </button>
           </div>
@@ -242,12 +247,12 @@ const { isDragging } = useWindowFileDrop(
         @click="backToList"
       >
         <AppIcon name="arrowLeft" :size="15" />
-        Mavzularga qaytish
+        {{ t('essayPage.backToTopics') }}
       </button>
 
       <AppCard>
         <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-app-muted">
-          Insho mavzusi
+          {{ t('essayPage.topicLabel') }}
         </p>
         <h2 class="mt-2 max-w-3xl whitespace-pre-line text-[18px] font-bold leading-[1.4] tracking-[-0.015em] text-app-ink">
           {{ activeTopic?.text }}
@@ -256,8 +261,8 @@ const { isDragging } = useWindowFileDrop(
         <div class="mt-5 inline-flex gap-1 rounded-full bg-app-sunken p-1">
           <button
             v-for="option in [
-              { id: 'upload', label: 'Rasm joylash' },
-              { id: 'write', label: 'Yozish' },
+              { id: 'upload', label: t('essayPage.modes.upload') },
+              { id: 'write', label: t('essayPage.modes.write') },
             ]"
             :key="option.id"
             type="button"
@@ -273,7 +278,7 @@ const { isDragging } = useWindowFileDrop(
         <textarea
           v-if="mode === 'write'"
           v-model="essayText"
-          placeholder="Inshoingizni shu yerda yozing…"
+          :placeholder="t('essayPage.placeholder')"
           class="mt-5 min-h-[320px] w-full resize-y rounded-xl border border-app-border bg-app-sunken p-5 text-[15px] leading-[1.75] text-app-ink outline-none transition-colors placeholder:text-app-muted focus:border-app-ink focus:bg-app-surface"
         ></textarea>
 
@@ -291,13 +296,13 @@ const { isDragging } = useWindowFileDrop(
               <AppIcon name="upload" :size="22" />
             </span>
             <p class="mt-3 text-[14px] font-semibold text-app-ink">
-              Insho rasmini tashlang
+              {{ t('essayPage.drop.title') }}
             </p>
             <p class="mt-1 text-[12.5px] text-app-muted">
-              Sahifaning istalgan joyiga tashlang, bosing yoki Ctrl+V bilan qo‘ying
+              {{ t('essayPage.drop.hint') }}
             </p>
             <p class="mt-1 text-[12.5px] text-app-muted">
-              JPG, PNG, WEBP · ko‘pi bilan {{ MAX_IMAGE_COUNT }} ta
+              {{ t('essayPage.drop.formats', { n: MAX_IMAGE_COUNT }) }}
             </p>
           </div>
           <input
@@ -319,12 +324,12 @@ const { isDragging } = useWindowFileDrop(
               <span
                 class="absolute left-2 top-2 rounded-md bg-app-ink/80 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-app-surface"
               >
-                {{ index + 1 }}-sahifa
+                {{ t('essayPage.pageBadge', { n: index + 1 }) }}
               </span>
               <button
                 type="button"
                 class="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-app-ink/80 text-app-surface opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
-                :aria-label="`${index + 1}-sahifani o‘chirish`"
+                :aria-label="t('essayPage.removePage', { n: index + 1 })"
                 @click.stop="removeUpload(upload.id)"
               >
                 <AppIcon name="close" :size="13" />
@@ -338,16 +343,16 @@ const { isDragging } = useWindowFileDrop(
         <div class="mt-5 flex flex-wrap items-center justify-between gap-4">
           <p class="text-[13px] text-app-muted">
             <template v-if="mode === 'write'">
-              <span class="font-semibold text-app-ink">{{ wordCount }}</span> so‘z
+              <span class="font-semibold text-app-ink">{{ wordCount }}</span> {{ t('essayPage.wordsSuffix', wordCount) }}
               <template v-if="essayText.length > MAX_ESSAY_LENGTH * 0.9">
                 ·
                 <span :class="essayText.length > MAX_ESSAY_LENGTH ? 'font-semibold text-app-bad' : ''">
-                  {{ essayText.length }}/{{ MAX_ESSAY_LENGTH }} belgi
+                  {{ t('essayPage.chars', { len: essayText.length, max: MAX_ESSAY_LENGTH }) }}
                 </span>
               </template>
             </template>
             <template v-else>
-              <span class="font-semibold text-app-ink">{{ uploads.length }}</span> sahifa yuklandi
+              <span class="font-semibold text-app-ink">{{ uploads.length }}</span> {{ t('essayPage.pagesUploadedSuffix', uploads.length) }}
             </template>
           </p>
 
@@ -358,7 +363,7 @@ const { isDragging } = useWindowFileDrop(
             @click="submit"
           >
             <AppIcon name="check" :size="15" />
-            Tekshirishga yuborish
+            {{ t('essayPage.submit') }}
           </button>
         </div>
       </AppCard>
@@ -369,7 +374,7 @@ const { isDragging } = useWindowFileDrop(
       <div class="mb-4 flex flex-wrap items-start justify-between gap-4">
         <div class="min-w-0">
           <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-app-muted">
-            Insho mavzusi
+            {{ t('essayPage.topicLabel') }}
           </p>
           <h2 class="mt-1 max-w-2xl truncate text-[17px] font-bold tracking-[-0.015em] text-app-ink">
             {{ activeTopic?.text }}
@@ -381,7 +386,7 @@ const { isDragging } = useWindowFileDrop(
           @click="writeAnother"
         >
           <AppIcon name="plus" :size="14" />
-          Yangi insho
+          {{ t('essayPage.newEssay') }}
         </button>
       </div>
 
@@ -398,7 +403,7 @@ const { isDragging } = useWindowFileDrop(
           <summary
             class="flex cursor-pointer items-center justify-between px-5 py-4 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile"
           >
-            <span>Siz yuklagan sahifalar</span>
+            <span>{{ t('essayPage.yourPages') }}</span>
             <AppIcon
               name="chevronDown"
               :size="16"
@@ -416,7 +421,7 @@ const { isDragging } = useWindowFileDrop(
                 <span
                   class="absolute left-2 top-2 rounded-md bg-app-ink/80 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-app-surface"
                 >
-                  {{ index + 1 }}-sahifa
+                  {{ t('essayPage.pageBadge', { n: index + 1 }) }}
                 </span>
               </div>
             </div>
@@ -430,8 +435,8 @@ const { isDragging } = useWindowFileDrop(
 
     <FileDropOverlay
       :show="isDragging"
-      title="Insho rasmini tashlang"
-      :hint="`JPG, PNG, WEBP · ko‘pi bilan ${MAX_IMAGE_COUNT} ta`"
+      :title="t('essayPage.drop.title')"
+      :hint="t('essayPage.drop.formats', { n: MAX_IMAGE_COUNT })"
     />
 
     <!-- Add a topic -->
@@ -442,21 +447,21 @@ const { isDragging } = useWindowFileDrop(
           class="relative w-full max-w-[520px] rounded-2xl border border-app-border bg-app-surface p-6 shadow-app-card"
           role="dialog"
           aria-modal="true"
-          aria-label="Yangi insho mavzusi"
+          :aria-label="t('essayPage.addDialog.title')"
         >
           <div class="flex items-start justify-between gap-4">
             <div>
               <h2 class="text-[18px] font-bold tracking-[-0.015em] text-app-ink">
-                Yangi insho mavzusi
+                {{ t('essayPage.addDialog.title') }}
               </h2>
               <p class="mt-1 text-[13px] leading-[1.6] text-app-muted">
-                Internetdan topgan yoki o‘zingiz tuzgan mavzu bo‘yicha insho yozib, tekshirtiring.
+                {{ t('essayPage.addDialog.description') }}
               </p>
             </div>
             <button
               type="button"
               class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-app-border text-app-muted transition-colors hover:bg-app-tile hover:text-app-ink"
-              aria-label="Yopish"
+              :aria-label="t('common.close')"
               @click="isAddOpen = false"
             >
               <AppIcon name="close" :size="16" />
@@ -465,13 +470,13 @@ const { isDragging } = useWindowFileDrop(
 
           <label class="mt-5 block">
             <span class="text-[11px] font-semibold uppercase tracking-[0.12em] text-app-muted">
-              Mavzu matni
+              {{ t('essayPage.addDialog.label') }}
             </span>
             <textarea
               v-model="draftTopic"
               rows="4"
               :maxlength="MAX_TOPIC_LENGTH"
-              placeholder="Masalan: Kitob — bilim manbai"
+              :placeholder="t('essayPage.addDialog.placeholder')"
               class="mt-2 w-full resize-y rounded-xl border border-app-border bg-app-sunken p-4 text-[14px] leading-[1.6] text-app-ink outline-none transition-colors placeholder:text-app-muted focus:border-app-ink focus:bg-app-surface"
             ></textarea>
           </label>
@@ -479,7 +484,7 @@ const { isDragging } = useWindowFileDrop(
             {{ draftTopic.length }}/{{ MAX_TOPIC_LENGTH }}
           </p>
 
-          <p v-if="addError" class="mt-2 text-[13px] font-medium text-app-bad">{{ addError }}</p>
+          <p v-if="addError" class="mt-2 text-[13px] font-medium text-app-bad">{{ wordEssayMessage(addError) }}</p>
 
           <div class="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button
@@ -487,7 +492,7 @@ const { isDragging } = useWindowFileDrop(
               class="rounded-full border border-app-border bg-app-surface px-5 py-2.5 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile"
               @click="isAddOpen = false"
             >
-              Bekor qilish
+              {{ t('common.cancel') }}
             </button>
             <button
               type="button"
@@ -495,7 +500,7 @@ const { isDragging } = useWindowFileDrop(
               class="rounded-full bg-app-ink px-5 py-2.5 text-[14px] font-semibold text-app-surface transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               @click="saveTopic"
             >
-              {{ isSavingTopic ? 'Saqlanmoqda…' : 'Qo‘shish' }}
+              {{ isSavingTopic ? t('essayPage.addDialog.saving') : t('essayPage.addDialog.add') }}
             </button>
           </div>
         </div>
@@ -510,16 +515,16 @@ const { isDragging } = useWindowFileDrop(
           class="relative w-full max-w-[420px] rounded-2xl border border-app-border bg-app-surface p-6 text-center shadow-app-card"
           role="dialog"
           aria-modal="true"
-          aria-label="Bepul tekshiruvlar tugadi"
+          :aria-label="t('essayPage.topUp.title')"
         >
           <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-app-tile text-app-ink">
             <AppIcon name="coins" :size="22" />
           </span>
           <h2 class="mt-4 text-[18px] font-bold tracking-[-0.015em] text-app-ink">
-            Bepul tekshiruvlar tugadi
+            {{ t('essayPage.topUp.title') }}
           </h2>
           <p class="mt-2 text-[14px] leading-[1.6] text-app-muted">
-            Insho tekshirishni davom ettirish uchun hisobingizni to‘ldiring.
+            {{ t('essayPage.topUp.description') }}
           </p>
           <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-center">
             <button
@@ -527,14 +532,14 @@ const { isDragging } = useWindowFileDrop(
               class="rounded-full border border-app-border bg-app-surface px-5 py-2.5 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile"
               @click="needsTopUp = false"
             >
-              Yopish
+              {{ t('common.close') }}
             </button>
             <button
               type="button"
               class="rounded-full bg-app-ink px-5 py-2.5 text-[14px] font-semibold text-app-surface transition-opacity hover:opacity-90"
               @click="goToTopUp"
             >
-              Hisobni to‘ldirish
+              {{ t('essayPage.topUp.action') }}
             </button>
           </div>
         </div>

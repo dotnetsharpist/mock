@@ -36,8 +36,7 @@ const routes = [
         component: LandingPage,
         meta: {
           seo: {
-            description:
-              "Milliy Mock — testlar, essay tekshirish va kurslar orqali o'qish jarayoningizni samarali va qiziqarli qiling.",
+            descriptionKey: 'seo.home.description',
           },
         },
       },
@@ -51,9 +50,8 @@ const routes = [
         component: () => import('@/views/marketing/NatijalarPage.vue'),
         meta: {
           seo: {
-            title: 'Natijalar',
-            description:
-              'MilliyMock o‘quvchilarining milliy sertifikat imtihonlaridagi natijalari va muvaffaqiyat hikoyalari.',
+            titleKey: 'seo.natijalar.title',
+            descriptionKey: 'seo.natijalar.description',
           },
         },
       },
@@ -63,9 +61,8 @@ const routes = [
         component: () => import('@/views/marketing/FikrlarPage.vue'),
         meta: {
           seo: {
-            title: 'Fikrlar',
-            description:
-              'MilliyMock bilan milliy sertifikatga tayyorlangan o‘quvchilarning fikrlari va tajribalari.',
+            titleKey: 'seo.fikrlar.title',
+            descriptionKey: 'seo.fikrlar.description',
           },
         },
       },
@@ -75,9 +72,8 @@ const routes = [
         component: () => import('@/views/marketing/PlatformaPage.vue'),
         meta: {
           seo: {
-            title: 'Platforma',
-            description:
-              'MilliyMock platformasi: real test formati, batafsil natijalar va tayyorgarlikni kuzatib borish imkoniyati.',
+            titleKey: 'seo.platforma.title',
+            descriptionKey: 'seo.platforma.description',
           },
         },
       },
@@ -89,9 +85,8 @@ const routes = [
         component: () => import('@/views/marketing/KurslarPage.vue'),
         meta: {
           seo: {
-            title: 'Kurslar',
-            description:
-              'MilliyMock kurslari tayyorlanmoqda: video darslar, mavzu bo‘yicha mashqlar va kurs ichida natija kuzatuvi.',
+            titleKey: 'seo.kurslar.title',
+            descriptionKey: 'seo.kurslar.description',
           },
         },
       },
@@ -102,9 +97,8 @@ const routes = [
         component: () => import('@/views/marketing/EssayTekshirishPage.vue'),
         meta: {
           seo: {
-            title: 'Essay tekshirish',
-            description:
-              'Insho va yozma ishlaringizni sun’iy intellekt tekshiradi: xatolar, baho va aniq tavsiyalar.',
+            titleKey: 'seo.essayTekshirish.title',
+            descriptionKey: 'seo.essayTekshirish.description',
           },
         },
       },
@@ -119,9 +113,8 @@ const routes = [
         props: { doc: 'oferta' },
         meta: {
           seo: {
-            title: 'Ommaviy oferta',
-            description:
-              'MilliyMock platformasida tanga sotib olish shartlari: narxlar, to‘lov, pulni qaytarish va tomonlarning majburiyatlari.',
+            titleKey: 'seo.oferta.title',
+            descriptionKey: 'seo.oferta.description',
           },
         },
       },
@@ -132,9 +125,8 @@ const routes = [
         props: { doc: 'maxfiylik' },
         meta: {
           seo: {
-            title: 'Maxfiylik siyosati',
-            description:
-              'MilliyMock qanday shaxsga doir ma’lumotlarni yig‘adi, ularni qayerda saqlaydi va kimga uzatadi.',
+            titleKey: 'seo.maxfiylik.title',
+            descriptionKey: 'seo.maxfiylik.description',
           },
         },
       },
@@ -152,9 +144,8 @@ const routes = [
         component: () => import('@/views/PricingPage.vue'), // Lazy load the pricing page
         meta: {
           seo: {
-            title: 'Narxlar',
-            description:
-              'MilliyMock tariflari va narxlari. O‘zingizga mos rejani tanlang va milliy sertifikat testlariga tayyorgarlikni boshlang.',
+            titleKey: 'seo.narxlar.title',
+            descriptionKey: 'seo.narxlar.description',
           },
         },
       },
@@ -171,9 +162,8 @@ const routes = [
         meta: {
           subjectKey: 'math',
           seo: {
-            title: 'Matematika testlari',
-            description:
-              'Matematikadan milliy sertifikat testlarini real test formatida ishlang. O‘zingizga mos testni tanlang va darhol boshlang.',
+            titleKey: 'seo.math.title',
+            descriptionKey: 'seo.math.description',
           },
         },
       },
@@ -192,9 +182,8 @@ const routes = [
         meta: {
           subjectKey: 'history',
           seo: {
-            title: 'Tarix testlari',
-            description:
-              'O‘zbekiston va jahon tarixi bo‘yicha milliy sertifikat testlarini ishlang va bilimingizni sinab ko‘ring.',
+            titleKey: 'seo.tarix.title',
+            descriptionKey: 'seo.tarix.description',
           },
         },
       },
@@ -205,9 +194,8 @@ const routes = [
         meta: {
           subjectKey: 'physics',
           seo: {
-            title: 'Fizika testlari',
-            description:
-              'Fizikadan milliy sertifikat testlarini real test formatida ishlang. O‘zingizga mos testni tanlang va darhol boshlang.',
+            titleKey: 'seo.fizika.title',
+            descriptionKey: 'seo.fizika.description',
           },
         },
       },
@@ -218,9 +206,8 @@ const routes = [
         meta: {
           subjectKey: 'biology',
           seo: {
-            title: 'Biologiya testlari',
-            description:
-              'Biologiyadan milliy sertifikat namunaviy testlarini real test formatida ishlang. O‘zingizga mos testni tanlang va darhol boshlang.',
+            titleKey: 'seo.biologiya.title',
+            descriptionKey: 'seo.biologiya.description',
           },
         },
       },
@@ -236,7 +223,7 @@ const routes = [
               meta: {
                 chrome: false,
                 support: false,
-                seo: { title: 'Biologiya testi', robots: 'noindex, nofollow' },
+                seo: { titleKey: 'seo.biologiyaTest.title', robots: 'noindex, nofollow' },
               },
             }
           : { redirect: '/biologiya' }),
@@ -248,9 +235,8 @@ const routes = [
         meta: {
           subjectKey: 'motherTongue',
           seo: {
-            title: 'Ona tili testlari',
-            description:
-              'Ona tilidan milliy sertifikat testlarini real test formatida ishlang. O‘zingizga mos testni tanlang va darhol boshlang.',
+            titleKey: 'seo.onaTili.title',
+            descriptionKey: 'seo.onaTili.description',
           },
         },
       },
@@ -292,20 +278,20 @@ const routes = [
         path: 'dashboard',
         name: 'dashboard',
         component: () => import('@/views/app/DashboardPage.vue'),
-        meta: { requiresAuth: true, appTitle: 'Bosh sahifa', seo: { title: 'Bosh sahifa', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, appTitle: 'Bosh sahifa', seo: { titleKey: 'seo.app.dashboard', robots: 'noindex, nofollow' } },
       },
       {
         path: 'testlar',
         name: 'testlar',
         component: () => import('@/views/app/TestlarPage.vue'),
-        meta: { requiresAuth: true, appTitle: 'Testlar', appIcon: 'tests', seo: { title: 'Testlar', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, appTitle: 'Testlar', appIcon: 'tests', seo: { titleKey: 'seo.app.tests', robots: 'noindex, nofollow' } },
       },
       {
         // One subject's mock list — where a card in the Fanlar grid leads.
         path: 'testlar/:subject',
         name: 'testlar-subject',
         component: () => import('@/views/app/SubjectTestsPage.vue'),
-        meta: { requiresAuth: true, appTitle: 'Testlar', appIcon: 'tests', seo: { title: 'Testlar', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, appTitle: 'Testlar', appIcon: 'tests', seo: { titleKey: 'seo.app.tests', robots: 'noindex, nofollow' } },
       },
       {
         // Savollar banki — topic-by-topic practice questions, separate from
@@ -314,19 +300,19 @@ const routes = [
         path: 'savollar-banki',
         name: 'savollar-banki',
         component: () => import('@/views/app/questionBank/BankHomePage.vue'),
-        meta: { requiresAuth: true, appTitle: 'Savollar banki', appIcon: 'layers', seo: { title: 'Savollar banki', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, appTitle: 'Savollar banki', appIcon: 'layers', seo: { titleKey: 'seo.app.questionBank', robots: 'noindex, nofollow' } },
       },
       {
         path: 'savollar-banki/:subject',
         name: 'savollar-banki-subject',
         component: () => import('@/views/app/questionBank/BankSubjectPage.vue'),
-        meta: { requiresAuth: true, appTitle: 'Savollar banki', appIcon: 'layers', seo: { title: 'Savollar banki', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, appTitle: 'Savollar banki', appIcon: 'layers', seo: { titleKey: 'seo.app.questionBank', robots: 'noindex, nofollow' } },
       },
       {
         path: 'savollar-banki/:subject/statistika',
         name: 'savollar-banki-stats',
         component: () => import('@/views/app/questionBank/BankStatsPage.vue'),
-        meta: { requiresAuth: true, appTitle: 'Savollar banki', appIcon: 'layers', seo: { title: 'Savollar banki — statistika', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, appTitle: 'Savollar banki', appIcon: 'layers', seo: { titleKey: 'seo.app.questionBankStats', robots: 'noindex, nofollow' } },
       },
       {
         // The platform's own pricing screen: balance, plans, tanga history.
@@ -336,7 +322,7 @@ const routes = [
         path: 'tanga',
         name: 'tanga',
         component: () => import('@/views/app/NarxlarPage.vue'),
-        meta: { requiresAuth: true, appTitle: 'Narxlar', appIcon: 'coins', seo: { title: 'Narxlar', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, appTitle: 'Narxlar', appIcon: 'coins', seo: { titleKey: 'seo.app.pricing', robots: 'noindex, nofollow' } },
       },
       {
         // Where Click sends the student back after paying: ?paymentId=…. The
@@ -347,13 +333,13 @@ const routes = [
         path: 'payment/result',
         name: 'payment-result',
         component: () => import('@/views/app/PaymentResultPage.vue'),
-        meta: { requiresAuth: true, authEntry: 'login', appTitle: 'To‘lov', appIcon: 'coins', seo: { title: 'To‘lov', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, authEntry: 'login', appTitle: 'To‘lov', appIcon: 'coins', seo: { titleKey: 'seo.app.payment', robots: 'noindex, nofollow' } },
       },
       {
         path: 'essay',
         name: 'essay',
         component: () => import('@/views/app/EssayPage.vue'),
-        meta: { requiresAuth: true, appTitle: 'Essay tekshirish', appIcon: 'essay', seo: { title: 'Essay tekshirish', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, appTitle: 'Essay tekshirish', appIcon: 'essay', seo: { titleKey: 'seo.app.essay', robots: 'noindex, nofollow' } },
       },
       {
         // The student's own results — mock attempts and saved essay checkings.
@@ -362,7 +348,7 @@ const routes = [
         path: 'natijalarim',
         name: 'natijalarim',
         component: () => import('@/views/app/NatijalarPage.vue'),
-        meta: { requiresAuth: true, appTitle: 'Natijalar', appIcon: 'results', seo: { title: 'Natijalar', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, appTitle: 'Natijalar', appIcon: 'results', seo: { titleKey: 'seo.app.results', robots: 'noindex, nofollow' } },
       },
       {
         // One saved essay checking's analysis. Persisted client-side — see
@@ -370,7 +356,7 @@ const routes = [
         path: 'natijalarim/insho/:id',
         name: 'essay-analysis',
         component: () => import('@/views/app/EssayAnalysisPage.vue'),
-        meta: { requiresAuth: true, appTitle: 'Insho natijasi', appIcon: 'essay', seo: { title: 'Insho natijasi', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, appTitle: 'Insho natijasi', appIcon: 'essay', seo: { titleKey: 'seo.app.essayResult', robots: 'noindex, nofollow' } },
       },
       {
         // Not designed yet. Bosh sahifa's "Davom etayotgan kurslar" rows do not
@@ -384,19 +370,19 @@ const routes = [
         path: 'kurslarim',
         name: 'kurslar',
         component: () => import('@/views/app/AppPlaceholderPage.vue'),
-        meta: { requiresAuth: true, appTitle: 'Kurslar', appIcon: 'cap', seo: { title: 'Kurslar', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, appTitle: 'Kurslar', appIcon: 'cap', seo: { titleKey: 'seo.app.courses', robots: 'noindex, nofollow' } },
       },
       {
         path: 'statistika',
         name: 'statistika',
         component: () => import('@/views/app/AppPlaceholderPage.vue'),
-        meta: { requiresAuth: true, appTitle: 'Statistika', appIcon: 'stats', seo: { title: 'Statistika', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, appTitle: 'Statistika', appIcon: 'stats', seo: { titleKey: 'seo.app.stats', robots: 'noindex, nofollow' } },
       },
       {
         path: 'yordam',
         name: 'yordam',
         component: () => import('@/views/app/AppPlaceholderPage.vue'),
-        meta: { requiresAuth: true, appTitle: 'Yordam', appIcon: 'help', seo: { title: 'Yordam', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, appTitle: 'Yordam', appIcon: 'help', seo: { titleKey: 'seo.app.help', robots: 'noindex, nofollow' } },
       },
       {
         // Account settings *and* profile: one destination, not the three
@@ -404,13 +390,13 @@ const routes = [
         path: 'sozlamalar',
         name: 'sozlamalar',
         component: () => import('@/views/app/SozlamalarPage.vue'),
-        meta: { requiresAuth: true, appTitle: 'Sozlamalar', appIcon: 'settings', seo: { title: 'Sozlamalar', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, appTitle: 'Sozlamalar', appIcon: 'settings', seo: { titleKey: 'seo.app.settings', robots: 'noindex, nofollow' } },
       },
       {
         path: 'community',
         name: 'community',
         component: () => import('@/views/app/AppPlaceholderPage.vue'),
-        meta: { requiresAuth: true, appTitle: 'Community', appIcon: 'community', seo: { title: 'Community', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, appTitle: 'Community', appIcon: 'community', seo: { titleKey: 'seo.app.community', robots: 'noindex, nofollow' } },
       },
     ],
   },
@@ -444,14 +430,14 @@ const routes = [
         path: 'savollar-banki/:subject/savol/:id',
         name: 'savollar-banki-question',
         component: () => import('@/views/app/questionBank/BankQuestionPage.vue'),
-        meta: { requiresAuth: true, chrome: false, support: false, seo: { title: 'Savollar banki', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, chrome: false, support: false, seo: { titleKey: 'seo.app.questionBank', robots: 'noindex, nofollow' } },
       },
       {
         // A practice / timed session and, once finished, its results.
         path: 'savollar-banki/sessiya/:id',
         name: 'savollar-banki-session',
         component: () => import('@/views/app/questionBank/BankSessionPage.vue'),
-        meta: { requiresAuth: true, chrome: false, support: false, seo: { title: 'Mashq', robots: 'noindex, nofollow' } },
+        meta: { requiresAuth: true, chrome: false, support: false, seo: { titleKey: 'seo.app.practice', robots: 'noindex, nofollow' } },
       },
     ],
   },

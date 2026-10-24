@@ -3,14 +3,19 @@
 // components/app/TestLaunchDialogs.vue, with a slot for the body so the start,
 // report and reset dialogs all look like one family.
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppIcon from '@/components/app/AppIcon.vue'
+
+const { t } = useI18n()
 
 const props = defineProps({
   open: { type: Boolean, default: false },
   title: { type: String, required: true },
   icon: { type: String, default: '' },
-  confirmLabel: { type: String, default: 'Tasdiqlash' },
-  cancelLabel: { type: String, default: 'Bekor qilish' },
+  // Empty means the default wording, looked up at render so it follows the
+  // language switch.
+  confirmLabel: { type: String, default: '' },
+  cancelLabel: { type: String, default: '' },
   busy: { type: Boolean, default: false },
   confirmDisabled: { type: Boolean, default: false },
   error: { type: String, default: '' },
@@ -98,7 +103,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             type="button"
             data-dialog-close
             class="-mr-2 -mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-app-muted transition-colors hover:bg-app-tile hover:text-app-ink"
-            aria-label="Yopish"
+            :aria-label="t('common.close')"
             :disabled="busy"
             @click="emit('close')"
           >
@@ -119,7 +124,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             class="rounded-full border border-app-border bg-app-surface px-5 py-2.5 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:opacity-60"
             @click="emit('close')"
           >
-            {{ cancelLabel }}
+            {{ cancelLabel || t('common.cancel') }}
           </button>
           <button
             type="submit"
@@ -127,7 +132,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             class="rounded-full px-5 py-2.5 text-[14px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:cursor-not-allowed disabled:opacity-50"
             :class="danger ? 'bg-app-bad' : 'bg-app-ink'"
           >
-            {{ confirmLabel }}
+            {{ confirmLabel || t('bank.actions.confirm') }}
           </button>
         </div>
       </form>

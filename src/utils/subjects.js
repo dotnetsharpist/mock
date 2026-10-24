@@ -1,26 +1,46 @@
+import { t } from '@/i18n'
+
 // Shared subject filter definitions. `value` is a stable key; `aliases` are the
 // backend `subject` strings this option should match (case-insensitive). Aliases
 // cover likely spellings so filtering works regardless of how the admin enum is
 // stored. `null` aliases means "match everything" (the All option).
+//
+// `label` is a getter over `labelKey`, so a list rendering `option.label`
+// follows a language switch instead of keeping the language it was imported in.
+const withLabel = (option) =>
+  Object.defineProperty(option, 'label', {
+    enumerable: true,
+    configurable: true,
+    get: () => t(option.labelKey),
+  })
+
 export const SUBJECT_FILTER_OPTIONS = [
-  { value: 'all', label: 'Barcha fanlar', aliases: null },
-  { value: 'math', label: 'Matematika', aliases: ['math', 'matematika', 'математика'] },
-  { value: 'history', label: 'Tarix', aliases: ['history', 'tarix', 'история'] },
-  {
+  withLabel({ value: 'all', labelKey: 'subjectsCatalog.all', aliases: null }),
+  withLabel({
+    value: 'math',
+    labelKey: 'subjects.math.subjectValue',
+    aliases: ['math', 'matematika', 'математика'],
+  }),
+  withLabel({
+    value: 'history',
+    labelKey: 'subjects.history.subjectValue',
+    aliases: ['history', 'tarix', 'история'],
+  }),
+  withLabel({
     value: 'physics',
-    label: 'Fizika',
+    labelKey: 'subjects.physics.subjectValue',
     aliases: ['physics', 'fizika', 'физика'],
-  },
-  {
+  }),
+  withLabel({
     value: 'motherTongue',
-    label: 'Ona tili',
+    labelKey: 'subjects.motherTongue.subjectValue',
     aliases: ['mothertongue', 'mother tongue', 'ona tili', 'onatili', 'родной язык'],
-  },
-  {
+  }),
+  withLabel({
     value: 'biology',
-    label: 'Biologiya',
+    labelKey: 'subjects.biology.subjectValue',
     aliases: ['biology', 'biologiya', 'биология'],
-  },
+  }),
 ]
 
 export function subjectMatches(testSubject, aliases) {
@@ -91,11 +111,12 @@ export function subjectIcon(testSubject) {
 }
 
 // Map a backend subject string (e.g. "Math", "History", "NativeLanguage") to its
-// Uzbek display label (e.g. "Matematika"). Falls back to the raw value, then
-// "Matematika".
+// display label in the current language (e.g. "Matematika"). Falls back to the
+// raw value, then "Matematika". Call it where it renders (a computed), not once
+// at load, or the name keeps the language it was read in.
 export function subjectDisplayName(testSubject) {
   const match = SUBJECT_FILTER_OPTIONS.find(
     (option) => option.aliases && subjectMatches(testSubject, option.aliases),
   )
-  return match?.label || (testSubject ? String(testSubject).trim() : 'Matematika')
+  return match?.label || (testSubject ? String(testSubject).trim() : t('subjects.math.subjectValue'))
 }

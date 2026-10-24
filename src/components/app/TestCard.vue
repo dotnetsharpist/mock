@@ -3,8 +3,9 @@
 // the tests differ only by date and the eye should scan them in a block.
 // TestRow is the same test in list form, used where subjects are mixed.
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppIcon from './AppIcon.vue'
-import { ACTION_BY_STATE, SUBJECTS, unknownSubject } from './subjects.js'
+import { ACTION_BY_STATE, SUBJECTS, subjectTitleNames, unknownSubject } from './subjects.js'
 
 const props = defineProps({
   test: { type: Object, required: true },
@@ -18,6 +19,8 @@ const props = defineProps({
 
 defineEmits(['action'])
 
+const { t } = useI18n()
+
 const subject = computed(
   () => SUBJECTS[props.test.subjectKey] ?? unknownSubject(props.test.subjectRaw),
 )
@@ -26,9 +29,10 @@ const action = computed(() => ACTION_BY_STATE[props.test.state] ?? ACTION_BY_STA
 // This card only ever appears inside one subject, whose name is already the
 // page heading — so a title like "Tarix - Milliy Sertifikat 04.04.2026" repeats
 // it and costs a whole line in a narrow card. Strip the prefix, but never to
-// nothing: a test actually called "Tarix" keeps its name.
+// nothing: a test actually called "Tarix" keeps its name. The titles are typed
+// in Uzbek, so the Uzbek names are tried in Russian too — subjectTitleNames.
 const withoutSubjectPrefix = (value) => {
-  for (const name of [subject.value.fullLabel, subject.value.label].filter(Boolean)) {
+  for (const name of subjectTitleNames(subject.value)) {
     const pattern = new RegExp(`^\\s*${name.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\s*[-–—:]\\s*`, 'i')
     const stripped = value.replace(pattern, '')
     if (stripped && stripped !== value) return stripped
@@ -87,8 +91,8 @@ const takers = computed(() =>
         v-if="test.state === 'done' && test.expired"
         class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-app-tile text-app-ink"
         role="img"
-        aria-label="Vaqt tugadi"
-        title="Vaqt tugadi"
+        :aria-label="t('appUi.timeUp')"
+        :title="t('appUi.timeUp')"
       >
         <AppIcon name="clock" :size="13" />
       </span>
@@ -96,8 +100,8 @@ const takers = computed(() =>
         v-else-if="test.state === 'done'"
         class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-app-good-bg text-app-good"
         role="img"
-        aria-label="Yakunlangan"
-        title="Yakunlangan"
+        :aria-label="t('appUi.testCard.done')"
+        :title="t('appUi.testCard.done')"
       >
         <AppIcon name="check" :size="13" />
       </span>
@@ -105,8 +109,8 @@ const takers = computed(() =>
         v-else-if="test.state === 'progress'"
         class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-app-info-bg text-app-info"
         role="img"
-        aria-label="Yechilmoqda"
-        title="Yechilmoqda"
+        :aria-label="t('appUi.testCard.inProgress')"
+        :title="t('appUi.testCard.inProgress')"
       >
         <AppIcon name="clock" :size="13" />
       </span>
@@ -117,7 +121,7 @@ const takers = computed(() =>
         v-if="test.isPremium"
         class="inline-flex rounded-full bg-app-tile px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-app-ink"
       >
-        Premium
+        {{ t('appUi.testCard.premium') }}
       </span>
     </div>
 
@@ -127,7 +131,7 @@ const takers = computed(() =>
       <div class="min-w-0">
         <dt class="flex items-center gap-1.5 text-[11px] text-app-muted">
           <AppIcon name="tests" :size="12" class="shrink-0" />
-          <span class="truncate">Savollar soni</span>
+          <span class="truncate">{{ t('appUi.testCard.questions') }}</span>
         </dt>
         <dd class="mt-1 text-[17px] font-bold leading-none text-app-ink">
           {{ test.questionCount }}
@@ -136,7 +140,7 @@ const takers = computed(() =>
       <div class="min-w-0">
         <dt class="flex items-center gap-1.5 text-[11px] text-app-muted">
           <AppIcon name="community" :size="12" class="shrink-0" />
-          <span class="truncate">Ishtirokchilar</span>
+          <span class="truncate">{{ t('appUi.testCard.takers') }}</span>
         </dt>
         <dd class="mt-1 text-[17px] font-bold leading-none text-app-ink">{{ takers }}</dd>
       </div>
@@ -150,7 +154,7 @@ const takers = computed(() =>
       class="mt-auto flex w-full items-center justify-center gap-1.5 rounded-lg bg-app-ink px-4 py-2.5 text-[13px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:cursor-not-allowed disabled:opacity-60"
       @click="$emit('action', test)"
     >
-      {{ busy ? 'Ochilmoqda…' : action }}
+      {{ busy ? t('appUi.opening') : action }}
       <AppIcon name="arrowRight" :size="14" />
     </button>
   </article>

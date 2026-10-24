@@ -1,12 +1,17 @@
 <script setup>
 // Stats band, from `MilliyMock Landing.dc.html`.
 // The `fikrlar` id is the design's own anchor target for the nav.
-const stats = [
-  { value: '13,543+', label: 'Faol foydalanuvchi' },
-  { value: '98%', label: 'Mamnun foydalanuvchi' },
-  { value: '24/7', label: "Doimiy qo'llab-quvvatlash" },
-  { value: '10,000+', label: 'Yaratilgan testlar' },
-]
+//
+// The figures sit with their labels in i18n (landing.stats), because Russian
+// groups thousands differently.
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { tm, rt } = useI18n()
+
+const stats = computed(() =>
+  tm('landing.stats').map((stat) => ({ value: rt(stat.value), label: rt(stat.label) })),
+)
 </script>
 
 <template>

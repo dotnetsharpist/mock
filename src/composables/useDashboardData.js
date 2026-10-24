@@ -26,6 +26,7 @@ import { fetchAttemptScore } from '@/utils/attemptResults'
 import { attemptListState } from '@/utils/attemptStatus'
 import { subjectKeyFromApi } from '@/components/app/subjects.js'
 import { loadEssayCheckings } from '@/utils/essayCheckingStorage'
+import { t } from '@/i18n'
 
 // How many recent attempts get a get-results call. Covers the four activity
 // rows and the seven chart points with room for attempts that fail to resolve.
@@ -102,7 +103,7 @@ export function useDashboardData() {
         return {
           id: Number(a.id),
           testId: Number(test.id ?? a.testId),
-          title: String(test.title || '').trim() || 'Nomsiz test',
+          title: String(test.title || '').trim() || t('appUi.untitledTest'),
           subjectKey: subjectKeyFromApi(test.subject),
           subjectRaw: test.subject || '',
           questionCount: Number(test.questionCount) || 0,

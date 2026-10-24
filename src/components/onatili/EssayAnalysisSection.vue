@@ -23,6 +23,7 @@
 // tying a highlight in the essay to its card in the inspector, so they are
 // structural here rather than decoration.
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   ESSAY_BAND_MAX,
   ESSAY_SCALED_MAX,
@@ -46,6 +47,8 @@ const props = defineProps({
   // and III, a lone "IV" beside the heading is a label for nothing.
   sectionLabel: { type: String, default: '' },
 })
+
+const { t } = useI18n()
 
 const normalized = computed(() => normalizeEssayAnalysis(props.analysis))
 
@@ -287,7 +290,7 @@ const quoteMarkStyle = (error) => {
           </span>
         </p>
         <p class="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-app-muted">
-          Insho balli
+          {{ t('essayAnalysis.bandScore') }}
         </p>
       </div>
 
@@ -304,7 +307,7 @@ const quoteMarkStyle = (error) => {
             </span>
           </p>
           <p class="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-app-muted">
-            Shkala
+            {{ t('essayAnalysis.scale') }}
           </p>
         </div>
 
@@ -313,7 +316,7 @@ const quoteMarkStyle = (error) => {
             {{ essayWordCount }}
           </p>
           <p class="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-app-muted">
-            So‘z
+            {{ t('essayAnalysis.words') }}
           </p>
         </div>
 
@@ -322,7 +325,7 @@ const quoteMarkStyle = (error) => {
             {{ flatErrors.length }}
           </p>
           <p class="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-app-muted">
-            Xato
+            {{ t('essayAnalysis.errors') }}
           </p>
         </div>
       </div>
@@ -335,7 +338,7 @@ const quoteMarkStyle = (error) => {
           <svg v-else class="h-3.5 w-3.5 shrink-0 text-app-bad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
             <path d="M18 6 6 18M6 6l12 12" stroke-linecap="round" />
           </svg>
-          {{ normalized.onTopic ? 'Mavzuga mos' : 'Mavzudan chetlashgan' }}
+          {{ normalized.onTopic ? t('essayAnalysis.onTopic') : t('essayAnalysis.offTopic') }}
         </span>
         <span class="flex items-center gap-1.5 text-[13px] text-app-muted">
           <svg v-if="!normalized.copiedSuspected" class="h-3.5 w-3.5 shrink-0 text-app-good" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
@@ -344,13 +347,13 @@ const quoteMarkStyle = (error) => {
           <svg v-else class="h-3.5 w-3.5 shrink-0 text-app-bad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
             <path d="M18 6 6 18M6 6l12 12" stroke-linecap="round" />
           </svg>
-          {{ normalized.copiedSuspected ? 'Ko‘chirma gumoni bor' : 'Ko‘chirmakashlik aniqlanmadi' }}
+          {{ normalized.copiedSuspected ? t('essayAnalysis.copied') : t('essayAnalysis.notCopied') }}
         </span>
         <span
           v-if="sample"
           class="rounded-full border border-app-border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-app-muted"
         >
-          Namuna
+          {{ t('essayAnalysis.sample') }}
         </span>
       </span>
     </div>
@@ -374,7 +377,7 @@ const quoteMarkStyle = (error) => {
           ? 'border-app-ink bg-app-ink text-app-surface'
           : 'border-app-border bg-app-surface text-app-muted hover:border-app-ink hover:text-app-ink'"
       >
-        Barchasi
+        {{ t('essayAnalysis.all') }}
         <span class="tabular-nums" :class="allCatsActive ? 'text-app-surface/60' : 'text-app-muted'">{{ flatErrors.length }}</span>
       </button>
       <button
@@ -405,7 +408,7 @@ const quoteMarkStyle = (error) => {
         <svg class="h-3.5 w-3.5 shrink-0 text-app-good" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
           <path d="m5 13 4 4L19 7" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
-        Xato topilmadi: {{ cleanCats.map((cat) => catMeta(cat).label).join(', ') }}
+        {{ t('essayAnalysis.clean', { cats: cleanCats.map((cat) => catMeta(cat).label).join(', ') }) }}
       </span>
     </div>
 
@@ -421,9 +424,9 @@ const quoteMarkStyle = (error) => {
         ref="essayPane"
         class="rounded-2xl bg-app-surface p-6 border border-app-border shadow-app-card sm:p-8 lg:max-h-[76vh] lg:overflow-y-auto lg:[scrollbar-width:thin]"
       >
-        <h4 class="text-[16px] font-bold tracking-[-0.01em] text-app-ink">O‘quvchi inshosi</h4>
+        <h4 class="text-[16px] font-bold tracking-[-0.01em] text-app-ink">{{ t('essayAnalysis.essayHeading') }}</h4>
         <p class="mb-5 mt-1 text-[10px] font-normal uppercase tracking-[0.14em] text-app-muted">
-          Belgilangan joyni bosing — o‘ngdagi izoh bilan bog‘lanadi
+          {{ t('essayAnalysis.essayHint') }}
         </p>
         <div class="space-y-3 text-[15px] leading-[2] text-app-ink">
           <p v-for="(segments, pIndex) in segmentedParagraphs" :key="pIndex">

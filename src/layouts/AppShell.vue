@@ -11,6 +11,7 @@
 // mount and keeps watching, so a token cleared mid-session ejects the user.
 import { nextTick, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useBalanceStore } from '@/stores/balance'
 import { useAppUser } from '@/composables/useAppUser'
@@ -20,6 +21,7 @@ import AppIcon from '@/components/app/AppIcon.vue'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const authStore = useAuthStore()
 const balanceStore = useBalanceStore()
 const user = useAppUser()
@@ -145,7 +147,7 @@ watch(
           <button
             type="button"
             class="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full text-app-muted hover:bg-app-tile"
-            aria-label="Menyuni yopish"
+            :aria-label="t('appShell.drawer.close')"
             @click="isDrawerOpen = false"
           >
             <AppIcon name="close" :size="18" />
