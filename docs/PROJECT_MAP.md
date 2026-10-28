@@ -159,8 +159,9 @@ The modal offers the gateways and the bot (`utils/payment.js`,
 `PAYMENT_PROVIDERS` in `utils/payment.js` (currently Click and Payme). A
 provider also in `PAUSED_PAYMENT_PROVIDERS` keeps its tab, but the tab only
 says it doesn't work yet and points to the others — no checkout is started.
-Payme is paused (2026-10-23) until its payment page shows MilliyMock instead
-of the YATT name. The billing note names the working ones. Empty, the dialog is the Telegram-only one, with its original copy and
+The list is empty: Payme was paused 2026-10-23 → 2026-10-28, while its
+payment page showed the YATT name instead of MilliyMock. The billing note
+names the working ones. Empty, the dialog is the Telegram-only one, with its original copy and
 billing note, and everything below stays wired.
 
 The dialog is one tab per way to pay — Click, Payme (as their logos,

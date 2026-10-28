@@ -38,10 +38,8 @@ export const ONLINE_PAYMENT_ENABLED = PAYMENT_PROVIDERS.length > 0
 
 // Gateways that keep their tab but don't take payments yet: the tab says so
 // and points to the others, and no checkout is ever started for them.
-// TEMP (2026-10-23): Payme's payment page shows the sole proprietor's (YATT)
-// name and no logo until Payme sets the cashbox's branding — take it out of
-// this list once it shows MilliyMock.
-export const PAUSED_PAYMENT_PROVIDERS = [PAYMENT_PROVIDER_PAYME]
+// Empty since 2026-10-28, when Payme's payment page started showing MilliyMock.
+export const PAUSED_PAYMENT_PROVIDERS = []
 export const WORKING_PAYMENT_PROVIDERS = PAYMENT_PROVIDERS.filter(
   (provider) => !PAUSED_PAYMENT_PROVIDERS.includes(provider),
 )
