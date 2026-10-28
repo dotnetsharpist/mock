@@ -1,4 +1,6 @@
 <script setup>
+import { useI18n } from 'vue-i18n'
+
 defineProps({
   answeredCount: {
     type: Number,
@@ -19,6 +21,8 @@ defineProps({
 })
 
 defineEmits(['submit'])
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -31,7 +35,7 @@ defineEmits(['submit'])
       <div class="flex items-center gap-2.5">
         <button
           type="button"
-          aria-label="Savollar ro'yxati"
+          :aria-label="t('testFlow.questionList')"
           class="inline-flex h-9 w-9 items-center justify-center rounded-[8px] border border-[#e0ddd7] bg-white text-[#1a1814] transition hover:bg-[#1a1814] hover:text-white"
         >
           <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

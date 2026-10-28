@@ -4,6 +4,7 @@
 // TestLaunchDialogs; the app tokens are global, so the public subject pages'
 // cards use it too.
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppIcon from './AppIcon.vue'
 import StatusBadge from './StatusBadge.vue'
 import { ATTEMPT_STATUS } from '@/utils/attemptStatus'
@@ -17,8 +18,10 @@ const props = defineProps({
 
 const emit = defineEmits(['go', 'finish', 'close'])
 
+const { t } = useI18n()
+
 const isPaused = computed(() => props.attempt?.attemptStatus === ATTEMPT_STATUS.paused)
-const title = computed(() => props.attempt?.title || 'Nomsiz test')
+const title = computed(() => props.attempt?.title || t('attemptGate.untitled'))
 </script>
 
 <template>
@@ -36,7 +39,7 @@ const title = computed(() => props.attempt?.title || 'Nomsiz test')
           type="button"
           :disabled="busy"
           class="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-app-muted transition-colors hover:bg-app-tile hover:text-app-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-app-ink disabled:opacity-60"
-          aria-label="Yopish"
+          :aria-label="t('common.close')"
           @click="emit('close')"
         >
           <AppIcon name="close" :size="16" />
@@ -50,27 +53,27 @@ const title = computed(() => props.attempt?.title || 'Nomsiz test')
         </span>
 
         <h2 id="active-attempt-title" class="mt-4 text-[18px] font-bold tracking-[-0.015em] text-app-ink">
-          Sizda tugallanmagan test bor
+          {{ t('attemptGate.dialogTitle') }}
         </h2>
         <p class="mt-2 text-[14px] leading-[1.6] text-app-muted">
-          Yangi testni boshlashdan oldin uni davom ettiring yoki yakunlang.
+          {{ t('attemptGate.dialogText') }}
         </p>
 
         <!-- The open attempt, so the choice is made knowing how far along it is. -->
         <div class="mt-4 rounded-xl bg-app-sunken px-4 py-3 text-left">
           <StatusBadge tone="info" class="!px-2.5 !py-0.5 !text-[11px]">
-            {{ isPaused ? 'Pauzada' : 'Vaqt ketmoqda' }}
+            {{ isPaused ? t('attemptGate.paused') : t('attemptGate.running') }}
           </StatusBadge>
           <p class="mt-1.5 line-clamp-2 text-[14px] font-semibold leading-snug text-app-ink">
             {{ title }}
           </p>
           <p class="mt-0.5 text-[13px] text-app-muted">
-            {{ attempt.answeredCount }} ta javob berildi, {{ attempt.remainingCount }} ta qoldi
+            {{ t('attemptGate.progress', { answered: attempt.answeredCount, remaining: attempt.remainingCount }) }}
           </p>
         </div>
 
         <p class="mt-3 text-[12.5px] leading-[1.5] text-app-muted">
-          Yakunlangan testni davom ettirib bo‘lmaydi — natijasi «Natijalar» sahifasida bo‘ladi.
+          {{ t('attemptGate.finishedNote') }}
         </p>
 
         <p v-if="error" class="mt-3 text-[13px] text-app-bad" role="alert">{{ error }}</p>
@@ -82,7 +85,7 @@ const title = computed(() => props.attempt?.title || 'Nomsiz test')
             class="rounded-full border border-app-border bg-app-surface px-5 py-2.5 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:opacity-60"
             @click="emit('finish')"
           >
-            {{ busy ? 'Yakunlanmoqda…' : 'Testni yakunlash' }}
+            {{ busy ? t('attemptGate.finishing') : t('attemptGate.finish') }}
           </button>
           <button
             type="button"
@@ -90,7 +93,7 @@ const title = computed(() => props.attempt?.title || 'Nomsiz test')
             class="inline-flex items-center justify-center gap-1.5 rounded-full bg-app-ink px-5 py-2.5 text-[14px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:opacity-60"
             @click="emit('go')"
           >
-            Testga o‘tish
+            {{ t('attemptGate.goToTest') }}
             <AppIcon name="arrowRight" :size="15" />
           </button>
         </div>

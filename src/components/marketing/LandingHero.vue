@@ -6,17 +6,23 @@
 // rotation is a no-op, so no transform wrapper is emitted. The figure's lean is
 // baked into the render itself, not applied here.
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlatformEntry } from '@/composables/usePlatformEntry'
 import { useLiveTestCount } from '@/composables/useLiveTestCount'
 import dashboardFigure from '@/assets/landing/dashboard-figure.png'
 
+const { t, locale } = useI18n()
 const { start } = usePlatformEntry()
 
 // Social proof is the real number of tests taken on MilliyMock, counting up and
 // re-polling — the figure the old hero showed — rather than a claim about how
 // many people trust us.
 const { count, isLive } = useLiveTestCount()
-const countLabel = computed(() => count.value.toLocaleString('en-US'))
+// Grouped the way each language reads it: "13,543" in Uzbek, as the design
+// has it, but "13 543" in Russian, where a comma is the decimal point.
+const countLabel = computed(() =>
+  count.value.toLocaleString(locale.value === 'ru' ? 'ru-RU' : 'en-US'),
+)
 </script>
 
 <template>
@@ -32,13 +38,16 @@ const countLabel = computed(() => count.value.toLocaleString('en-US'))
       <h1
         class="mb-[20px] text-[38px] font-bold leading-[1.12] tracking-[-0.025em] sm:mb-[28px] sm:text-[56px] sm:leading-[1.08] lg:text-[72px]"
       >
-        Bilimingizni sinang. <span class="text-accent">Natijangizni oshiring.</span>
+        {{ t('landing.hero.titleStart') }}
+        <span class="text-accent">{{ t('landing.hero.titleHighlight') }}</span>
       </h1>
 
       <!-- One line at this measure. The old three-line version listed the
            product's parts, which the feature columns below already do. -->
       <p class="mb-[32px] max-w-[400px] text-[17px] leading-[1.6] text-muted sm:mb-[40px] sm:text-[19px] sm:leading-[1.65]">
-        <span class="text-ink">Milliy Mock</span> — testlar va essay tekshirish bitta joyda.
+        <i18n-t keypath="landing.hero.tagline" scope="global">
+          <template #brand><span class="text-ink">Milliy Mock</span></template>
+        </i18n-t>
       </p>
 
       <div class="flex flex-wrap items-center gap-[24px]">
@@ -46,7 +55,7 @@ const countLabel = computed(() => count.value.toLocaleString('en-US'))
           :to="start"
           class="inline-flex items-center gap-[10px] whitespace-nowrap rounded-full bg-ink px-[30px] py-[16px] text-[16px] font-medium text-white transition-transform duration-200 hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink motion-reduce:hover:scale-100"
         >
-          Bepul boshlash <span aria-hidden="true">→</span>
+          {{ t('landing.startFree') }} <span aria-hidden="true">→</span>
         </RouterLink>
 
         <!-- HIDDEN FOR NOW (by request) — the "Qanday ishlaydi?" play button.
@@ -65,7 +74,7 @@ const countLabel = computed(() => count.value.toLocaleString('en-US'))
               <path d="M3.8 2.4 L11.4 7 L3.8 11.6 Z" fill="#111111" />
             </svg>
           </span>
-          Qanday ishlaydi?
+          {{ t('landing.hero.howItWorks') }}
         </RouterLink>
       </div>
 
@@ -85,7 +94,7 @@ const countLabel = computed(() => count.value.toLocaleString('en-US'))
     >
       <img
         :src="dashboardFigure"
-        alt="Milliy Mock platformasining boshqaruv paneli"
+        :alt="t('landing.hero.figureAlt')"
         width="1532"
         height="925"
         loading="lazy"
@@ -105,7 +114,7 @@ const countLabel = computed(() => count.value.toLocaleString('en-US'))
         <span
           v-if="isLive"
           class="relative flex h-[6px] w-[6px]"
-          title="Jonli hisob — real vaqtda yangilanadi"
+          :title="t('landing.hero.liveTitle')"
           aria-hidden="true"
         >
           <span
@@ -114,7 +123,7 @@ const countLabel = computed(() => count.value.toLocaleString('en-US'))
           <span class="relative inline-flex h-[6px] w-[6px] rounded-full bg-emerald-500"></span>
         </span>
         <span class="font-semibold tabular-nums text-ink">{{ countLabel }}+</span>
-        ishlangan test
+        {{ t('landing.hero.testsTaken', count) }}
       </p>
     </div>
   </header>

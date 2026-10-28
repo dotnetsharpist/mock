@@ -13,6 +13,7 @@
 // attempt comes up behind the pause overlay, and one that ended meanwhile goes
 // straight to its result.
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { ATTEMPT_STATUS, normalizeActiveAttempt } from '@/utils/attemptStatus'
 import { formatCountdown } from '@/utils/formatCountdown'
@@ -20,6 +21,7 @@ import AppCard from './AppCard.vue'
 import AppIcon from './AppIcon.vue'
 import StatusBadge from './StatusBadge.vue'
 
+const { t } = useI18n()
 const authStore = useAuthStore()
 
 const rawAttempt = computed(() => authStore.userInfo?.activeAttempt ?? null)
@@ -96,11 +98,11 @@ const hasRunOut = computed(
 
 const isVisible = computed(() => Boolean(attempt.value) && !hasRunOut.value)
 
-const title = computed(() => attempt.value?.title || 'Nomsiz test')
+const title = computed(() => attempt.value?.title || t('attemptGate.untitled'))
 
 const progressLabel = computed(() => {
   const { answeredCount = 0, remainingCount = 0 } = attempt.value || {}
-  return `${answeredCount} ta javob berildi, ${remainingCount} ta qoldi`
+  return t('attemptGate.progress', { answered: answeredCount, remaining: remainingCount })
 })
 
 const continueTo = computed(() => ({
@@ -113,7 +115,7 @@ const continueTo = computed(() => ({
   <AppCard v-if="isVisible" class="mb-5">
     <section
       class="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6"
-      aria-label="Tugallanmagan test"
+      :aria-label="t('attemptGate.bannerLabel')"
     >
       <div class="flex min-w-0 flex-1 items-center gap-4">
         <span
@@ -127,7 +129,7 @@ const continueTo = computed(() => ({
           <!-- In progress either way, so both read as info — "paused" is a
                state of an open attempt, not a warning. -->
           <StatusBadge tone="info" class="!px-2.5 !py-0.5 !text-[11px]">
-            {{ isPaused ? 'Pauzada' : 'Vaqt ketmoqda' }}
+            {{ isPaused ? t('attemptGate.paused') : t('attemptGate.running') }}
           </StatusBadge>
           <h2 class="mt-1.5 line-clamp-2 text-[15px] font-bold leading-snug tracking-[-0.01em] text-app-ink">
             {{ title }}
@@ -138,7 +140,7 @@ const continueTo = computed(() => ({
 
       <div class="flex items-center gap-5 sm:shrink-0">
         <div v-if="secondsLeft !== null">
-          <p class="text-[12px] text-app-muted">Qolgan vaqt</p>
+          <p class="text-[12px] text-app-muted">{{ t('testPage.timer') }}</p>
           <p class="text-[20px] font-bold leading-tight tracking-[-0.01em] text-app-ink tabular-nums">
             {{ formatCountdown(secondsLeft) }}
           </p>
@@ -148,7 +150,7 @@ const continueTo = computed(() => ({
           :to="continueTo"
           class="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full bg-app-ink px-5 py-2.5 text-[14px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
         >
-          Davom etish
+          {{ t('register.continue') }}
           <AppIcon name="arrowRight" :size="15" />
         </RouterLink>
       </div>

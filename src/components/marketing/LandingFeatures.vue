@@ -1,6 +1,9 @@
 <script setup>
 // Feature columns, from `MilliyMock Landing.dc.html`.
 // The `platforma`, `essay` and `kurslar` ids are the design's own nav anchors.
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -32,9 +35,9 @@
             <path d="M9 16h4" />
           </svg>
         </span>
-        <h3 class="mb-[12px] text-[19px] font-bold">Mock testlar</h3>
+        <h3 class="mb-[12px] text-[19px] font-bold">{{ t('landing.features.mock.title') }}</h3>
         <p class="text-[15px] leading-[1.6] text-muted">
-          Haqiqiy imtihonlarga mos testlar bilan bilimingizni sinang.
+          {{ t('landing.features.mock.text') }}
         </p>
       </div>
 
@@ -60,9 +63,9 @@
             <path d="M16.5 3.5l4 4L7 21H3v-4z" />
           </svg>
         </span>
-        <h3 class="mb-[12px] text-[19px] font-bold">Essay tekshirish</h3>
+        <h3 class="mb-[12px] text-[19px] font-bold">{{ t('landing.features.essay.title') }}</h3>
         <p class="text-[15px] leading-[1.6] text-muted">
-          Ingliz tili esselaringizni AI va ekspertlarimiz tekshiradi.
+          {{ t('landing.features.essay.text') }}
         </p>
       </div>
 
@@ -88,9 +91,9 @@
             <path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z" />
           </svg>
         </span>
-        <h3 class="mb-[12px] text-[19px] font-bold">Kurslar</h3>
+        <h3 class="mb-[12px] text-[19px] font-bold">{{ t('landing.features.courses.title') }}</h3>
         <p class="text-[15px] leading-[1.6] text-muted">
-          Video darslar va amaliy mashqlar bilan bilimingizni oshiring.
+          {{ t('landing.features.courses.text') }}
         </p>
       </div>
 
@@ -115,9 +118,9 @@
             <path d="M15 11h5v5" />
           </svg>
         </span>
-        <h3 class="mb-[12px] text-[19px] font-bold">Natija va tahlil</h3>
+        <h3 class="mb-[12px] text-[19px] font-bold">{{ t('landing.features.results.title') }}</h3>
         <p class="text-[15px] leading-[1.6] text-muted">
-          Batafsil statistika va tahlillar orqali o'sish yo'lingizni kuzating.
+          {{ t('landing.features.results.text') }}
         </p>
       </div>
     </div>

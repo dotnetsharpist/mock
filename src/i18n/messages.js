@@ -777,7 +777,7 @@ const messages = {
         sat: 'SAT',
         act: 'ACT',
         math: 'Математика',
-        history: 'Тарих',
+        history: 'История',
         physics: 'Физика',
         motherTongue: 'Родной язык',
         biology: 'Биология',
@@ -950,21 +950,21 @@ const messages = {
       plans: [
         {
           name: 'Малый пакет',
-          price: "20 000 so'm",
+          price: '20 000 сум',
           tokens: 5,
           highlighted: false,
           features: ['2 премиум-теста или проверки эссе', 'Чтобы попробовать']
         },
         {
           name: 'Средний пакет',
-          price: "35 000 so'm",
+          price: '35 000 сум',
           tokens: 10,
           highlighted: true,
           features: ['5 премиум-тестов или проверок эссе', 'На несколько недель подготовки']
         },
         {
           name: 'Большой пакет',
-          price: "70 000 so'm",
+          price: '70 000 сум',
           tokens: 25,
           highlighted: false,
           bestValue: true,

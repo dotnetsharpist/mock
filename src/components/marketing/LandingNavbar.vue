@@ -6,23 +6,26 @@
 // separate bars rather than one navigation.
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { usePlatformEntry } from '@/composables/usePlatformEntry'
+import LanguageSwitch from '@/components/LanguageSwitch.vue'
 import logoLockup from '@/assets/landing/logo-lockup.png'
 
 const navItems = [
   // Platforma is the one link that is no longer an in-page anchor: `/platforma`
   // is now a real page (the screen tour), and a four-word feature column on the
   // landing page was a weaker answer than the thing itself.
-  { label: 'Platforma', to: '/platforma' },
-  { label: 'Fikrlar', to: '/fikrlar' },
+  { label: 'platform', to: '/platforma' },
+  { label: 'reviews', to: '/fikrlar' },
   // The essay analysis screen has its own page — better than an anchor to a
   // four-word feature column, and it keeps /platforma about the platform.
-  { label: 'Essay tekshirish', to: '/essay-tekshirish' },
+  { label: 'essay', to: '/essay-tekshirish' },
   // Courses do not exist yet, so this leads to the page that says so — an
   // anchor to a four-word feature column implied they were already there.
-  { label: 'Kurslar', to: '/kurslar' },
+  { label: 'courses', to: '/kurslar' },
 ]
 
+const { t } = useI18n()
 const { enter } = usePlatformEntry()
 
 const open = ref(false)
@@ -39,7 +42,7 @@ watch(() => route.fullPath, () => {
   <div class="relative">
     <nav
       class="mx-auto box-content flex max-w-[1280px] items-center justify-between px-[20px] py-[18px] sm:px-[32px] lg:h-[92px] lg:px-[48px] lg:py-0"
-      aria-label="Asosiy menyu"
+      :aria-label="t('landingNav.label')"
     >
       <RouterLink
         to="/"
@@ -63,45 +66,51 @@ watch(() => route.fullPath, () => {
           :to="item.to"
           class="rounded-sm text-navlink transition-colors hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
         >
-          {{ item.label }}
+          {{ t(`landingNav.${item.label}`) }}
         </RouterLink>
       </div>
 
-      <RouterLink
-        :to="enter"
-        class="hidden items-center gap-[9px] whitespace-nowrap rounded-full bg-ink px-[24px] py-[12px] text-[15px] font-medium text-white transition-transform duration-200 hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink motion-reduce:hover:scale-100 lg:inline-flex"
-      >
-        Platformaga kirish <span class="text-[15px]" aria-hidden="true">→</span>
-      </RouterLink>
+      <!-- The language switch stays outside the collapsed menu: a visitor who
+           doesn't read Uzbek has no reason to open a menu labelled in it. -->
+      <div class="flex items-center gap-[12px] lg:gap-[20px]">
+        <LanguageSwitch tone="landing" />
 
-      <button
-        type="button"
-        class="-mr-[8px] inline-flex h-[40px] w-[40px] items-center justify-center rounded-full text-navlink transition-colors hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink lg:hidden"
-        :aria-expanded="open"
-        aria-controls="menyu"
-        :aria-label="open ? 'Menyuni yopish' : 'Menyuni ochish'"
-        @click="open = !open"
-      >
-        <!-- Bare lines in the nav-link grey, no chrome around them: at this size
-             a filled ink tile carried more weight than the logo opposite it. -->
-        <svg
-          width="22"
-          height="22"
-          viewBox="0 0 22 22"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-          stroke-linecap="round"
-          aria-hidden="true"
+        <RouterLink
+          :to="enter"
+          class="hidden items-center gap-[9px] whitespace-nowrap rounded-full bg-ink px-[24px] py-[12px] text-[15px] font-medium text-white transition-transform duration-200 hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink motion-reduce:hover:scale-100 lg:inline-flex"
         >
-          <template v-if="!open">
-            <path d="M3 6h16M3 11h16M3 16h16" />
-          </template>
-          <template v-else>
-            <path d="M5.5 5.5l11 11M16.5 5.5l-11 11" />
-          </template>
-        </svg>
-      </button>
+          {{ t('landingNav.enter') }} <span class="text-[15px]" aria-hidden="true">→</span>
+        </RouterLink>
+
+        <button
+          type="button"
+          class="-mr-[8px] inline-flex h-[40px] w-[40px] items-center justify-center rounded-full text-navlink transition-colors hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink lg:hidden"
+          :aria-expanded="open"
+          aria-controls="menyu"
+          :aria-label="open ? t('landingNav.closeMenu') : t('landingNav.openMenu')"
+          @click="open = !open"
+        >
+          <!-- Bare lines in the nav-link grey, no chrome around them: at this size
+               a filled ink tile carried more weight than the logo opposite it. -->
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 22 22"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <template v-if="!open">
+              <path d="M3 6h16M3 11h16M3 16h16" />
+            </template>
+            <template v-else>
+              <path d="M5.5 5.5l11 11M16.5 5.5l-11 11" />
+            </template>
+          </svg>
+        </button>
+      </div>
     </nav>
 
     <!-- The panel overlays the page rather than pushing it down, so opening the
@@ -121,7 +130,7 @@ watch(() => route.fullPath, () => {
           class="rounded-[12px] px-[14px] py-[13px] text-[16px] font-medium text-navlink transition-colors hover:bg-tile hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           @click="open = false"
         >
-          {{ item.label }}
+          {{ t(`landingNav.${item.label}`) }}
         </RouterLink>
 
         <RouterLink
@@ -129,7 +138,7 @@ watch(() => route.fullPath, () => {
           class="mt-[6px] inline-flex items-center justify-center gap-[9px] rounded-full bg-ink px-[24px] py-[14px] text-[16px] font-medium text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
           @click="open = false"
         >
-          Platformaga kirish <span aria-hidden="true">→</span>
+          {{ t('landingNav.enter') }} <span aria-hidden="true">→</span>
         </RouterLink>
       </div>
     </div>

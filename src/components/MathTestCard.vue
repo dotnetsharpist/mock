@@ -404,7 +404,7 @@ const handleAttemptedCardClick = () => {
             v-if="isPremium"
             class="font-mono-custom inline-flex items-center rounded-full border border-[#e0ddd7] bg-[#faf9f6] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#1a1814]"
           >
-            Premium
+            {{ t('mathCard.premium') }}
           </span>
         </div>
       </div>
@@ -572,14 +572,18 @@ const handleAttemptedCardClick = () => {
               </svg>
             </div>
             <div>
-              <h4 class="text-xl font-bold tracking-tight text-black">Premium test</h4>
-              <p class="mt-2 text-sm leading-6 text-gray-500">
-                «{{ test.title }}» ni ochish uchun
-                <span class="font-semibold text-black">{{ tokenCost }} tanga</span> sarflanadi.
-              </p>
-              <p class="mt-1 text-sm text-gray-500">
-                Hisobingizda: <span class="font-semibold text-black">{{ availableTanga }} tanga</span>
-              </p>
+              <h4 class="text-xl font-bold tracking-tight text-black">{{ t('testFlow.premium.title') }}</h4>
+              <i18n-t keypath="testFlow.premium.cost" tag="p" scope="global" class="mt-2 text-sm leading-6 text-gray-500">
+                <template #title>{{ test.title }}</template>
+                <template #cost>
+                  <span class="font-semibold text-black">{{ t('common.tangaCount', tokenCost) }}</span>
+                </template>
+              </i18n-t>
+              <i18n-t keypath="testFlow.premium.balance" tag="p" scope="global" class="mt-1 text-sm text-gray-500">
+                <template #balance>
+                  <span class="font-semibold text-black">{{ t('common.tangaCount', availableTanga) }}</span>
+                </template>
+              </i18n-t>
             </div>
 
             <p v-if="purchaseError" class="text-sm text-red-600">
@@ -593,7 +597,7 @@ const handleAttemptedCardClick = () => {
                 :disabled="isPurchasing"
                 class="inline-flex h-11 min-w-[7rem] items-center justify-center rounded-full border border-black bg-white px-6 text-sm font-semibold text-black transition duration-200 hover:bg-black hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Bekor qilish
+                {{ t('common.cancel') }}
               </button>
               <button
                 type="button"
@@ -601,7 +605,7 @@ const handleAttemptedCardClick = () => {
                 :disabled="isPurchasing"
                 class="inline-flex h-11 min-w-[7rem] items-center justify-center rounded-full border border-black bg-black px-6 text-sm font-semibold text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {{ isPurchasing ? 'Sotib olinmoqda…' : 'Sotib olish' }}
+                {{ isPurchasing ? t('testFlow.premium.buying') : t('pricing.buy') }}
               </button>
             </div>
           </div>
@@ -621,15 +625,17 @@ const handleAttemptedCardClick = () => {
               </svg>
             </div>
             <div>
-              <h4 class="text-xl font-bold tracking-tight text-black">Tanga yetarli emas</h4>
-              <p class="mt-2 text-sm leading-6 text-gray-500">
-                Bu premium testni ochish uchun
-                <span class="font-semibold text-black">{{ tokenCost }} tanga</span> kerak.
-              </p>
-              <p class="mt-1 text-sm text-gray-500">
-                Hisobingizda: <span class="font-semibold text-black">{{ availableTanga }} tanga</span>.
-                Tangalarni to‘ldiring.
-              </p>
+              <h4 class="text-xl font-bold tracking-tight text-black">{{ t('testFlow.premium.notEnoughTitle') }}</h4>
+              <i18n-t keypath="testFlow.premium.notEnoughText" tag="p" scope="global" class="mt-2 text-sm leading-6 text-gray-500">
+                <template #cost>
+                  <span class="font-semibold text-black">{{ t('common.tangaCount', tokenCost) }}</span>
+                </template>
+              </i18n-t>
+              <i18n-t keypath="testFlow.premium.balanceTopUp" tag="p" scope="global" class="mt-1 text-sm text-gray-500">
+                <template #balance>
+                  <span class="font-semibold text-black">{{ t('common.tangaCount', availableTanga) }}</span>
+                </template>
+              </i18n-t>
             </div>
 
             <div class="space-y-3">
@@ -638,14 +644,14 @@ const handleAttemptedCardClick = () => {
                 @click="goToPricing"
                 class="inline-flex h-12 w-full items-center justify-center rounded-full border border-black bg-black px-6 text-sm font-semibold text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.98]"
               >
-                Hisobni to‘ldirish
+                {{ t('appShell.topbar.topUp') }}
               </button>
               <button
                 type="button"
                 class="text-sm font-medium text-gray-400 transition hover:text-black"
                 @click="showTopUpModal = false"
               >
-                Yopish
+                {{ t('common.close') }}
               </button>
             </div>
           </div>

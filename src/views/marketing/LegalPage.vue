@@ -7,7 +7,12 @@
 // backend's offer `version`: the server records that version as the one the
 // student accepted, so a page edited without a new version would be a text
 // nobody agreed to.
+//
+// For the same reason the documents are not translated: the Uzbek text is the
+// one the student accepts. In Russian the page says so above it, and the
+// article keeps lang="uz" so a screen reader still reads it as Uzbek.
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import MarkdownIt from 'markdown-it'
 import oferta from '@/content/legal/oferta.md?raw'
 import maxfiylik from '@/content/legal/maxfiylik.md?raw'
@@ -15,6 +20,8 @@ import maxfiylik from '@/content/legal/maxfiylik.md?raw'
 const props = defineProps({
   doc: { type: String, required: true },
 })
+
+const { t, locale } = useI18n()
 
 const DOCS = { oferta, maxfiylik }
 
@@ -43,8 +50,14 @@ const html = computed(() => md.render(DOCS[props.doc] || ''))
 
 <template>
   <main class="mx-auto max-w-3xl px-4 pb-24 pt-16 sm:px-6 sm:pt-20 lg:px-8">
+    <p
+      v-if="locale !== 'uz'"
+      class="mb-8 rounded-[14px] border border-hairline bg-panel px-4 py-3 text-[14px] leading-[1.6] text-muted"
+    >
+      {{ t('legalPage.uzbekOnly') }}
+    </p>
     <!-- eslint-disable-next-line vue/no-v-html -- our own Markdown, raw HTML disabled -->
-    <article class="legal" v-html="html"></article>
+    <article class="legal" lang="uz" v-html="html"></article>
   </main>
 </template>
 

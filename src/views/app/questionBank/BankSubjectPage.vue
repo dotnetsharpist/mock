@@ -7,6 +7,7 @@
 // returns to the same list, page and all.
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AppTopbar from '@/components/app/AppTopbar.vue'
 import AppCard from '@/components/app/AppCard.vue'
 import AppIcon from '@/components/app/AppIcon.vue'
@@ -22,11 +23,11 @@ import BankStartDialog from '@/components/questionBank/BankStartDialog.vue'
 import {
   DIFFICULTIES,
   LANGUAGE_OPTIONS,
-  MODE_LABELS,
   STATUS_FILTERS,
   TYPE_OPTIONS,
   bankSubject,
   formatBankDate,
+  modeLabel,
   percent,
 } from '@/components/questionBank/bankLabels.js'
 import { toneForScore } from '@/components/app/score.js'
@@ -38,6 +39,7 @@ defineProps({
 })
 defineEmits(['openMenu'])
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const bank = useQuestionBankStore()
@@ -242,14 +244,19 @@ const filterSummary = computed(() => {
   const parts = []
   if (f.skillIds.length) {
     const names = f.skillIds.map((id) => skillNames.value.get(id)).filter(Boolean)
-    parts.push(names.length > 2 ? `${names.slice(0, 2).join(', ')} va yana ${names.length - 2} ta mavzu` : names.join(', '))
+    const more = names.length - 2
+    parts.push(
+      more > 0
+        ? t('bank.subject.moreTopics', { names: names.slice(0, 2).join(', '), n: more }, more)
+        : names.join(', '),
+    )
   }
   if (f.difficulties.length) {
     parts.push(DIFFICULTIES.filter((d) => f.difficulties.includes(d.value)).map((d) => d.label).join(', '))
   }
   if (f.status) parts.push(STATUS_FILTERS.find((s) => s.value === f.status)?.label)
-  if (f.saved) parts.push('saqlanganlar')
-  if (f.type) parts.push(TYPE_OPTIONS.find((t) => t.value === f.type)?.label)
+  if (f.saved) parts.push(t('bank.subject.savedSummary'))
+  if (f.type) parts.push(TYPE_OPTIONS.find((option) => option.value === f.type)?.label)
   if (f.language) parts.push(LANGUAGE_OPTIONS.find((l) => l.value === f.language)?.label)
   return parts.filter(Boolean).join(' · ')
 })
@@ -316,21 +323,21 @@ const emptyCopy = computed(() => {
   if (f.saved && !f.status && !f.skillIds.length && !f.difficulties.length) {
     return {
       icon: 'bookmark',
-      title: 'Saqlangan savollar yo‘q',
-      description: 'Savol ichidagi belgi tugmasini bosing — u shu yerda to‘planadi.',
+      title: t('bank.subject.emptySavedTitle'),
+      description: t('bank.subject.emptySavedText'),
     }
   }
   if (f.status === 'Incorrect' && !f.saved) {
     return {
       icon: 'checkCircle',
-      title: 'Xato javoblar yo‘q',
-      description: 'Xato yechilgan savollar shu yerda yig‘iladi, ularni qayta ishlashingiz mumkin.',
+      title: t('bank.subject.emptyMistakesTitle'),
+      description: t('bank.subject.emptyMistakesText'),
     }
   }
   return {
     icon: 'filter',
-    title: 'Bu filtrlarga mos savol yo‘q',
-    description: 'Boshqa mavzu yoki qiyinlikni tanlab ko‘ring.',
+    title: t('bank.subject.emptyFilteredTitle'),
+    description: t('bank.subject.emptyFilteredText'),
   }
 })
 
@@ -341,10 +348,10 @@ const sessionTone = (session) =>
 
 <template>
   <AppTopbar
-    :title="subject ? `${subject.label} — savollar banki` : 'Fan topilmadi'"
-    :subtitle="subject ? 'Mavzu tanlang, savollarni yeching va yechimlarini o‘rganing.' : ''"
+    :title="subject ? t('bank.subject.title', { subject: subject.label }) : t('bank.labels.subjectNotFound')"
+    :subtitle="subject ? t('bank.subject.subtitle') : ''"
     back-to="/savollar-banki"
-    back-label="Savollar banki"
+    :back-label="t('bank.title')"
     :user="user"
     @open-menu="$emit('openMenu')"
   />
@@ -353,23 +360,23 @@ const sessionTone = (session) =>
     <AppCard v-if="!subject">
       <EmptyState
         icon="layers"
-        title="Bunday fan yo‘q"
-        description="Havola eskirgan bo‘lishi mumkin. Fanlar ro‘yxatidan tanlang."
-        action-label="Savollar banki"
+        :title="t('bank.labels.noSuchSubject')"
+        :description="t('bank.subject.noSuchText')"
+        :action-label="t('bank.title')"
         action-to="/savollar-banki"
       />
     </AppCard>
 
     <AppCard v-else-if="topicsError && !topics.length">
-      <EmptyState icon="close" title="Savollarni yuklab bo‘lmadi" :description="topicsError" />
+      <EmptyState icon="close" :title="t('bank.subject.topicsError')" :description="topicsError" />
     </AppCard>
 
     <AppCard v-else-if="!topicsLoading && !totalQuestions && !filters.language">
       <EmptyState
         icon="layers"
-        title="Bu fandan savol qo‘shilmagan"
-        description="Savollar qo‘shilgach, ular shu yerda ochiladi."
-        action-label="Boshqa fanni tanlash"
+        :title="t('bank.subject.emptyTitle')"
+        :description="t('bank.subject.emptyText')"
+        :action-label="t('bank.subject.otherSubject')"
         action-to="/savollar-banki"
       />
     </AppCard>
@@ -378,7 +385,7 @@ const sessionTone = (session) =>
       <!-- Where the student stands, and the two lists they come back for -->
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div class="rounded-2xl border border-app-border bg-app-surface p-4 shadow-app-card">
-          <p class="text-[13px] font-medium text-app-muted">Yechilgan</p>
+          <p class="text-[13px] font-medium text-app-muted">{{ t('bank.subject.solved') }}</p>
           <p class="mt-1.5 text-[22px] font-bold tabular-nums text-app-ink">
             {{ answeredQuestions }}<span class="text-[15px] font-semibold text-app-muted">/{{ totalQuestions }}</span>
           </p>
@@ -388,7 +395,7 @@ const sessionTone = (session) =>
           class="rounded-2xl border border-app-border bg-app-surface p-4 shadow-app-card transition-colors hover:bg-app-sunken"
         >
           <p class="flex items-center justify-between text-[13px] font-medium text-app-muted">
-            Birinchi urinishda
+            {{ t('bank.labels.firstTry') }}
             <AppIcon name="arrowRight" :size="14" />
           </p>
           <p class="mt-1.5 text-[22px] font-bold tabular-nums text-app-ink">
@@ -402,7 +409,7 @@ const sessionTone = (session) =>
           @click="showMistakes"
         >
           <p class="flex items-center justify-between text-[13px] font-medium text-app-muted">
-            Xatolar
+            {{ t('bank.subject.mistakes') }}
             <AppIcon name="xCircle" :size="15" />
           </p>
           <p class="mt-1.5 text-[22px] font-bold tabular-nums text-app-ink">{{ stats?.mistakeCount ?? 0 }}</p>
@@ -414,7 +421,7 @@ const sessionTone = (session) =>
           @click="showSaved"
         >
           <p class="flex items-center justify-between text-[13px] font-medium text-app-muted">
-            Saqlangan
+            {{ t('bank.subject.saved') }}
             <AppIcon name="bookmark" :size="15" />
           </p>
           <p class="mt-1.5 text-[22px] font-bold tabular-nums text-app-ink">{{ stats?.savedCount ?? 0 }}</p>
@@ -432,7 +439,7 @@ const sessionTone = (session) =>
                 :aria-expanded="topicsOpenOnPhone"
                 @click="topicsOpenOnPhone = !topicsOpenOnPhone"
               >
-                Mavzular
+                {{ t('bank.subject.topics') }}
                 <span v-if="filters.skillIds.length" class="rounded-full bg-app-ink px-2 py-0.5 text-[11px] font-semibold text-app-surface">
                   {{ filters.skillIds.length }}
                 </span>
@@ -449,7 +456,7 @@ const sessionTone = (session) =>
                 class="text-[12.5px] font-semibold text-app-muted hover:text-app-ink"
                 @click="filters.skillIds = []"
               >
-                Tozalash
+                {{ t('bank.actions.clear') }}
               </button>
             </div>
             <div class="px-2 pb-3 lg:block" :class="topicsOpenOnPhone ? 'block' : 'hidden'">
@@ -457,14 +464,14 @@ const sessionTone = (session) =>
                 <SkeletonBlock v-for="n in 5" :key="n" class="h-9 w-full" />
               </div>
               <p v-else-if="!topics.length" class="px-3 py-4 text-[13px] text-app-muted">
-                Bu tilda savol yo‘q.
+                {{ t('bank.subject.noTopicsInLanguage') }}
               </p>
               <BankTopicTree v-else v-model="filters.skillIds" :domains="topics" />
             </div>
           </AppCard>
 
           <AppCard v-if="sessions.length" class="hidden lg:block">
-            <p class="text-[15px] font-bold text-app-ink">So‘nggi mashqlar</p>
+            <p class="text-[15px] font-bold text-app-ink">{{ t('bank.subject.recentSessions') }}</p>
             <ul class="mt-3 space-y-1">
               <li v-for="session in sessions" :key="session.id">
                 <RouterLink
@@ -473,12 +480,12 @@ const sessionTone = (session) =>
                 >
                   <span class="min-w-0 flex-1">
                     <span class="block text-[13.5px] font-semibold text-app-ink">
-                      {{ MODE_LABELS[session.mode] }} · {{ session.totalCount }} savol
+                      {{ t('bank.labels.sessionLine', { mode: modeLabel(session.mode), n: session.totalCount }, session.totalCount) }}
                     </span>
                     <span class="block text-[12px] text-app-muted">{{ formatBankDate(session.startedAt) }}</span>
                   </span>
                   <StatusBadge :tone="sessionTone(session)" class="!px-2.5 !py-1 !text-[12px]">
-                    {{ session.finishedAt ? `${session.correctCount}/${session.totalCount}` : 'Davom etish' }}
+                    {{ session.finishedAt ? `${session.correctCount}/${session.totalCount}` : t('bank.actions.continue') }}
                   </StatusBadge>
                 </RouterLink>
               </li>
@@ -536,19 +543,19 @@ const sessionTone = (session) =>
                 @click="filters.saved = !filters.saved"
               >
                 <AppIcon name="bookmark" :size="14" />
-                Saqlanganlar
+                {{ t('bank.subject.savedChip') }}
               </button>
 
               <AppSelect
                 v-model="typeModel"
                 :options="TYPE_OPTIONS"
-                aria-label="Savol turi"
+                :aria-label="t('bank.subject.typeLabel')"
                 class="w-[160px]"
               />
               <AppSelect
                 v-model="languageModel"
                 :options="LANGUAGE_OPTIONS"
-                aria-label="Savol tili"
+                :aria-label="t('bank.subject.languageLabel')"
                 class="w-[160px]"
               />
 
@@ -558,15 +565,17 @@ const sessionTone = (session) =>
                 class="px-2 py-2 text-[13px] font-semibold text-app-muted hover:text-app-ink"
                 @click="clearFilters"
               >
-                Filtrlarni tozalash
+                {{ t('bank.actions.clearFilters') }}
               </button>
             </div>
           </div>
 
           <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
             <p class="text-[14px] text-app-muted" role="status">
-              <template v-if="listLoading && !list.items.length">Yuklanmoqda…</template>
-              <template v-else><span class="font-semibold text-app-ink">{{ list.totalCount }}</span> ta savol</template>
+              <template v-if="listLoading && !list.items.length">{{ t('bank.labels.loading') }}</template>
+              <i18n-t v-else keypath="bank.subject.total" :plural="list.totalCount" scope="global">
+                <template #questions><span class="font-semibold text-app-ink">{{ list.totalCount }}</span></template>
+              </i18n-t>
             </p>
             <button
               type="button"
@@ -575,7 +584,7 @@ const sessionTone = (session) =>
               @click="openStart"
             >
               <AppIcon name="play" :size="17" />
-              Mashqni boshlash
+              {{ t('bank.start.title') }}
             </button>
           </div>
 
@@ -591,7 +600,7 @@ const sessionTone = (session) =>
               </div>
             </div>
 
-            <EmptyState v-else-if="listError" icon="close" title="Ro‘yxatni yuklab bo‘lmadi" :description="listError" />
+            <EmptyState v-else-if="listError" icon="close" :title="t('bank.subject.listError')" :description="listError" />
 
             <div v-else-if="!list.items.length" class="py-2">
               <EmptyState :icon="emptyCopy.icon" :title="emptyCopy.title" :description="emptyCopy.description" />
@@ -601,7 +610,7 @@ const sessionTone = (session) =>
                   class="rounded-full border border-app-border px-4 py-2 text-[13px] font-semibold text-app-ink hover:bg-app-tile"
                   @click="clearFilters"
                 >
-                  Filtrlarni tozalash
+                  {{ t('bank.actions.clearFilters') }}
                 </button>
               </div>
             </div>
@@ -616,7 +625,7 @@ const sessionTone = (session) =>
                   <BankStatusMark :is-correct="item.lastIsCorrect" class="mt-0.5" />
                   <span class="min-w-0 flex-1">
                     <BankRichText
-                      :text="item.preview || 'Savol'"
+                      :text="item.preview || t('bank.labels.question')"
                       inline
                       tag="span"
                       class="line-clamp-2 text-[14.5px] leading-[1.6] text-app-ink"
@@ -624,7 +633,7 @@ const sessionTone = (session) =>
                     <span class="mt-1 block truncate text-[12.5px] text-app-muted">
                       #{{ item.id }} · {{ item.domainName }} · {{ item.skillName }}<template
                         v-if="item.type === 'FreeAnswer'"
-                      > · yozma javob</template>
+                      > · {{ t('bank.subject.freeAnswerTag') }}</template>
                     </span>
                   </span>
                   <span class="flex shrink-0 items-center gap-2">
@@ -639,13 +648,13 @@ const sessionTone = (session) =>
           <nav
             v-if="list.totalPages > 1"
             class="mt-5 flex flex-wrap items-center justify-center gap-1.5 sm:justify-end"
-            aria-label="Sahifalar"
+            :aria-label="t('bank.subject.pages')"
           >
             <button
               type="button"
               class="flex h-9 w-9 items-center justify-center rounded-lg border border-app-border bg-app-surface text-app-ink transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40"
               :disabled="filters.page === 1"
-              aria-label="Oldingi sahifa"
+              :aria-label="t('bank.subject.previousPage')"
               @click="goToPage(filters.page - 1)"
             >
               <AppIcon name="arrowLeft" :size="16" />
@@ -671,7 +680,7 @@ const sessionTone = (session) =>
               type="button"
               class="flex h-9 w-9 items-center justify-center rounded-lg border border-app-border bg-app-surface text-app-ink transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40"
               :disabled="filters.page >= list.totalPages"
-              aria-label="Keyingi sahifa"
+              :aria-label="t('bank.subject.nextPage')"
               @click="goToPage(filters.page + 1)"
             >
               <AppIcon name="arrowRight" :size="16" />

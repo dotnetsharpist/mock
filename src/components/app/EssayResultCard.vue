@@ -6,6 +6,7 @@
 // StatusBadge tone scale, and score.js deciding what counts as a good band, so
 // an essay is graded by the same threshold as everything else.
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppIcon from './AppIcon.vue'
 import StatusBadge from './StatusBadge.vue'
 import { toneForScore } from './score.js'
@@ -17,14 +18,20 @@ const props = defineProps({
 
 const emit = defineEmits(['open', 'remove'])
 
+const { t, locale } = useI18n()
+
 const UZ_MONTHS = [
   'yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun',
   'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr',
 ]
 
+// "5-oktabr, 2026" / "5 октября 2026".
 const formattedDate = computed(() => {
   const date = new Date(props.entry.savedAt)
   if (Number.isNaN(date.getTime())) return ''
+  if (locale.value === 'ru') {
+    return `${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })} ${date.getFullYear()}`
+  }
   return `${date.getDate()}-${UZ_MONTHS[date.getMonth()]}, ${date.getFullYear()}`
 })
 
@@ -42,9 +49,12 @@ const scorePercent = computed(() => {
 const tone = computed(() => (bandTotal.value == null ? 'neutral' : toneForScore(scorePercent.value)))
 
 const metaLine = computed(() => {
-  const parts = [formattedDate.value, props.entry.mode === 'upload' ? 'Rasm' : 'Yozma']
+  const parts = [
+    formattedDate.value,
+    props.entry.mode === 'upload' ? t('resultUi.essay.modeUpload') : t('resultUi.essay.modeWrite'),
+  ]
   const pages = props.entry.uploads?.length || 0
-  if (props.entry.mode === 'upload' && pages) parts.push(`${pages} sahifa`)
+  if (props.entry.mode === 'upload' && pages) parts.push(t('resultUi.essay.pages', pages))
   return parts.filter(Boolean).join(' • ')
 })
 </script>
@@ -73,7 +83,7 @@ const metaLine = computed(() => {
       <button
         type="button"
         class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-app-muted opacity-0 transition hover:bg-app-tile hover:text-app-bad focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink group-hover:opacity-100"
-        :aria-label="`«${entry.topic}» tahlilini o‘chirish`"
+        :aria-label="t('resultUi.essay.remove', { topic: entry.topic })"
         @click.stop="emit('remove', entry.id)"
       >
         <AppIcon name="trash" :size="15" />
@@ -84,10 +94,10 @@ const metaLine = computed(() => {
 
     <div class="mt-4 flex items-center gap-2">
       <StatusBadge :tone="tone">
-        {{ bandTotal ?? '—' }} / {{ bandMax }} ball
+        {{ t('resultUi.essay.score', { total: bandTotal ?? '—', max: bandMax }, bandMax) }}
       </StatusBadge>
       <StatusBadge v-if="entry.sample" tone="neutral" class="!px-2 !py-0.5 !text-[11px]">
-        NAMUNA
+        {{ t('resultUi.essay.sample') }}
       </StatusBadge>
     </div>
 
@@ -103,7 +113,7 @@ const metaLine = computed(() => {
       class="mt-5 flex w-full items-center justify-center gap-1.5 rounded-lg bg-app-ink px-4 py-2.5 text-[13px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
       @click="emit('open', entry.id)"
     >
-      Tahlilni ko‘rish
+      {{ t('resultUi.essay.open') }}
       <AppIcon name="arrowRight" :size="14" />
     </button>
   </article>

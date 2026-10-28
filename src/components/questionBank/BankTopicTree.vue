@@ -3,8 +3,11 @@
 // Nothing ticked means "every topic" — the same as the API, where an empty
 // skill list is no filter at all.
 import { reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppIcon from '@/components/app/AppIcon.vue'
 import { percent } from './bankLabels.js'
+
+const { t } = useI18n()
 
 const props = defineProps({
   domains: { type: Array, required: true },
@@ -61,14 +64,14 @@ const toggleDomain = (domain) => {
           <span class="min-w-0 flex-1">
             <span class="block truncate text-[14px] font-semibold text-app-ink">{{ domain.name }}</span>
             <span class="text-[12px] text-app-muted">
-              {{ domain.answeredCount }}/{{ domain.questionCount }} yechilgan
+              {{ t('bank.topics.solved', { answered: domain.answeredCount, total: domain.questionCount }) }}
             </span>
           </span>
         </button>
         <button
           type="button"
           class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-app-muted hover:text-app-ink"
-          :aria-label="collapsed[domain.id] ? `${domain.name} mavzularini ochish` : `${domain.name} mavzularini yopish`"
+          :aria-label="t(collapsed[domain.id] ? 'bank.topics.expand' : 'bank.topics.collapse', { name: domain.name })"
           :aria-expanded="!collapsed[domain.id]"
           @click="collapsed[domain.id] = !collapsed[domain.id]"
         >

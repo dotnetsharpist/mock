@@ -19,8 +19,15 @@ export function usePaymentCheckout() {
   const { t } = useI18n()
   const startingProvider = ref('')
   const isStarting = computed(() => Boolean(startingProvider.value))
-  const error = ref('')
   const errorKind = ref('')
+  // The provider the failed checkout was for. The words are derived, not
+  // stored, so an error on screen follows a language switch.
+  const errorProvider = ref('')
+  const error = computed(() =>
+    errorKind.value
+      ? t(`pricing.payment.gateway.errors.${errorKind.value}`, { provider: errorProvider.value })
+      : '',
+  )
 
   // Back from the provider with the browser's back button, the page can come
   // out of the back/forward cache exactly as it left: button still spinning.
@@ -44,14 +51,14 @@ export function usePaymentCheckout() {
       startingProvider.value = ''
       // apiFetch is already taking them to /login.
       if (err?.status === 401) return
+      errorProvider.value = provider
       errorKind.value = checkoutErrorKind(err)
-      error.value = t(`pricing.payment.gateway.errors.${errorKind.value}`, { provider })
     }
   }
 
   function clearError() {
-    error.value = ''
     errorKind.value = ''
+    errorProvider.value = ''
   }
 
   return { start, startingProvider, isStarting, error, errorKind, clearError }

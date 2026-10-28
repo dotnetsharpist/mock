@@ -4,6 +4,7 @@
 // Only subjects the backend actually has published tests for appear here, so a
 // student never opens a fan and finds nothing. Counts are real test counts.
 import { computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppTopbar from '@/components/app/AppTopbar.vue'
 import SubjectCard from '@/components/app/SubjectCard.vue'
 import SkeletonBlock from '@/components/app/SkeletonBlock.vue'
@@ -15,6 +16,7 @@ defineProps({
 })
 defineEmits(['openMenu'])
 
+const { t } = useI18n()
 const catalog = useTestCatalogStore()
 
 onMounted(() => {
@@ -26,20 +28,20 @@ const subjects = computed(() => catalog.subjectsWithTests)
 const errorCopy = computed(() =>
   catalog.errorKind === 'network'
     ? {
-        title: 'Internetda uzilish bor',
-        description: 'Ulanishni tekshiring va sahifani yangilang.',
+        title: t('appUi.loadErrors.offline'),
+        description: t('appUi.loadErrors.checkAndReload'),
       }
     : {
-        title: 'Fanlarni yuklab bo‘lmadi',
-        description: 'Biroz kuting va qayta urinib ko‘ring.',
+        title: t('testsPage.subjectsLoadFailed'),
+        description: t('appUi.loadErrors.waitAndRetry'),
       },
 )
 </script>
 
 <template>
   <AppTopbar
-    title="Testlar"
-    subtitle="Fanlardan test tanlang va bilimlaringizni sinang."
+    :title="t('appShell.nav.tests')"
+    :subtitle="t('testsPage.subtitle')"
     :user="user"
     @open-menu="$emit('openMenu')"
   />
@@ -55,7 +57,7 @@ const errorCopy = computed(() =>
            It stays in the accessibility tree, and returns visibly from sm up
            where it labels the grid. -->
       <h2 class="sr-only text-[18px] font-bold tracking-[-0.015em] text-app-ink sm:not-sr-only">
-        Fanlar
+        {{ t('testsPage.subjectsHeading') }}
       </h2>
 
       <!-- Loading: the grid's own shape, so nothing shifts when the data lands -->
@@ -76,7 +78,7 @@ const errorCopy = computed(() =>
             <SkeletonBlock class="mt-6 h-3 w-16" />
           </div>
         </div>
-        <p class="sr-only" role="status">Fanlar yuklanmoqda</p>
+        <p class="sr-only" role="status">{{ t('testsPage.subjectsLoading') }}</p>
       </template>
 
       <EmptyState
@@ -90,8 +92,8 @@ const errorCopy = computed(() =>
       <EmptyState
         v-else-if="!subjects.length"
         icon="tests"
-        title="Hozircha fan qo‘shilmagan"
-        description="Testlar qo‘shilgach, fanlar shu yerda ro‘yxatga chiqadi."
+        :title="t('testsPage.noSubjects.title')"
+        :description="t('testsPage.noSubjects.description')"
       />
 
       <!-- Tighter gap in the phone's single column: the cards are rows there,

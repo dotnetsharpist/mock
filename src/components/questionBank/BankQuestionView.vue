@@ -6,10 +6,13 @@
 // revealed, because the same view serves three situations: practising from
 // the list, a practice/timed session, and reviewing a finished session.
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppIcon from '@/components/app/AppIcon.vue'
 import BankRichText from './BankRichText.vue'
 import BankDifficultyBadge from './BankDifficultyBadge.vue'
 import { OPTION_LETTERS } from './bankLabels.js'
+
+const { t } = useI18n()
 
 const props = defineProps({
   question: { type: Object, required: true },
@@ -69,11 +72,11 @@ const isCrossed = (option) => !props.reveal && props.crossedOut.includes(option.
 const verdict = computed(() => {
   switch (props.reveal?.status) {
     case 'correct':
-      return { icon: 'checkCircle', label: 'To‘g‘ri javob!', box: 'border-app-good/30 bg-app-good-bg', tone: 'text-app-good' }
+      return { icon: 'checkCircle', label: t('bank.question.verdictCorrect'), box: 'border-app-good/30 bg-app-good-bg', tone: 'text-app-good' }
     case 'wrong':
-      return { icon: 'xCircle', label: 'Xato javob', box: 'border-app-bad/30 bg-app-bad-bg', tone: 'text-app-bad' }
+      return { icon: 'xCircle', label: t('bank.question.verdictWrong'), box: 'border-app-bad/30 bg-app-bad-bg', tone: 'text-app-bad' }
     case 'skipped':
-      return { icon: 'info', label: 'Javob berilmagan', box: 'border-app-border bg-app-sunken', tone: 'text-app-ink' }
+      return { icon: 'info', label: t('bank.question.verdictSkipped'), box: 'border-app-border bg-app-sunken', tone: 'text-app-ink' }
     default:
       return null
   }
@@ -98,7 +101,7 @@ watch(
     <section
       v-if="question.passage"
       class="rounded-2xl border border-app-border bg-app-surface p-5 shadow-app-card lg:sticky lg:top-[88px] lg:max-h-[calc(100vh-190px)] lg:overflow-y-auto sm:p-6"
-      aria-label="Matn"
+      :aria-label="t('bank.question.passage')"
     >
       <button
         type="button"
@@ -106,7 +109,7 @@ watch(
         :aria-expanded="passageOpen"
         @click="passageOpen = !passageOpen"
       >
-        Matn
+        {{ t('bank.question.passage') }}
         <AppIcon
           name="chevronDown"
           :size="16"
@@ -139,7 +142,7 @@ watch(
       <!-- Free answer -->
       <div v-if="isFreeAnswer" class="mt-6">
         <label :for="`bank-answer-${question.id}`" class="text-[13px] font-semibold text-app-ink">
-          Javobingiz
+          {{ t('bank.question.yourAnswer') }}
         </label>
         <input
           :id="`bank-answer-${question.id}`"
@@ -149,7 +152,7 @@ watch(
           autocomplete="off"
           spellcheck="false"
           :disabled="locked"
-          placeholder="Javobni shu yerga yozing"
+          :placeholder="t('bank.question.answerPlaceholder')"
           class="mt-2 w-full rounded-xl border bg-app-surface px-4 py-3 text-[16px] text-app-ink outline-none transition-colors placeholder:text-app-muted focus:border-app-ink disabled:bg-app-sunken"
           :class="
             reveal?.status === 'correct'
@@ -162,12 +165,12 @@ watch(
           @keydown.enter.prevent="emit('submit')"
         />
         <p v-if="!locked && !reveal" class="mt-2 text-[12.5px] text-app-muted">
-          Faqat javobni yozing — masalan, son yoki so‘z. Enter tugmasi bilan yuboring.
+          {{ t('bank.question.freeAnswerHint') }}
         </p>
       </div>
 
       <!-- Options -->
-      <div v-else class="mt-6 space-y-2.5" role="radiogroup" aria-label="Javob variantlari">
+      <div v-else class="mt-6 space-y-2.5" role="radiogroup" :aria-label="t('bank.question.options')">
         <div v-for="option in options" :key="option.id" class="flex items-stretch gap-2">
           <button
             type="button"
@@ -223,10 +226,10 @@ watch(
             :aria-pressed="isCrossed(option)"
             :aria-label="
               isCrossed(option)
-                ? `${option.letter} variantni qaytarish`
-                : `${option.letter} variantni chiqarib tashlash`
+                ? t('bank.question.restoreOption', { letter: option.letter })
+                : t('bank.question.crossOutOption', { letter: option.letter })
             "
-            :title="isCrossed(option) ? 'Qaytarish' : 'Chiqarib tashlash'"
+            :title="isCrossed(option) ? t('bank.question.restore') : t('bank.question.crossOut')"
             @click="emit('toggleCross', option.id)"
           >
             <span class="line-through decoration-[1.5px]">{{ option.letter }}</span>
@@ -248,39 +251,39 @@ watch(
           </p>
 
           <p v-if="!isFreeAnswer && correctLetter && reveal.status !== 'correct'" class="mt-2 text-[14.5px] text-app-ink">
-            To‘g‘ri javob: <span class="font-bold">{{ correctLetter }}</span>
+            {{ t('bank.question.correctAnswer') }} <span class="font-bold">{{ correctLetter }}</span>
           </p>
 
           <template v-if="isFreeAnswer">
             <p v-if="textAnswer && reveal.status === 'wrong'" class="mt-2 text-[14.5px] text-app-ink">
-              Sizning javobingiz: <span class="font-semibold">{{ textAnswer }}</span>
+              {{ t('bank.question.yourAnswerWas') }} <span class="font-semibold">{{ textAnswer }}</span>
             </p>
             <p v-if="reveal.correctAnswer" class="mt-2 text-[14.5px] text-app-ink">
-              To‘g‘ri javob:
+              {{ t('bank.question.correctAnswer') }}
               <BankRichText :text="reveal.correctAnswer" inline class="font-bold" />
             </p>
             <p v-if="acceptedAnswers.length > 1" class="mt-1 text-[13px] text-app-muted">
-              Shular ham qabul qilinadi: {{ acceptedAnswers.slice(1).join(', ') }}
+              {{ t('bank.question.alsoAccepted', { answers: acceptedAnswers.slice(1).join(', ') }) }}
             </p>
           </template>
         </div>
 
         <section class="rounded-2xl border border-app-border bg-app-surface p-5 shadow-app-card sm:p-6">
-          <h3 class="text-[15px] font-bold text-app-ink">Yechim</h3>
+          <h3 class="text-[15px] font-bold text-app-ink">{{ t('bank.question.solution') }}</h3>
           <BankRichText
             v-if="reveal.explanation"
             :text="reveal.explanation"
             class="mt-3 text-[15.5px] leading-[1.75] text-app-ink"
           />
-          <p v-else class="mt-2 text-[14px] text-app-muted">Bu savol uchun yechim hali qo‘shilmagan.</p>
+          <p v-else class="mt-2 text-[14px] text-app-muted">{{ t('bank.question.noSolution') }}</p>
           <p
             v-if="!verdict && isFreeAnswer && reveal.correctAnswer"
             class="mt-3 text-[14.5px] text-app-ink"
           >
-            To‘g‘ri javob: <BankRichText :text="reveal.correctAnswer" inline class="font-bold" />
+            {{ t('bank.question.correctAnswer') }} <BankRichText :text="reveal.correctAnswer" inline class="font-bold" />
           </p>
           <p v-if="!verdict && !isFreeAnswer && correctLetter" class="mt-3 text-[14.5px] text-app-ink">
-            To‘g‘ri javob: <span class="font-bold">{{ correctLetter }}</span>
+            {{ t('bank.question.correctAnswer') }} <span class="font-bold">{{ correctLetter }}</span>
           </p>
         </section>
       </div>

@@ -7,6 +7,7 @@
 // it is Community, the promoted destination. If the active state also went
 // black, two things would shout at once and neither would read as current.
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AppIcon from './AppIcon.vue'
 import CoinIcon from './CoinIcon.vue'
 import logoLockup from '@/assets/landing/logo-lockup.png'
@@ -17,28 +18,32 @@ defineProps({
 
 const emit = defineEmits(['navigate'])
 const route = useRoute()
+const { t } = useI18n()
 
 // Every destination is the platform's own path, never one that redirects here:
 // /narxlar and /natijalar both bounce a signed-in user to /tanga and
 // /natijalarim, and isActive() compares against the *current* path — so linking
 // to the public path meant the item could never highlight as current.
+//
+// Labels are message keys under `appShell.nav`, read at render so a language
+// switch relabels the sidebar in place.
 const navItems = [
-  { label: 'Bosh sahifa', icon: 'home', to: '/dashboard' },
-  { label: 'Testlar', icon: 'tests', to: '/testlar' },
+  { label: 'home', icon: 'home', to: '/dashboard' },
+  { label: 'tests', icon: 'tests', to: '/testlar' },
   // Savollar banki is hidden from the nav for now. /savollar-banki and its
   // sub-routes still resolve for anyone who has the link — uncomment to bring
   // the item back.
-  // { label: 'Savollar banki', icon: 'layers', to: '/savollar-banki' },
-  { label: 'Essay tekshirish', icon: 'essay', to: '/essay' },
-  { label: 'Natijalar', icon: 'results', to: '/natijalarim' },
-  { label: 'Kurslar', icon: 'cap', to: '/kurslarim' },
-  { label: 'Statistika', icon: 'stats', to: '/statistika' },
-  { label: 'Narxlar', icon: 'coins', to: '/tanga' },
+  // { label: 'questionBank', icon: 'layers', to: '/savollar-banki' },
+  { label: 'essay', icon: 'essay', to: '/essay' },
+  { label: 'results', icon: 'results', to: '/natijalarim' },
+  { label: 'courses', icon: 'cap', to: '/kurslarim' },
+  { label: 'stats', icon: 'stats', to: '/statistika' },
+  { label: 'pricing', icon: 'coins', to: '/tanga' },
   // Yordam and Sozlamalar are deliberately not here. Sozlamalar is the user
   // card at the foot of this sidebar and the topbar avatar menu — a third entry
   // for it was the duplication the /profile merge set out to remove. Both routes
   // still resolve; they are just not nav destinations.
-  { label: 'Community', icon: 'community', to: '/community', promoted: true },
+  { label: 'community', icon: 'community', to: '/community', promoted: true },
 ]
 
 const isActive = (to) => route.path === to || route.path.startsWith(`${to}/`)
@@ -67,7 +72,7 @@ const itemClass = (item) => {
 
     <!-- gap, not space-y: `space-y-*` targets `& > * + *`, which outranks the
          promoted item's `mt-auto` and would pin it back to the list. -->
-    <nav class="flex flex-1 flex-col gap-1 overflow-y-auto px-3" aria-label="Platforma menyusi">
+    <nav class="flex flex-1 flex-col gap-1 overflow-y-auto px-3" :aria-label="t('appShell.nav.label')">
       <RouterLink
         v-for="item in navItems"
         :key="item.to"
@@ -78,7 +83,7 @@ const itemClass = (item) => {
         @click="emit('navigate')"
       >
         <AppIcon :name="item.icon" :size="19" class="shrink-0" />
-        <span class="truncate">{{ item.label }}</span>
+        <span class="truncate">{{ t(`appShell.nav.${item.label}`) }}</span>
       </RouterLink>
     </nav>
 
@@ -104,7 +109,7 @@ const itemClass = (item) => {
           class="mt-3 inline-flex items-center gap-2 rounded-full bg-app-tile px-2.5 py-1 text-[12px] font-semibold text-app-ink"
         >
           <CoinIcon :size="14" class="text-app-coin" />
-          {{ user.tanga }} tanga
+          {{ t('common.tangaCount', user.tanga) }}
         </span>
       </RouterLink>
     </div>

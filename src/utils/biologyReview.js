@@ -28,91 +28,71 @@
 // merges them by criterion code, and is deliberately tolerant — either column
 // may be missing, unparseable, or gain criteria this build has never seen.
 
+import { t } from '@/i18n'
+
+// Every label and explanation below is an i18n key under `biologyReview`,
+// worded by normalizeBiologyReview. The section calls that inside a computed,
+// so a language switch re-words an open review.
+
 // Criterion codes are grouped by their leading letter. a/b feed the
 // methodological score, c the arithmetic score, d the presentation score.
 export const ELEMENT_GROUPS = [
-  { key: 'a', label: 'Yondashuv va shart' },
-  { key: 'b', label: 'Sxema va modellashtirish' },
-  { key: 'c', label: 'Hisob-kitob' },
-  { key: 'd', label: 'Javob va rasmiylashtirish' },
+  { key: 'a', labelKey: 'biologyReview.groups.a' },
+  { key: 'b', labelKey: 'biologyReview.groups.b' },
+  { key: 'c', labelKey: 'biologyReview.groups.c' },
+  { key: 'd', labelKey: 'biologyReview.groups.d' },
 ]
 
-const OTHER_GROUP = { key: 'other', label: 'Boshqa mezonlar' }
+const OTHER_GROUP = { key: 'other', labelKey: 'biologyReview.groups.other' }
 
 export const ELEMENT_VERDICTS = {
-  full: { label: 'To‘liq', color: '#4f7a55' },
-  partial: { label: 'Qisman', color: '#c08a3e' },
-  zero: { label: 'Bajarilmagan', color: '#c25d52' },
+  full: { labelKey: 'biologyReview.elementVerdicts.full', color: '#4f7a55' },
+  partial: { labelKey: 'biologyReview.elementVerdicts.partial', color: '#c08a3e' },
+  zero: { labelKey: 'biologyReview.elementVerdicts.zero', color: '#c25d52' },
 }
 
 // Criteria the AI marked not applicable to this problem type (e.g. a Punnett
 // square on a molecular-biology task). They score nothing and are not failures.
-export const SKIPPED_VERDICT = { label: 'Tegishli emas', color: '#a39e94' }
+export const SKIPPED_VERDICT = { labelKey: 'biologyReview.elementVerdicts.skipped', color: '#a39e94' }
 
 export const SCORE_BUCKETS = [
-  { key: 'methodologicalScore', label: 'Metodik qism', color: '#5b7ea3' },
-  { key: 'arithmeticScore', label: 'Hisob-kitoblar', color: '#4f8f88' },
-  { key: 'presentationScore', label: 'Rasmiylashtirish', color: '#b8703c' },
+  { key: 'methodologicalScore', labelKey: 'biologyReview.buckets.methodologicalScore', color: '#5b7ea3' },
+  { key: 'arithmeticScore', labelKey: 'biologyReview.buckets.arithmeticScore', color: '#4f8f88' },
+  { key: 'presentationScore', labelKey: 'biologyReview.buckets.presentationScore', color: '#b8703c' },
 ]
 
 // verdict === "graded" is the normal case. EVERY other verdict is an official
 // zero condition — totalScore is 0 and the UI shows the verdict's `explanation`
-// instead of a score breakdown.
+// instead of a score breakdown. The wording is `biologyReview.verdicts.<key>`
+// (`label`, and `explanation` where `explained`).
 const REVIEW_VERDICTS = {
-  graded: { label: 'Baholandi', tone: 'ok' },
-  all_correct: {
-    label: 'Javoblar to‘liq to‘g‘ri',
-    tone: 'ok',
-    explanation:
-      'Barcha yozma javoblaringiz to‘g‘ri, shuning uchun topshiriq to‘liq ballga baholandi. Bunday holatda yechim rasmi tekshirilmaydi.',
-  },
-  wrong_method: {
-    label: 'Yechim usuli xato',
-    tone: 'bad',
-    explanation:
-      'Tanlangan yechim usuli tubdan xato. Rasmiy baholash qoidasiga ko‘ra bunday yechimga 0 ball qo‘yiladi.',
-  },
-  answer_only: {
-    label: 'Faqat javob yozilgan',
-    tone: 'warn',
-    explanation:
-      'Rasmda faqat javob ko‘rsatilgan, yechimning o‘zi yozilmagan. Yechimsiz javob rasmiy qoidaga ko‘ra baholanmaydi — 0 ball.',
-  },
-  no_solution: {
-    label: 'Yechim yozilmagan',
-    tone: 'bad',
-    explanation:
-      'Yuborilgan rasmda bu topshiriqning yechimi topilmadi, shuning uchun 0 ball qo‘yildi.',
-  },
-  illegible: {
-    label: 'O‘qib bo‘lmadi',
-    tone: 'bad',
-    explanation:
-      'Qo‘lyozmani o‘qib bo‘lmadi, shuning uchun yechim baholanmadi. Keyingi safar yechimni aniqroq yozib, yorug‘ joyda suratga oling.',
-  },
-  gross_biological_error: {
-    label: 'Jiddiy biologik xato',
-    tone: 'bad',
-    explanation:
-      'Yechimda jiddiy biologik xato bor. Rasmiy baholash qoidasiga ko‘ra bunday yechimga 0 ball qo‘yiladi.',
-  },
-  no_applicable_elements: {
-    label: 'Baholanadigan element yo‘q',
-    tone: 'bad',
-    explanation:
-      'Yechimda baholash mezonlariga mos keladigan element topilmadi, shuning uchun ball qo‘yilmadi.',
-  },
-  pending: { label: 'Tekshirilmoqda', tone: 'warn' },
+  graded: { tone: 'ok' },
+  all_correct: { tone: 'ok', explained: true },
+  wrong_method: { tone: 'bad', explained: true },
+  answer_only: { tone: 'warn', explained: true },
+  no_solution: { tone: 'bad', explained: true },
+  illegible: { tone: 'bad', explained: true },
+  gross_biological_error: { tone: 'bad', explained: true },
+  no_applicable_elements: { tone: 'bad', explained: true },
+  pending: { tone: 'warn' },
+}
+
+// A verdict's display shape: { key, label, tone, explanation? }.
+function wordVerdict(key) {
+  const { tone, explained } = REVIEW_VERDICTS[key]
+  const verdict = { label: t(`biologyReview.verdicts.${key}.label`), tone }
+  if (explained) verdict.explanation = t(`biologyReview.verdicts.${key}.explanation`)
+  return verdict
 }
 
 // Blocking problems the AI flags on the evaluation payload. Each one explains a
 // heavily reduced score, so they surface as warning chips above the criteria.
 const FLAGS = [
-  { key: 'method_fundamentally_wrong', label: 'Yechim usuli tubdan xato' },
-  { key: 'gross_biological_error', label: 'Jiddiy biologik xato' },
-  { key: 'answer_only', label: 'Faqat javob yozilgan, yechimsiz' },
-  { key: 'no_solution', label: 'Yechim yozilmagan' },
-  { key: 'illegible', label: 'Qo‘lyozma o‘qilmadi' },
+  'method_fundamentally_wrong',
+  'gross_biological_error',
+  'answer_only',
+  'no_solution',
+  'illegible',
 ]
 
 // Scores arrive either as a bare number or boxed as { source, parsedValue }
@@ -169,21 +149,21 @@ function normalizeVerdict(value) {
   const verdict = String(value || '').trim().toLowerCase()
 
   if (REVIEW_VERDICTS[verdict]) {
-    return { key: verdict, ...REVIEW_VERDICTS[verdict] }
+    return { key: verdict, ...wordVerdict(verdict) }
   }
 
   // No verdict at all → an older row from before the verdict column; treat as
   // graded. An UNKNOWN verdict is, per the contract, some new zero condition —
   // pass the raw name through with a generic zero explanation.
   if (!verdict) {
-    return { key: '', ...REVIEW_VERDICTS.graded }
+    return { key: '', ...wordVerdict('graded') }
   }
 
   return {
     key: verdict,
     label: String(value),
     tone: 'warn',
-    explanation: 'Rasmiy baholash qoidasiga ko‘ra bu yechimga ball qo‘yilmadi.',
+    explanation: t('biologyReview.verdicts.unknownExplanation'),
   }
 }
 
@@ -218,6 +198,7 @@ export function normalizeBiologyReview(raw) {
       .trim()
       .toLowerCase()
     const weight = readScore(fromBreakdown.weight ?? fromEvaluation.weight)
+    const verdict = applicable ? ELEMENT_VERDICTS[verdictKey] || SKIPPED_VERDICT : SKIPPED_VERDICT
 
     return {
       code,
@@ -225,7 +206,7 @@ export function normalizeBiologyReview(raw) {
       groupKey: /^[a-d]/i.test(code) ? code[0].toLowerCase() : OTHER_GROUP.key,
       applicable,
       verdictKey: applicable ? verdictKey : 'skipped',
-      verdict: applicable ? ELEMENT_VERDICTS[verdictKey] || SKIPPED_VERDICT : SKIPPED_VERDICT,
+      verdict: { label: t(verdict.labelKey), color: verdict.color },
       weight,
       reasoning: String(fromEvaluation.reasoning || ''),
       quote: String(fromEvaluation.quote || '').trim(),
@@ -236,7 +217,8 @@ export function normalizeBiologyReview(raw) {
 
   const groups = [...ELEMENT_GROUPS, OTHER_GROUP]
     .map((group) => ({
-      ...group,
+      key: group.key,
+      label: t(group.labelKey),
       elements: elements.filter((element) => element.groupKey === group.key),
     }))
     .filter((group) => group.elements.length > 0)
@@ -245,7 +227,9 @@ export function normalizeBiologyReview(raw) {
   const maxScore = readScore(review.maxScore)
 
   const buckets = SCORE_BUCKETS.map((bucket) => ({
-    ...bucket,
+    key: bucket.key,
+    label: t(bucket.labelKey),
+    color: bucket.color,
     value: readScore(review[bucket.key]) ?? 0,
   }))
 
@@ -255,11 +239,7 @@ export function normalizeBiologyReview(raw) {
   // different thing to tell the student — so re-word the id 0 one.
   const verdict =
     rawVerdict.key === 'no_solution' && Number(review.id ?? 0) === 0
-      ? {
-          ...rawVerdict,
-          explanation:
-            'Javoblaringizda xatolik bor, lekin yechim rasmi yuklanmagan. Yechimsiz baholash mumkin emas — bu topshiriq uchun 0 ball qo‘yildi.',
-        }
+      ? { ...rawVerdict, explanation: t('biologyReview.verdicts.no_solution.noPhotos') }
       : rawVerdict
 
   return {
@@ -279,7 +259,10 @@ export function normalizeBiologyReview(raw) {
     buckets,
     globalNotes: String(evaluation.global_notes || review.globalNotes || '').trim(),
     methodBlockVoided: review.methodBlockVoided === true,
-    flags: FLAGS.filter((flag) => evaluation[flag.key] === true),
+    flags: FLAGS.filter((flag) => evaluation[flag] === true).map((flag) => ({
+      key: flag,
+      label: t(`biologyReview.flags.${flag}`),
+    })),
     groups,
     counts: {
       total: applicableElements.length,

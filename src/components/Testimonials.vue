@@ -5,8 +5,10 @@ import { useI18n } from 'vue-i18n'
 import TestimonialCard from './TestimonialCard.vue'
 import AppReveal from './AppReveal.vue'
 
-const { t, tm } = useI18n()
+const { t, tm, locale } = useI18n()
 const testimonials = computed(() => tm('testimonials.items'))
+// NCarousel clones the first and last slides to loop, and the clones don't
+// re-render — keyed by locale, a language switch rebuilds them too.
 </script>
 
 <template>
@@ -27,6 +29,7 @@ const testimonials = computed(() => tm('testimonials.items'))
 
       <div class="hidden md:flex">
         <NCarousel
+          :key="locale"
           draggable
           autoplay
           :interval="3000"
@@ -47,6 +50,7 @@ const testimonials = computed(() => tm('testimonials.items'))
 
       <div class="flex md:hidden">
         <NCarousel
+          :key="locale"
           draggable
           autoplay
           :interval="3000"

@@ -4,13 +4,17 @@
 // pointer-events-none throughout: an overlay that appears under the cursor and
 // then swallows drag events would fire a dragleave against itself and blink
 // out of existence.
+import { useI18n } from 'vue-i18n'
 import AppIcon from '@/components/app/AppIcon.vue'
 
 defineProps({
   show: { type: Boolean, default: false },
-  title: { type: String, default: 'Rasmni shu yerga tashlang' },
+  // Empty → the generic "drop the image here", in the current language.
+  title: { type: String, default: '' },
   hint: { type: String, default: '' },
 })
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -32,7 +36,7 @@ defineProps({
           <span class="flex h-14 w-14 items-center justify-center rounded-full bg-app-tile text-app-ink">
             <AppIcon name="upload" :size="24" />
           </span>
-          <p class="mt-4 text-[16px] font-semibold text-app-ink">{{ title }}</p>
+          <p class="mt-4 text-[16px] font-semibold text-app-ink">{{ title || t('essayPage.drop.defaultTitle') }}</p>
           <p v-if="hint" class="mt-1 text-[13px] text-app-muted">{{ hint }}</p>
         </div>
       </div>

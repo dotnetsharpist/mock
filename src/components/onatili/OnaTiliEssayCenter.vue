@@ -10,6 +10,7 @@
 // are free; once they're spent the endpoints reply 400 "Not enough balance",
 // and the top-up modal points at /narxlar.
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { NModal, NCard } from 'naive-ui'
 import EssayAnalysisSection from '@/components/onatili/EssayAnalysisSection.vue'
@@ -21,7 +22,6 @@ import { apiFetch, getTestApiBaseUrl } from '@/utils/api'
 import { ESSAY_BAND_MAX } from '@/utils/essayAnalysis'
 import { saveEssayChecking } from '@/utils/essayCheckingStorage'
 
-const TOPIC_META = "250–300 so'z"
 // Mirror the backend limits so obvious input problems never reach the API
 // (its remaining 400 is then the insufficient-balance refusal).
 const MAX_TOPIC_LENGTH = 500
@@ -33,6 +33,25 @@ const IMAGE_EXTENSION_RE = /\.(jpe?g|png|webp)$/i
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useI18n()
+
+// Messages for the student are kept as an i18n key with its params —
+// { key, params } — or as the server's own words, which are shown as they
+// came, and worded only when read: a language switch re-words one already on
+// screen. Same arrangement as composables/useEssayCenter.
+const i18nMessage = (key, params) => ({ key, params })
+const messageRef = () => {
+  const raw = ref('')
+  return computed({
+    get: () =>
+      raw.value && typeof raw.value === 'object'
+        ? t(raw.value.key, raw.value.params ?? {})
+        : String(raw.value || ''),
+    set: (value) => {
+      raw.value = value
+    },
+  })
+}
 const apiBaseUrl = getTestApiBaseUrl()
 
 const authHeaders = () => ({
@@ -45,11 +64,11 @@ const view = ref('list') // 'list' | 'writer' | 'result'
 
 const topics = ref([]) // { id, text, isPublic }
 const topicsLoading = ref(false)
-const topicsError = ref('')
+const topicsError = messageRef()
 
 const customModalOpen = ref(false)
 const customText = ref('')
-const customError = ref('')
+const customError = messageRef()
 const isSavingTopic = ref(false)
 const deletingTopicId = ref(null)
 
@@ -57,7 +76,7 @@ const activeTopic = ref(null) // { id, text }
 const mode = ref('upload') // 'upload' | 'write'
 const essayText = ref('')
 const uploads = ref([]) // { id, name, file, dataUrl }
-const submitError = ref('')
+const submitError = messageRef()
 const isReviewing = ref(false)
 const balanceModalOpen = ref(false)
 
@@ -91,7 +110,7 @@ const fetchTopics = async () => {
     topics.value = payload.data
   } catch (error) {
     console.error(error)
-    topicsError.value = 'Mavzularni yuklab bo‘lmadi. Sahifani yangilab ko‘ring.'
+    topicsError.value = i18nMessage('essayPage.errors.topicsLoad')
   } finally {
     topicsLoading.value = false
   }
@@ -106,10 +125,20 @@ onMounted(fetchTopics)
 const displayTopics = computed(() => [
   ...topics.value
     .filter((topic) => topic.isPublic === false)
-    .map((topic) => ({ ...topic, tag: 'SHAXSIY MAVZU', meta: 'Siz qo‘shgansiz', custom: true })),
+    .map((topic) => ({
+      ...topic,
+      tag: t('essayPage.tags.own'),
+      meta: t('essayPage.meta.own'),
+      custom: true,
+    })),
   ...topics.value
     .filter((topic) => topic.isPublic !== false)
-    .map((topic) => ({ ...topic, tag: 'TAYYOR MAVZU', meta: TOPIC_META, custom: false })),
+    .map((topic) => ({
+      ...topic,
+      tag: t('essayPage.tags.ready'),
+      meta: t('essayPage.meta.ready'),
+      custom: false,
+    })),
 ])
 
 // ——— Add / delete a custom topic ——————————————————————————————————————
@@ -123,7 +152,7 @@ const addCustom = async () => {
   const text = customText.value.trim()
   if (!text || isSavingTopic.value) return
   if (text.length > MAX_TOPIC_LENGTH) {
-    customError.value = `Mavzu ${MAX_TOPIC_LENGTH} belgidan oshmasligi kerak.`
+    customError.value = i18nMessage('essayPage.errors.topicTooLong', { max: MAX_TOPIC_LENGTH })
     return
   }
 
@@ -143,7 +172,7 @@ const addCustom = async () => {
     await fetchTopics()
   } catch (error) {
     console.error(error)
-    customError.value = error?.message || 'Mavzuni saqlab bo‘lmadi. Qayta urinib ko‘ring.'
+    customError.value = error?.message || i18nMessage('onaTili.topicSaveFailed')
   } finally {
     isSavingTopic.value = false
   }
@@ -164,7 +193,7 @@ const removeCustom = async (topic) => {
     topics.value = topics.value.filter((item) => item.id !== topic.id)
   } catch (error) {
     console.error(error)
-    topicsError.value = 'Mavzuni o‘chirib bo‘lmadi. Qayta urinib ko‘ring.'
+    topicsError.value = i18nMessage('essayPage.errors.topicDelete')
   } finally {
     deletingTopicId.value = null
   }
@@ -192,7 +221,6 @@ const wordCount = computed(() =>
 )
 const charCount = computed(() => essayText.value.length)
 const showTextarea = computed(() => mode.value !== 'upload')
-const textareaPlaceholder = 'Inshoingizni shu yerda yozing…'
 
 // ——— Photo upload ——————————————————————————————————————————————————————
 const fileInput = ref(null)
@@ -203,15 +231,15 @@ const readFiles = (fileList) => {
   const files = Array.from(fileList || [])
   for (const file of files) {
     if (uploads.value.length >= MAX_IMAGE_COUNT) {
-      submitError.value = `Ko‘pi bilan ${MAX_IMAGE_COUNT} ta rasm yuklash mumkin.`
+      submitError.value = i18nMessage('essayPage.errors.tooManyImages', { max: MAX_IMAGE_COUNT })
       break
     }
     if (!file.type.startsWith('image/') || !IMAGE_EXTENSION_RE.test(file.name)) {
-      submitError.value = 'Faqat JPG, PNG yoki WEBP rasmlar qabul qilinadi.'
+      submitError.value = i18nMessage('essayPage.errors.imageType')
       continue
     }
     if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
-      submitError.value = `Har bir rasm ${MAX_IMAGE_SIZE_MB}MB dan oshmasligi kerak.`
+      submitError.value = i18nMessage('essayPage.errors.imageSize', { mb: MAX_IMAGE_SIZE_MB })
       continue
     }
     const id = `${file.name}-${file.size}-${Date.now()}-${uploads.value.length}`
@@ -270,21 +298,21 @@ const submit = async () => {
 
   if (isUpload) {
     if (!uploads.value.length) {
-      submitError.value = 'Tekshirish uchun kamida bitta rasm yuklang.'
+      submitError.value = i18nMessage('essayPage.errors.noImages')
       return
     }
     const totalSize = uploads.value.reduce((sum, upload) => sum + upload.file.size, 0)
     if (totalSize > MAX_TOTAL_SIZE_MB * 1024 * 1024) {
-      submitError.value = `Rasmlarning umumiy hajmi ${MAX_TOTAL_SIZE_MB}MB dan oshmasligi kerak.`
+      submitError.value = i18nMessage('essayPage.errors.totalSize', { mb: MAX_TOTAL_SIZE_MB })
       return
     }
   } else {
     if (!text) {
-      submitError.value = 'Tekshirish uchun avval inshoingizni kiriting.'
+      submitError.value = i18nMessage('essayPage.errors.noText')
       return
     }
     if (text.length > MAX_ESSAY_LENGTH) {
-      submitError.value = `Insho ${MAX_ESSAY_LENGTH} belgidan oshmasligi kerak.`
+      submitError.value = i18nMessage('essayPage.errors.essayTooLong', { max: MAX_ESSAY_LENGTH })
       return
     }
   }
@@ -355,7 +383,7 @@ const submit = async () => {
     view.value = 'result'
   } catch (error) {
     console.error(error)
-    submitError.value = 'Tekshirishda xatolik yuz berdi. Qayta urinib ko‘ring.'
+    submitError.value = i18nMessage('essayPage.errors.submit')
   } finally {
     isReviewing.value = false
   }
@@ -433,12 +461,12 @@ const SKELETON_COUNT = 6
             <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke-linecap="round" />
           </svg>
         </div>
-        <p class="font-medium text-[#1a1814]">Insho tekshirish uchun avval tizimga kiring</p>
+        <p class="font-medium text-[#1a1814]">{{ t('onaTili.loginPrompt') }}</p>
         <RouterLink
           :to="loginLocation"
           class="mt-5 inline-flex items-center gap-2 rounded-full bg-[#1a1814] px-7 py-3 text-sm font-semibold text-white transition hover:bg-black active:scale-[0.98]"
         >
-          Kirish
+          {{ t('onaTili.login') }}
         </RouterLink>
       </div>
 
@@ -481,7 +509,7 @@ const SKELETON_COUNT = 6
             @click="fetchTopics"
             class="inline-flex items-center gap-2 rounded-full bg-[#1a1814] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-black active:scale-[0.98]"
           >
-            Qayta urinish
+            {{ t('essayPage.retry') }}
           </button>
         </div>
 
@@ -499,9 +527,9 @@ const SKELETON_COUNT = 6
               </svg>
             </span>
             <div>
-              <p class="text-[15px] font-semibold text-[#1a1814]">O‘z mavzuingizni qo‘shing</p>
+              <p class="text-[15px] font-semibold text-[#1a1814]">{{ t('essayPage.addOwn.title') }}</p>
               <p class="mx-auto mt-1 max-w-[220px] text-[12.5px] leading-snug text-[#8a857c]">
-                Internetdan topgan yoki o‘zingiz tuzgan mavzu bo‘yicha yozing
+                {{ t('essayPage.addOwn.hint') }}
               </p>
             </div>
           </button>
@@ -524,7 +552,7 @@ const SKELETON_COUNT = 6
                 type="button"
                 @click="removeCustom(topic)"
                 :disabled="deletingTopicId === topic.id"
-                aria-label="O‘chirish"
+                :aria-label="t('onaTili.remove')"
                 class="flex h-8 w-8 items-center justify-center rounded-full border border-[#e0ddd7] text-[#a39e94] transition hover:border-red-300 hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -551,7 +579,7 @@ const SKELETON_COUNT = 6
                 @click="startTopic(topic)"
                 class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#1a1814] px-5 py-2.5 text-[13px] font-semibold text-white transition hover:bg-black active:scale-[0.98]"
               >
-                Boshlash
+                {{ t('essayPage.start') }}
                 <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                   <path d="M5 12h14m-6-6 6 6-6 6" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
@@ -572,11 +600,11 @@ const SKELETON_COUNT = 6
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M19 12H5m6-6-6 6 6 6" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
-        Mavzularga qaytish
+        {{ t('essayPage.backToTopics') }}
       </button>
 
       <div class="rounded-[28px] border border-[#e0ddd7] bg-white/80 p-6 shadow-[0_10px_30px_rgba(26,24,20,0.06)] backdrop-blur-sm sm:p-8 lg:p-10">
-        <p class="font-mono-custom text-[10px] font-semibold uppercase tracking-[0.22em] text-[#a39e94]">Insho mavzusi</p>
+        <p class="font-mono-custom text-[10px] font-semibold uppercase tracking-[0.22em] text-[#a39e94]">{{ t('essayPage.topicLabel') }}</p>
         <h2 class="mt-2.5 max-w-3xl whitespace-pre-line text-2xl font-bold leading-snug tracking-[-0.01em] text-[#1a1814]">
           {{ activeTopic?.text }}
         </h2>
@@ -585,8 +613,8 @@ const SKELETON_COUNT = 6
         <div class="mt-7 inline-flex flex-wrap gap-1.5 rounded-full bg-[#ece8e0] p-1.5">
           <button
             v-for="m in [
-              { id: 'upload', label: 'Rasm joylash' },
-              { id: 'write', label: 'Yozish' },
+              { id: 'upload', label: t('essayPage.modes.upload') },
+              { id: 'write', label: t('essayPage.modes.write') },
             ]"
             :key="m.id"
             type="button"
@@ -602,7 +630,7 @@ const SKELETON_COUNT = 6
         <textarea
           v-if="showTextarea"
           v-model="essayText"
-          :placeholder="textareaPlaceholder"
+          :placeholder="t('essayPage.placeholder')"
           class="mt-6 min-h-[340px] w-full resize-y rounded-[20px] border border-[#d8d3ca] bg-[#faf9f6] p-6 text-[15.5px] leading-[1.8] text-[#1a1814] outline-none transition focus:border-[#1a1814] focus:bg-white"
         ></textarea>
 
@@ -619,12 +647,12 @@ const SKELETON_COUNT = 6
                 <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
             </span>
-            <p class="text-[15px] font-semibold text-[#1a1814]">Insho rasmini tashlang</p>
+            <p class="text-[15px] font-semibold text-[#1a1814]">{{ t('essayPage.drop.title') }}</p>
             <p class="mt-1 text-[13px] text-[#8a857c]">
-              Sahifaning istalgan joyiga tashlang, bosing yoki Ctrl+V bilan qo‘ying
+              {{ t('essayPage.drop.hint') }}
             </p>
             <p class="mt-1 text-[13px] text-[#8a857c]">
-              JPG, PNG, WEBP · ko‘pi bilan {{ MAX_IMAGE_COUNT }} ta
+              {{ t('essayPage.drop.formats', { n: MAX_IMAGE_COUNT }) }}
             </p>
           </div>
           <input
@@ -645,12 +673,12 @@ const SKELETON_COUNT = 6
             >
               <img :src="upload.dataUrl" :alt="upload.name" class="h-36 w-full object-cover" />
               <span class="font-mono-custom absolute left-2 top-2 rounded-md bg-black/75 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-white">
-                {{ index + 1 }}-sahifa
+                {{ t('essayPage.pageBadge', { n: index + 1 }) }}
               </span>
               <button
                 type="button"
                 @click.stop="removeUpload(upload.id)"
-                aria-label="O‘chirish"
+                :aria-label="t('onaTili.remove')"
                 class="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/75 text-white opacity-0 transition group-hover/thumb:opacity-100"
               >
                 <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
@@ -665,13 +693,13 @@ const SKELETON_COUNT = 6
 
         <div class="mt-6 flex flex-wrap items-center justify-between gap-4">
           <span v-if="showTextarea" class="text-[13.5px] text-[#8a857c]">
-            <span class="font-semibold text-[#1a1814]">{{ wordCount }}</span> so‘z
+            <span class="font-semibold text-[#1a1814]">{{ wordCount }}</span> {{ t('essayPage.wordsSuffix', wordCount) }}
             <template v-if="charCount > MAX_ESSAY_LENGTH * 0.9">
-              · <span :class="charCount > MAX_ESSAY_LENGTH ? 'font-semibold text-red-600' : ''">{{ charCount }}/{{ MAX_ESSAY_LENGTH }} belgi</span>
+              · <span :class="charCount > MAX_ESSAY_LENGTH ? 'font-semibold text-red-600' : ''">{{ t('essayPage.chars', { len: charCount, max: MAX_ESSAY_LENGTH }) }}</span>
             </template>
           </span>
           <span v-else class="text-[13.5px] text-[#8a857c]">
-            <span class="font-semibold text-[#1a1814]">{{ uploads.length }}</span> sahifa yuklandi
+            <span class="font-semibold text-[#1a1814]">{{ uploads.length }}</span> {{ t('essayPage.pagesUploadedSuffix', uploads.length) }}
           </span>
 
           <button
@@ -683,7 +711,7 @@ const SKELETON_COUNT = 6
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="m5 12 5 5L20 7" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
-            Tekshirishga yuborish
+            {{ t('essayPage.submit') }}
           </button>
         </div>
       </div>
@@ -693,7 +721,7 @@ const SKELETON_COUNT = 6
     <template v-else>
       <div class="mb-2 flex flex-wrap items-center justify-between gap-4">
         <div class="min-w-0">
-          <p class="font-mono-custom text-[10px] font-semibold uppercase tracking-[0.22em] text-[#a39e94]">Insho mavzusi</p>
+          <p class="font-mono-custom text-[10px] font-semibold uppercase tracking-[0.22em] text-[#a39e94]">{{ t('essayPage.topicLabel') }}</p>
           <h2 class="mt-1.5 max-w-2xl truncate text-xl font-bold tracking-[-0.01em] text-[#1a1814]">{{ activeTopic?.text }}</h2>
         </div>
         <button
@@ -704,7 +732,7 @@ const SKELETON_COUNT = 6
           <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
-          Yangi insho
+          {{ t('essayPage.newEssay') }}
         </button>
       </div>
 
@@ -717,7 +745,7 @@ const SKELETON_COUNT = 6
         <!-- The uploaded pages, echoed so the OCR text can be compared. -->
         <details v-if="submittedUploads.length" class="group mt-8 overflow-hidden rounded-[18px] bg-white ring-1 ring-[#eeeae2] shadow-[0_10px_30px_rgba(26,24,20,0.05)]">
           <summary class="flex cursor-pointer items-center justify-between px-5 py-4 text-[14px] font-semibold text-[#1a1814] transition hover:bg-[#faf8f4]">
-            <span>Siz yuklagan sahifalar</span>
+            <span>{{ t('essayPage.yourPages') }}</span>
             <svg class="h-4 w-4 text-[#8a857c] transition-transform duration-200 group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
@@ -727,7 +755,7 @@ const SKELETON_COUNT = 6
               <div v-for="(upload, index) in submittedUploads" :key="upload.id" class="relative overflow-hidden rounded-[14px] border border-[#e0ddd7] bg-[#faf9f6]">
                 <img :src="upload.dataUrl" :alt="upload.name" class="h-36 w-full object-cover" />
                 <span class="font-mono-custom absolute left-2 top-2 rounded-md bg-black/75 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-white">
-                  {{ index + 1 }}-sahifa
+                  {{ t('essayPage.pageBadge', { n: index + 1 }) }}
                 </span>
               </div>
             </div>
@@ -741,8 +769,8 @@ const SKELETON_COUNT = 6
 
     <FileDropOverlay
       :show="isDragging"
-      title="Insho rasmini tashlang"
-      :hint="`JPG, PNG, WEBP · ko‘pi bilan ${MAX_IMAGE_COUNT} ta`"
+      :title="t('essayPage.drop.title')"
+      :hint="t('essayPage.drop.formats', { n: MAX_IMAGE_COUNT })"
     />
 
     <!-- ═══════════════ Insufficient balance ═══════════════ -->
@@ -757,11 +785,12 @@ const SKELETON_COUNT = 6
               </svg>
             </div>
             <div>
-              <h4 class="text-xl font-bold tracking-tight text-black">Bepul tekshiruvlar tugadi</h4>
-              <p class="mt-2 text-sm leading-6 text-gray-500">
-                Sizning <span class="font-semibold text-black">2 ta bepul</span> insho tekshiruvingiz tugadi.
-                Davom etish uchun hisobingizni to‘ldiring.
-              </p>
+              <h4 class="text-xl font-bold tracking-tight text-black">{{ t('essayPage.topUp.title') }}</h4>
+              <i18n-t keypath="onaTili.balanceText" tag="p" scope="global" class="mt-2 text-sm leading-6 text-gray-500">
+                <template #free>
+                  <span class="font-semibold text-black">{{ t('onaTili.balanceFree') }}</span>
+                </template>
+              </i18n-t>
             </div>
 
             <div class="space-y-3">
@@ -770,14 +799,14 @@ const SKELETON_COUNT = 6
                 @click="goToPricing"
                 class="inline-flex h-12 w-full items-center justify-center rounded-full border border-black bg-black px-6 text-sm font-semibold text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.98]"
               >
-                Hisobni to‘ldirish
+                {{ t('essayPage.topUp.action') }}
               </button>
               <button
                 type="button"
                 class="text-sm font-medium text-gray-400 transition hover:text-black"
                 @click="balanceModalOpen = false"
               >
-                Yopish
+                {{ t('common.close') }}
               </button>
             </div>
           </div>
@@ -792,15 +821,15 @@ const SKELETON_COUNT = 6
           <div class="space-y-6">
             <div class="flex items-start justify-between gap-4">
               <div>
-                <h3 class="text-xl font-bold tracking-[-0.01em] text-[#1a1814]">Yangi insho mavzusi</h3>
+                <h3 class="text-xl font-bold tracking-[-0.01em] text-[#1a1814]">{{ t('essayPage.addDialog.title') }}</h3>
                 <p class="mt-1 text-sm leading-relaxed text-[#8a857c]">
-                  Internetdan topgan yoki o‘zingiz tuzgan mavzu bo‘yicha insho yozib, tekshirtiring.
+                  {{ t('essayPage.addDialog.description') }}
                 </p>
               </div>
               <button
                 type="button"
                 @click="customModalOpen = false"
-                aria-label="Yopish"
+                :aria-label="t('common.close')"
                 class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#e0ddd7] text-[#8a857c] transition hover:border-[#1a1814] hover:text-[#1a1814]"
               >
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -811,13 +840,13 @@ const SKELETON_COUNT = 6
 
             <div>
               <label class="font-mono-custom mb-2 block text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8a857c]">
-                Mavzu matni
+                {{ t('essayPage.addDialog.label') }}
               </label>
               <textarea
                 v-model="customText"
                 rows="4"
                 :maxlength="MAX_TOPIC_LENGTH"
-                placeholder="Masalan: Kitob — bilim manbai"
+                :placeholder="t('essayPage.addDialog.placeholder')"
                 class="w-full resize-y rounded-2xl border border-[#d8d3ca] bg-[#faf9f6] p-4 text-[14.5px] leading-relaxed text-[#1a1814] outline-none transition focus:border-[#1a1814] focus:bg-white"
               ></textarea>
               <p class="mt-1.5 text-right text-[12px] text-[#bcb6a9]">{{ customText.length }}/{{ MAX_TOPIC_LENGTH }}</p>
@@ -831,7 +860,7 @@ const SKELETON_COUNT = 6
                 @click="customModalOpen = false"
                 class="inline-flex h-11 min-w-[7rem] items-center justify-center rounded-full border border-[#1a1814] bg-white px-6 text-sm font-semibold text-[#1a1814] transition hover:bg-[#1a1814] hover:text-white active:scale-[0.98]"
               >
-                Bekor qilish
+                {{ t('common.cancel') }}
               </button>
               <button
                 type="button"
@@ -839,7 +868,7 @@ const SKELETON_COUNT = 6
                 :disabled="!customText.trim() || isSavingTopic"
                 class="inline-flex h-11 min-w-[7rem] items-center justify-center rounded-full bg-[#1a1814] px-6 text-sm font-semibold text-white transition hover:bg-black active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {{ isSavingTopic ? 'Saqlanmoqda…' : 'Qo‘shish' }}
+                {{ isSavingTopic ? t('essayPage.addDialog.saving') : t('essayPage.addDialog.add') }}
               </button>
             </div>
           </div>

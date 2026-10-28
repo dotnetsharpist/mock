@@ -20,6 +20,7 @@ import { useAuthStore } from '@/stores/auth'
 import { apiFetch, getTestApiBaseUrl, isNetworkError } from '@/utils/api'
 import { ESSAY_BAND_MAX } from '@/utils/essayAnalysis'
 import { saveEssayChecking } from '@/utils/essayCheckingStorage'
+import { t } from '@/i18n'
 
 // Mirror the backend limits so obvious input problems never reach the API —
 // its remaining 400 is then the insufficient-balance refusal.
@@ -29,7 +30,27 @@ export const MAX_IMAGE_COUNT = 5
 const MAX_IMAGE_SIZE_MB = 10
 const MAX_TOTAL_SIZE_MB = 15
 const IMAGE_EXTENSION_RE = /\.(jpe?g|png|webp)$/i
-const TOPIC_META = "250–300 so'z"
+
+// Messages for the student are kept as an i18n key with its params —
+// { key, params } — or as the server's own words, which are shown as they came.
+// They are worded only when read, so a language switch re-words one that is
+// already on screen.
+const i18nMessage = (key, params) => ({ key, params })
+
+export function wordEssayMessage(value) {
+  return value && typeof value === 'object' ? t(value.key, value.params ?? {}) : String(value || '')
+}
+
+// A ref that takes either shape and reads back as words.
+function messageRef() {
+  const raw = ref('')
+  return computed({
+    get: () => wordEssayMessage(raw.value),
+    set: (value) => {
+      raw.value = value
+    },
+  })
+}
 
 export function useEssayCenter() {
   const router = useRouter()
@@ -45,7 +66,7 @@ export function useEssayCenter() {
 
   const topics = ref([])
   const topicsLoading = ref(false)
-  const topicsError = ref('')
+  const topicsError = messageRef()
   const deletingTopicId = ref(null)
   const isSavingTopic = ref(false)
 
@@ -53,7 +74,7 @@ export function useEssayCenter() {
   const mode = ref('upload') // 'upload' | 'write'
   const essayText = ref('')
   const uploads = ref([])
-  const submitError = ref('')
+  const submitError = messageRef()
   const isReviewing = ref(false)
   const needsTopUp = ref(false)
 
@@ -76,8 +97,8 @@ export function useEssayCenter() {
     } catch (error) {
       console.error(error)
       topicsError.value = isNetworkError(error)
-        ? 'Internetda uzilish bor. Ulanishni tekshiring.'
-        : 'Mavzularni yuklab bo‘lmadi. Sahifani yangilab ko‘ring.'
+        ? i18nMessage('essayPage.errors.network')
+        : i18nMessage('essayPage.errors.topicsLoad')
     } finally {
       topicsLoading.value = false
     }
@@ -90,17 +111,27 @@ export function useEssayCenter() {
   const displayTopics = computed(() => [
     ...topics.value
       .filter((topic) => topic.isPublic === false)
-      .map((topic) => ({ ...topic, tag: 'SHAXSIY MAVZU', meta: 'Siz qo‘shgansiz', own: true })),
+      .map((topic) => ({
+        ...topic,
+        tag: t('essayPage.tags.own'),
+        meta: t('essayPage.meta.own'),
+        own: true,
+      })),
     ...topics.value
       .filter((topic) => topic.isPublic !== false)
-      .map((topic) => ({ ...topic, tag: 'TAYYOR MAVZU', meta: TOPIC_META, own: false })),
+      .map((topic) => ({
+        ...topic,
+        tag: t('essayPage.tags.ready'),
+        meta: t('essayPage.meta.ready'),
+        own: false,
+      })),
   ])
 
   async function addTopic(text) {
     const value = String(text || '').trim()
     if (!value || isSavingTopic.value) return { ok: false, message: '' }
     if (value.length > MAX_TOPIC_LENGTH) {
-      return { ok: false, message: `Mavzu ${MAX_TOPIC_LENGTH} belgidan oshmasligi kerak.` }
+      return { ok: false, message: i18nMessage('essayPage.errors.topicTooLong', { max: MAX_TOPIC_LENGTH }) }
     }
 
     isSavingTopic.value = true
@@ -118,7 +149,7 @@ export function useEssayCenter() {
       return { ok: true, message: '' }
     } catch (error) {
       console.error(error)
-      return { ok: false, message: error?.message || 'Mavzuni saqlab bo‘lmadi.' }
+      return { ok: false, message: error?.message || i18nMessage('essayPage.errors.topicSave') }
     } finally {
       isSavingTopic.value = false
     }
@@ -139,7 +170,7 @@ export function useEssayCenter() {
       topics.value = topics.value.filter((item) => item.id !== topic.id)
     } catch (error) {
       console.error(error)
-      topicsError.value = 'Mavzuni o‘chirib bo‘lmadi. Qayta urinib ko‘ring.'
+      topicsError.value = i18nMessage('essayPage.errors.topicDelete')
     } finally {
       deletingTopicId.value = null
     }
@@ -164,15 +195,15 @@ export function useEssayCenter() {
     submitError.value = ''
     for (const file of Array.from(fileList || [])) {
       if (uploads.value.length >= MAX_IMAGE_COUNT) {
-        submitError.value = `Ko‘pi bilan ${MAX_IMAGE_COUNT} ta rasm yuklash mumkin.`
+        submitError.value = i18nMessage('essayPage.errors.tooManyImages', { max: MAX_IMAGE_COUNT })
         break
       }
       if (!file.type.startsWith('image/') || !IMAGE_EXTENSION_RE.test(file.name)) {
-        submitError.value = 'Faqat JPG, PNG yoki WEBP rasmlar qabul qilinadi.'
+        submitError.value = i18nMessage('essayPage.errors.imageType')
         continue
       }
       if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
-        submitError.value = `Har bir rasm ${MAX_IMAGE_SIZE_MB}MB dan oshmasligi kerak.`
+        submitError.value = i18nMessage('essayPage.errors.imageSize', { mb: MAX_IMAGE_SIZE_MB })
         continue
       }
       const id = `${file.name}-${file.size}-${Date.now()}-${uploads.value.length}`
@@ -250,21 +281,21 @@ export function useEssayCenter() {
 
     if (isUpload) {
       if (!uploads.value.length) {
-        submitError.value = 'Tekshirish uchun kamida bitta rasm yuklang.'
+        submitError.value = i18nMessage('essayPage.errors.noImages')
         return
       }
       const totalSize = uploads.value.reduce((sum, upload) => sum + upload.file.size, 0)
       if (totalSize > MAX_TOTAL_SIZE_MB * 1024 * 1024) {
-        submitError.value = `Rasmlarning umumiy hajmi ${MAX_TOTAL_SIZE_MB}MB dan oshmasligi kerak.`
+        submitError.value = i18nMessage('essayPage.errors.totalSize', { mb: MAX_TOTAL_SIZE_MB })
         return
       }
     } else {
       if (!text) {
-        submitError.value = 'Tekshirish uchun avval inshoingizni kiriting.'
+        submitError.value = i18nMessage('essayPage.errors.noText')
         return
       }
       if (text.length > MAX_ESSAY_LENGTH) {
-        submitError.value = `Insho ${MAX_ESSAY_LENGTH} belgidan oshmasligi kerak.`
+        submitError.value = i18nMessage('essayPage.errors.essayTooLong', { max: MAX_ESSAY_LENGTH })
         return
       }
     }
@@ -331,8 +362,8 @@ export function useEssayCenter() {
     } catch (error) {
       console.error(error)
       submitError.value = isNetworkError(error)
-        ? 'Internetda uzilish bor. Ulanishni tekshiring va qayta yuboring.'
-        : 'Tekshirishda xatolik yuz berdi. Qayta urinib ko‘ring.'
+        ? i18nMessage('essayPage.errors.networkSubmit')
+        : i18nMessage('essayPage.errors.submit')
     } finally {
       isReviewing.value = false
     }

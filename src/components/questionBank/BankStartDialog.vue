@@ -2,8 +2,11 @@
 // Starts a session from the list's current filters: practice (answer and see
 // the solution at once) or timed (a clock per question, results at the end).
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import BankDialog from './BankDialog.vue'
-import { formatDuration } from './bankLabels.js'
+import { formatDuration, modeLabel } from './bankLabels.js'
+
+const { t } = useI18n()
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -43,11 +46,11 @@ watch(
 
 // The last chip is "everything that matches" unless that is one of the round numbers.
 const countLabel = (value) =>
-  value === available.value && !COUNT_CHOICES.includes(value) ? `Hammasi (${value})` : String(value)
+  value === available.value && !COUNT_CHOICES.includes(value) ? t('bank.start.all', { n: value }) : String(value)
 
 const MODES = [
-  { value: 'Practice', label: 'Mashq', hint: 'Har savoldan keyin javob va yechim ko‘rsatiladi.' },
-  { value: 'Timed', label: 'Vaqtli', hint: 'Har savolga vaqt beriladi, natija oxirida chiqadi.' },
+  { value: 'Practice', hintKey: 'bank.start.practiceHint' },
+  { value: 'Timed', hintKey: 'bank.start.timedHint' },
 ]
 
 const totalTime = computed(() => formatDuration(count.value * secondsPerQuestion.value))
@@ -69,9 +72,9 @@ const chipClass = (active) =>
 <template>
   <BankDialog
     :open="open"
-    title="Mashqni boshlash"
+    :title="t('bank.start.title')"
     icon="play"
-    :confirm-label="busy ? 'Boshlanmoqda…' : 'Boshlash'"
+    :confirm-label="busy ? t('bank.start.starting') : t('bank.start.start')"
     :busy="busy"
     :confirm-disabled="!available"
     :error="error"
@@ -79,14 +82,21 @@ const chipClass = (active) =>
     @confirm="confirm"
     @close="emit('close')"
   >
-    <p class="text-[14px] leading-[1.6] text-app-muted">
-      <span class="font-semibold text-app-ink">{{ matchCount }} ta savol</span> tanlangan filtrlarga mos keladi<template
-        v-if="filterSummary"
-      >: {{ filterSummary }}</template>.
-    </p>
+    <i18n-t
+      :keypath="filterSummary ? 'bank.start.matchesWithFilters' : 'bank.start.matches'"
+      :plural="matchCount"
+      tag="p"
+      class="text-[14px] leading-[1.6] text-app-muted"
+      scope="global"
+    >
+      <template #questions>
+        <span class="font-semibold text-app-ink">{{ t('bank.labels.questionCount', matchCount) }}</span>
+      </template>
+      <template #filters>{{ filterSummary }}</template>
+    </i18n-t>
 
     <fieldset class="mt-5">
-      <legend class="text-[13px] font-semibold text-app-ink">Rejim</legend>
+      <legend class="text-[13px] font-semibold text-app-ink">{{ t('bank.start.mode') }}</legend>
       <div class="mt-2 grid grid-cols-2 gap-2">
         <button
           v-for="item in MODES"
@@ -97,14 +107,14 @@ const chipClass = (active) =>
           :aria-pressed="mode === item.value"
           @click="mode = item.value"
         >
-          <span class="block text-[14px] font-semibold text-app-ink">{{ item.label }}</span>
-          <span class="mt-1 block text-[12.5px] leading-[1.5] text-app-muted">{{ item.hint }}</span>
+          <span class="block text-[14px] font-semibold text-app-ink">{{ modeLabel(item.value) }}</span>
+          <span class="mt-1 block text-[12.5px] leading-[1.5] text-app-muted">{{ t(item.hintKey) }}</span>
         </button>
       </div>
     </fieldset>
 
     <fieldset class="mt-5">
-      <legend class="text-[13px] font-semibold text-app-ink">Savollar soni</legend>
+      <legend class="text-[13px] font-semibold text-app-ink">{{ t('bank.start.count') }}</legend>
       <div class="mt-2 flex flex-wrap gap-2">
         <button
           v-for="value in countChoices"
@@ -121,7 +131,7 @@ const chipClass = (active) =>
     </fieldset>
 
     <fieldset v-if="mode === 'Timed'" class="mt-5">
-      <legend class="text-[13px] font-semibold text-app-ink">Har bir savolga vaqt</legend>
+      <legend class="text-[13px] font-semibold text-app-ink">{{ t('bank.start.timePerQuestion') }}</legend>
       <div class="mt-2 flex flex-wrap gap-2">
         <button
           v-for="value in SECOND_CHOICES"
@@ -135,13 +145,13 @@ const chipClass = (active) =>
           {{ formatDuration(value) }}
         </button>
       </div>
-      <p class="mt-2 text-[12.5px] text-app-muted">Jami: {{ totalTime }}</p>
+      <p class="mt-2 text-[12.5px] text-app-muted">{{ t('bank.start.total', { time: totalTime }) }}</p>
     </fieldset>
 
     <label class="mt-5 flex cursor-pointer items-center justify-between gap-4 rounded-xl bg-app-sunken px-4 py-3">
       <span>
-        <span class="block text-[14px] font-semibold text-app-ink">Aralash tartibda</span>
-        <span class="block text-[12.5px] text-app-muted">O‘chirilsa, savollar mavzu tartibida keladi.</span>
+        <span class="block text-[14px] font-semibold text-app-ink">{{ t('bank.start.shuffle') }}</span>
+        <span class="block text-[12.5px] text-app-muted">{{ t('bank.start.shuffleHint') }}</span>
       </span>
       <input v-model="randomize" type="checkbox" class="peer sr-only" />
       <span

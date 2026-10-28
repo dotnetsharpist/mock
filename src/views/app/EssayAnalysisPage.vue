@@ -11,6 +11,7 @@
 // empty state, which is what should happen — a student must never be shown a
 // specimen analysis dressed as their own.
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import AppTopbar from '@/components/app/AppTopbar.vue'
 import AppCard from '@/components/app/AppCard.vue'
@@ -30,10 +31,14 @@ defineProps({
 defineEmits(['openMenu'])
 
 const route = useRoute()
+const { t, locale } = useI18n()
 
 const SAMPLE_ID = 'namuna'
+const isSample = route.params.id === SAMPLE_ID && import.meta.env.DEV
+// The sample's topic is our copy, not the student's, so it is worded at
+// render (see topicText) and follows a language switch.
 const sampleEntry = () => ({
-  topic: 'Namunaviy insho — tahlil ko‘rinishi',
+  topic: '',
   savedAt: new Date().toISOString(),
   analysis: sampleEssayAnalysis,
   analyzedText: sampleEssayText,
@@ -44,11 +49,9 @@ const sampleEntry = () => ({
   sample: true,
 })
 
-const entry = ref(
-  route.params.id === SAMPLE_ID && import.meta.env.DEV
-    ? sampleEntry()
-    : getEssayChecking(route.params.id),
-)
+const entry = ref(isSample ? sampleEntry() : getEssayChecking(route.params.id))
+
+const topicText = computed(() => (isSample ? t('essayAnalysis.page.sampleTopic') : entry.value?.topic))
 
 const hasEntry = computed(() => Boolean(entry.value))
 const hasUserEssay = computed(
@@ -60,10 +63,14 @@ const UZ_MONTHS = [
   'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr',
 ]
 
+// "5-oktabr, 2026" / "5 октября 2026".
 const formattedDate = computed(() => {
   if (!entry.value?.savedAt) return ''
   const date = new Date(entry.value.savedAt)
   if (Number.isNaN(date.getTime())) return ''
+  if (locale.value === 'ru') {
+    return `${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })} ${date.getFullYear()}`
+  }
   return `${date.getDate()}-${UZ_MONTHS[date.getMonth()]}, ${date.getFullYear()}`
 })
 
@@ -79,10 +86,10 @@ const BACK_TO = '/natijalar?view=essays'
   <!-- The check date rides in the subtitle rather than taking a line of its own
        above the analysis. -->
   <AppTopbar
-    title="Insho natijasi"
-    :subtitle="hasEntry ? [entry.topic, formattedDate].filter(Boolean).join(' · ') : ''"
+    :title="t('essayAnalysis.page.title')"
+    :subtitle="hasEntry ? [topicText, formattedDate].filter(Boolean).join(' · ') : ''"
     :back-to="BACK_TO"
-    back-label="Natijalar"
+    :back-label="t('navbar.result')"
     :user="user"
     @open-menu="$emit('openMenu')"
   />
@@ -91,9 +98,9 @@ const BACK_TO = '/natijalar?view=essays'
     <AppCard v-if="!hasEntry">
       <EmptyState
         icon="essay"
-        title="Bu insho tahlili topilmadi"
-        description="Havola eskirgan bo‘lishi yoki tahlil shu qurilmadan o‘chirilgan bo‘lishi mumkin."
-        action-label="Natijalarga qaytish"
+        :title="t('essayAnalysis.page.notFound.title')"
+        :description="t('essayAnalysis.page.notFound.description')"
+        :action-label="t('essayAnalysis.page.notFound.action')"
         :action-to="BACK_TO"
       />
     </AppCard>
@@ -101,8 +108,7 @@ const BACK_TO = '/natijalar?view=essays'
     <template v-else>
       <AppCard v-if="entry.uploadsDropped" class="mb-4">
         <p class="text-[13px] leading-[1.6] text-app-muted">
-          Bu inshoning rasm sahifalari joy tejash uchun saqlanmagan — tahlil va natija
-          saqlanib qolgan.
+          {{ t('essayAnalysis.page.uploadsDropped') }}
         </p>
       </AppCard>
 
@@ -118,7 +124,7 @@ const BACK_TO = '/natijalar?view=essays'
           <summary
             class="flex cursor-pointer items-center justify-between px-5 py-4 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile"
           >
-            <span>Siz yuborgan insho</span>
+            <span>{{ t('essayAnalysis.page.yourEssay') }}</span>
             <AppIcon
               name="chevronDown"
               :size="16"
@@ -142,7 +148,7 @@ const BACK_TO = '/natijalar?view=essays'
                 <span
                   class="absolute left-2 top-2 rounded-md bg-app-ink/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-app-surface"
                 >
-                  {{ index + 1 }}-sahifa
+                  {{ t('essayPage.pageBadge', { n: index + 1 }) }}
                 </span>
               </div>
             </div>

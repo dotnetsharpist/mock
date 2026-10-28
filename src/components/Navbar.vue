@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { setLocale } from '@/i18n'
+import LanguageSwitch from '@/components/LanguageSwitch.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useBalanceStore } from '@/stores/balance'
 import { useMobileMenu } from '@/composables/useMobileMenu'
@@ -18,7 +18,7 @@ const isScrolled = ref(false)
 const handleScroll = () => {
   isScrolled.value = window.scrollY > 12
 }
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
@@ -71,12 +71,6 @@ const userInitial = computed(() => {
   return trimmed ? trimmed.charAt(0).toUpperCase() : '?'
 })
 
-const localeModel = computed({
-  get: () => locale.value,
-  set: (value: string) => {
-    setLocale(value)
-  },
-})
 
 const isActiveItem = (item: { to?: string | Record<string, unknown>; label: string }) => {
   if (typeof item.to === 'string') {
@@ -166,26 +160,22 @@ onBeforeUnmount(() => {
       </nav>
 
       <div class="flex shrink-0 items-center gap-2">
-        <select
-          v-model="localeModel"
-          class="hidden rounded-md border border-transparent bg-transparent px-2.5 py-1.5 text-[13px] text-[#888] outline-none transition hover:bg-white/10 sm:block"
-        >
-          <option value="uz">UZ</option>
-          <option value="ru">RU</option>
-        </select>
+        <!-- Visible at every width: it used to be `hidden sm:block`, and the
+             phone menu only printed the current code as text. -->
+        <LanguageSwitch tone="dark" />
 
         <router-link
           v-if="authStore.userInfo"
           to="/narxlar"
           class="hidden items-center gap-1.5 rounded-full border border-[#333] bg-[#1e1e1e] px-3 py-2 transition hover:opacity-90 sm:flex"
-          title="Tanga balansi"
+          :title="t('common.tangaBalance')"
         >
           <svg class="h-4 w-4 text-[#cfcabf]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <circle cx="12" cy="12" r="9" />
             <circle cx="12" cy="12" r="4.25" />
           </svg>
           <span class="text-[14px] font-semibold tabular-nums text-white">{{ tangaBalance }}</span>
-          <span class="text-[13px] text-[#888]">tanga</span>
+          <span class="text-[13px] text-[#888]">{{ t('common.tangaUnit', tangaBalance) }}</span>
         </router-link>
 
         <router-link v-if="!authStore.userInfo" to="/register" class="hidden sm:block">
@@ -292,7 +282,6 @@ onBeforeUnmount(() => {
               </span>
               <div class="min-w-0">
                 <p class="truncate text-[14px] font-semibold text-white">{{ userName }}</p>
-                <p class="text-xs uppercase text-[#666]">{{ localeModel }}</p>
               </div>
             </div>
 
@@ -306,7 +295,7 @@ onBeforeUnmount(() => {
                 <circle cx="12" cy="12" r="4.25" />
               </svg>
               <span class="text-[14px] font-semibold tabular-nums text-white">{{ tangaBalance }}</span>
-              <span class="text-[13px] text-[#888]">tanga</span>
+              <span class="text-[13px] text-[#888]">{{ t('common.tangaUnit', tangaBalance) }}</span>
             </router-link>
           </div>
 

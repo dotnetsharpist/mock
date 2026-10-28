@@ -1,10 +1,12 @@
 <script setup>
-// Platform top bar: page title/greeting on the left; bell, tanga pill, buy
-// button and avatar menu on the right. From the approved mockup.
+// Platform top bar: page title/greeting on the left; bell, UZ/RU switch, tanga
+// pill, buy button and avatar menu on the right. From the approved mockup.
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useBalanceStore } from '@/stores/balance'
+import LanguageSwitch from '@/components/LanguageSwitch.vue'
 import ActiveAttemptBanner from './ActiveAttemptBanner.vue'
 import AppIcon from './AppIcon.vue'
 import CoinIcon from './CoinIcon.vue'
@@ -25,6 +27,7 @@ defineEmits(['openMenu'])
 const isUserMenuOpen = ref(false)
 
 const router = useRouter()
+const { t } = useI18n()
 const authStore = useAuthStore()
 const balanceStore = useBalanceStore()
 
@@ -93,29 +96,33 @@ async function signOut() {
       <button
         type="button"
         disabled
-        title="Bildirishnomalar — tez orada"
+        :title="t('appShell.topbar.notificationsSoon')"
         class="hidden h-10 w-10 cursor-not-allowed items-center justify-center rounded-full border border-app-border bg-app-surface text-app-muted opacity-70 sm:flex"
-        aria-label="Bildirishnomalar — tez orada"
+        :aria-label="t('appShell.topbar.notificationsSoon')"
       >
         <AppIcon name="bell" :size="18" />
       </button>
+
+      <!-- In the bar from sm up. On a phone the bar has no width left for it,
+           so it moves into the avatar menu below instead of disappearing. -->
+      <LanguageSwitch class="hidden sm:inline-flex" />
 
       <!-- On phones the balance doubles as the way to top up, so tanga never
            disappears from the shell at small widths. -->
       <RouterLink
         to="/tanga"
         class="inline-flex items-center gap-1.5 rounded-full border border-app-border bg-app-surface px-2.5 py-1.5 text-[13px] font-semibold text-app-ink transition-colors hover:bg-app-tile sm:gap-2 sm:px-3.5 sm:py-2 sm:text-[14px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
-        :aria-label="`${user.tanga} tanga — tanga sotib olish`"
+        :aria-label="t('appShell.topbar.balanceLabel', { n: user.tanga })"
       >
         <CoinIcon :size="16" class="text-app-coin" />
-        {{ user.tanga }} tanga
+        {{ t('common.tangaCount', user.tanga) }}
       </RouterLink>
 
       <RouterLink
         to="/tanga"
         class="hidden items-center rounded-full bg-app-ink px-4 py-2 text-[14px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink sm:inline-flex"
       >
-        Tanga sotib olish
+        {{ t('appShell.topbar.buy') }}
       </RouterLink>
 
       <div class="relative">
@@ -150,7 +157,7 @@ async function signOut() {
             @click="isUserMenuOpen = false"
           >
             <AppIcon name="settings" :size="16" class="text-app-muted" />
-            Sozlamalar
+            {{ t('appShell.topbar.settings') }}
           </RouterLink>
           <RouterLink
             to="/tanga"
@@ -159,8 +166,13 @@ async function signOut() {
             @click="isUserMenuOpen = false"
           >
             <CoinIcon :size="16" class="text-app-coin" />
-            Hisobni to‘ldirish
+            {{ t('appShell.topbar.topUp') }}
           </RouterLink>
+
+          <div class="flex items-center justify-between gap-2 px-3 py-2 sm:hidden">
+            <span class="text-[15px] text-app-ink">{{ t('common.language') }}</span>
+            <LanguageSwitch />
+          </div>
 
           <div class="my-1 h-px bg-app-border"></div>
 
@@ -171,7 +183,7 @@ async function signOut() {
             @click="signOut"
           >
             <AppIcon name="logout" :size="16" class="text-app-muted" />
-            Chiqish
+            {{ t('appShell.topbar.signOut') }}
           </button>
         </div>
       </div>

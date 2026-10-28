@@ -3,8 +3,11 @@
 // covers, and how many mocks it has. The whole card is the link — a card with a
 // separate button inside it gives the same action two targets.
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppIcon from './AppIcon.vue'
 import { SUBJECTS, unknownSubject } from './subjects.js'
+
+const { t } = useI18n()
 
 const props = defineProps({
   subjectKey: { type: String, required: true },
@@ -55,7 +58,7 @@ const entry = computed(
         class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-app-tile px-2.5 py-1 text-[12px] font-medium text-app-muted sm:mt-auto sm:gap-0 sm:rounded-none sm:bg-transparent sm:px-0 sm:py-0 sm:pt-5 sm:text-[13px]"
       >
         <AppIcon name="tests" :size="13" class="shrink-0 sm:hidden" />
-        {{ count }} ta test
+        {{ t('appUi.testCount', count) }}
       </p>
 
       <!-- The grid card had no visible affordance — students did not read a
@@ -65,7 +68,7 @@ const entry = computed(
       <span
         class="mt-3.5 hidden items-center justify-center gap-1.5 rounded-full border border-app-border bg-app-surface px-4 py-2 text-[13px] font-semibold text-app-ink transition-colors duration-200 group-hover:border-app-ink group-hover:bg-app-ink group-hover:text-white sm:inline-flex"
       >
-        Testlarni ko‘rish
+        {{ t('appUi.browseTests') }}
         <AppIcon name="arrowRight" :size="15" class="shrink-0" />
       </span>
     </div>

@@ -81,7 +81,7 @@ const pausedText = computed(() =>
   WORKING_PAYMENT_PROVIDERS.length
     ? t('pricing.payment.gateway.paused.text', {
         provider: method.value,
-        others: formatProviders(t('pricing.payment.online.or')),
+        others: formatProviders(),
       })
     : t('pricing.payment.gateway.paused.textCardOnly', { provider: method.value }),
 )
@@ -287,7 +287,7 @@ const close = () => emit('close')
               <div class="min-w-0 flex-1">
                 <p class="text-[15px] font-semibold text-[#1a1814]">{{ planName }}</p>
                 <p class="mt-0.5 text-[13px] text-[#6b6760]">
-                  {{ planTokens }} {{ t('pricing.tokenSuffix') }}
+                  {{ t('common.tangaCount', planTokens) }}
                 </p>
               </div>
               <span class="shrink-0 text-[17px] font-bold tracking-[-0.01em] text-[#1a1814]">{{ planPrice }}</span>

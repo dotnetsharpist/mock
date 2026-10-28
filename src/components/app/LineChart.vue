@@ -3,6 +3,9 @@
 // and inherits the ink stroke from the design system. Reused wherever a trend
 // over time is shown (dashboard progress, results comparison).
 import { computed, useId } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 // Each instance needs its own gradient id, or a second chart on the page
 // silently reuses the first one's fill.
@@ -60,7 +63,9 @@ const tickY = (t) => PAD_T + (props.height - PAD_T - PAD_B) * (1 - t / 100)
     :class="fitHeight ? 'h-full w-full' : 'h-auto w-full'"
     preserveAspectRatio="xMidYMid meet"
     role="img"
-    :aria-label="`Progress grafigi: ${points.map((p) => `${p.label} ${p.value}%`).join(', ')}`"
+    :aria-label="
+      t('appUi.chartLabel', { points: points.map((p) => `${p.label} ${p.value}%`).join(', ') })
+    "
   >
     <g class="text-app-border">
       <line

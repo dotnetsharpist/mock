@@ -20,6 +20,7 @@ import PricingPaymentModal from '@/components/PricingPaymentModal.vue'
 import { useBalanceStore } from '@/stores/balance'
 import { usePricingPlans } from '@/composables/usePricingPlans'
 import { formatProviders, WORKING_PAYMENT_PROVIDERS } from '@/utils/payment'
+import { intlLocale } from '@/i18n'
 
 defineProps({
   user: { type: Object, required: true },
@@ -45,12 +46,20 @@ const plans = computed(() =>
     // "better value", but 10 tanga for 35 000 against 5 for 20 000 is 2× the
     // tanga at 1.75× the price — better value, though not by 2×. So the chip
     // states the thing that is actually 2×: the tanga.
-    const ratio = baseTokens && tokens > baseTokens ? tokens / baseTokens : null
+    const ratio = baseTokens && tokens > baseTokens ? Number((tokens / baseTokens).toFixed(1)) : null
     return {
       ...plan,
       index,
       tokens,
-      ratio: ratio ? `${Number(ratio.toFixed(1))}x` : null,
+      // "2x ko‘proq tanga" / "в 2 раза больше токенов" — a fractional ratio
+      // takes the "few" form in Russian (в 2,5 раза).
+      ratio: ratio
+        ? t(
+            'paymentApp.pricing.ratio',
+            { ratio: `${ratio}x`, times: ratio.toLocaleString(intlLocale()) },
+            Number.isInteger(ratio) ? ratio : 2,
+          )
+        : null,
       // No badge on the plain pack — "Basic" was an English filler word next to
       // two Uzbek ones, and it labelled a pack that has nothing less in it.
       badge: plan.highlighted
@@ -78,33 +87,18 @@ onMounted(() => {
 // Tanga buy two things — a premium test and an AI essay check — and both cost
 // the same (TEST_TOKEN_COST; the essay price is the backend's, mirrored here).
 // The first essay check is free (backend FreeReviewCount = 1).
+// Worded at render from `paymentApp.pricing.how.<key>` (title, description).
 const HOW_IT_WORKS = [
-  {
-    key: 'cost',
-    numeral: '2',
-    title: '2 tanga = 1 test yoki 1 insho tekshiruvi',
-    description:
-      'Premium test ham, AI insho tekshiruvi ham 2 tangadan. Birinchi insho tekshiruvi bepul.',
-  },
-  {
-    key: 'expiry',
-    icon: 'infinity',
-    title: 'Tanga muddatsiz amal qiladi',
-    description: 'Obuna emas — tangalar sarflanmaguncha hisobingizda turadi.',
-  },
-  {
-    key: 'charge',
-    icon: 'play',
-    title: 'Faqat ishlatganda yechiladi',
-    description: 'Tanga testni boshlaganingizda yoki inshoni tekshiruvga yuborganingizda yechiladi.',
-  },
+  { key: 'cost', numeral: '2' },
+  { key: 'expiry', icon: 'infinity' },
+  { key: 'charge', icon: 'play' },
 ]
 </script>
 
 <template>
   <AppTopbar
-    title="Narxlar"
-    subtitle="Tanga sotib oling — premium testlar va AI insho tekshiruvi uchun."
+    :title="t('paymentApp.pricing.title')"
+    :subtitle="t('paymentApp.pricing.subtitle')"
     :user="user"
     @open-menu="$emit('openMenu')"
   />
@@ -121,11 +115,11 @@ const HOW_IT_WORKS = [
     >
       <div class="flex flex-wrap items-start justify-between gap-4">
         <div class="min-w-0">
-          <h2 class="text-[18px] font-bold tracking-[-0.015em] text-app-ink">Tanga paketlari</h2>
+          <h2 class="text-[18px] font-bold tracking-[-0.015em] text-app-ink">{{ t('paymentApp.pricing.packsTitle') }}</h2>
           <!-- Same rule as the topbar subtitle: on a phone this sentence only
                restates the heading above it. -->
           <p class="mt-0.5 hidden text-[13px] text-app-muted sm:block">
-            Har bir paket bir xil narsani beradi — faqat hajmi va bittasining narxi farq qiladi.
+            {{ t('paymentApp.pricing.packsLead') }}
           </p>
         </div>
 
@@ -134,13 +128,13 @@ const HOW_IT_WORKS = [
           class="inline-flex shrink-0 items-center gap-2 rounded-lg text-[13px] font-medium text-app-muted transition-colors hover:text-app-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
         >
           <AppIcon name="info" :size="16" />
-          Tanga qanday ishlaydi?
+          {{ t('paymentApp.pricing.howTitle') }}
         </a>
       </div>
 
       <!-- Plans -->
       <section aria-labelledby="plans-heading" class="mt-5">
-        <h3 id="plans-heading" class="sr-only">Ta'riflar</h3>
+        <h3 id="plans-heading" class="sr-only">{{ t('paymentApp.pricing.plansHeading') }}</h3>
         <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
           <!-- All three cards share one surface. The popular plan used to get a
                2px ink border, a white fill and a shadow, which made it read as a
@@ -178,13 +172,13 @@ const HOW_IT_WORKS = [
                 class="inline-flex items-center gap-1.5 rounded-full bg-app-tile px-3 py-1 text-[13px] font-semibold text-app-ink"
               >
                 <CoinIcon :size="14" class="text-app-coin" />
-                {{ plan.tokens }} {{ t('pricing.tokenSuffix') }}
+                {{ t('common.tangaCount', plan.tokens) }}
               </span>
               <span
                 v-if="plan.ratio"
                 class="inline-flex items-center rounded-full bg-app-tile px-3 py-1 text-[13px] font-medium text-app-muted"
               >
-                {{ plan.ratio }} ko‘proq tanga
+                {{ plan.ratio }}
               </span>
             </div>
 
@@ -210,7 +204,7 @@ const HOW_IT_WORKS = [
               class="mt-auto w-full rounded-lg bg-app-ink px-4 py-3 text-[13px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
               @click="buy(plan)"
             >
-              {{ plan.tokens }} {{ t('pricing.tokenSuffix') }} {{ t('pricing.buy').toLowerCase() }}
+              {{ t('paymentApp.buyTokens', plan.tokens) }}
             </button>
           </article>
         </div>
@@ -223,7 +217,7 @@ const HOW_IT_WORKS = [
         aria-labelledby="how-heading"
       >
         <h3 id="how-heading" class="text-[15px] font-bold tracking-[-0.01em] text-app-ink">
-          Tanga qanday ishlaydi?
+          {{ t('paymentApp.pricing.howTitle') }}
         </h3>
 
         <dl class="mt-4 grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
@@ -241,16 +235,16 @@ const HOW_IT_WORKS = [
               <span v-else class="text-[14px] font-bold">{{ item.numeral }}</span>
             </span>
             <div class="min-w-0">
-              <dt class="text-[14px] font-semibold text-app-ink">{{ item.title }}</dt>
+              <dt class="text-[14px] font-semibold text-app-ink">{{ t(`paymentApp.pricing.how.${item.key}.title`) }}</dt>
               <dd class="mt-1 text-[12.5px] leading-[1.6] text-app-muted">
-                {{ item.description }}
+                {{ t(`paymentApp.pricing.how.${item.key}.description`) }}
               </dd>
             </div>
           </div>
         </dl>
 
         <p class="mt-5 border-t border-app-border pt-4 text-[12.5px] text-app-muted">
-          {{ t(billingNoteKey, { providers: formatProviders(t('pricing.payment.online.or')) }) }}.
+          {{ t(billingNoteKey, { providers: formatProviders() }) }}.
         </p>
       </section>
     </AppCard>

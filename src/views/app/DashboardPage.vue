@@ -9,6 +9,7 @@
 // rather than invented — see the empty/`—` branches below.
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AppTopbar from '@/components/app/AppTopbar.vue'
 import AppCard from '@/components/app/AppCard.vue'
 import AppIcon from '@/components/app/AppIcon.vue'
@@ -27,6 +28,7 @@ const props = defineProps({
 defineEmits(['openMenu'])
 
 const route = useRoute()
+const { t } = useI18n()
 
 const {
   isLoading,
@@ -70,12 +72,12 @@ const formatDate = (time) => {
 const relativeDate = (time) => {
   if (!time) return '—'
   const days = Math.round((startOfToday() - startOfDay(time)) / DAY)
-  if (days <= 0) return 'Bugun'
-  if (days === 1) return 'Kecha'
-  if (days < 7) return `${days} kun oldin`
-  if (days < 30) return `${Math.floor(days / 7)} hafta oldin`
-  if (days < 365) return `${Math.floor(days / 30)} oy oldin`
-  return `${Math.floor(days / 365)} yil oldin`
+  if (days <= 0) return t('dashboard.relative.today')
+  if (days === 1) return t('dashboard.relative.yesterday')
+  if (days < 7) return t('dashboard.relative.daysAgo', days)
+  if (days < 30) return t('dashboard.relative.weeksAgo', Math.floor(days / 7))
+  if (days < 365) return t('dashboard.relative.monthsAgo', Math.floor(days / 30))
+  return t('dashboard.relative.yearsAgo', Math.floor(days / 365))
 }
 
 // ?empty=1 still previews the first-run screen against real plumbing.
@@ -89,7 +91,7 @@ const stats = computed(() => [
   {
     key: 'solved',
     icon: 'tests',
-    label: 'Testlar yechildi',
+    label: t('dashboard.stats.solved'),
     value: hasHistory.value ? String(solvedTestCount.value) : '0',
     // Only a real previous week earns a trend line; see weekComparison. Gated
     // on hasHistory too, or the ?empty=1 preview shows "0 solved" under a
@@ -98,46 +100,46 @@ const stats = computed(() => [
       hasHistory.value && weekComparison.value.percent !== null
         ? {
             amount: `${weekComparison.value.percent}%`,
-            note: "o'tgan haftaga nisbatan",
+            note: t('dashboard.stats.vsLastWeek'),
             direction: weekComparison.value.direction,
           }
         : null,
     note: hasHistory.value
-      ? `Bu hafta ${weekComparison.value.thisWeek} ta`
-      : 'Hali test yechilmagan',
+      ? t('dashboard.stats.thisWeek', { n: weekComparison.value.thisWeek })
+      : t('dashboard.stats.noTestsYet'),
   },
   {
     key: 'average',
     icon: 'trend',
-    label: "O'rtacha natija",
+    label: t('dashboard.stats.average'),
     value: !hasHistory.value || averagePercent.value === null ? '—' : `${averagePercent.value}%`,
     // Deliberately says which tests it covers: resolving a percentage costs a
     // request per attempt, so this is the recent window, not a lifetime mean.
     note: !hasHistory.value
-      ? 'Hali natija yo‘q'
+      ? t('dashboard.stats.noResultYet')
       : averagePercent.value === null
-        ? 'Natijalar hisoblanmoqda'
-        : `Oxirgi ${scoredRecent.value.length} ta test bo‘yicha`,
+        ? t('dashboard.stats.calculating')
+        : t('dashboard.stats.overLastTests', scoredRecent.value.length),
   },
   {
     key: 'tanga',
     coin: true,
-    label: 'Tanga balansi',
+    label: t('dashboard.stats.balance'),
     value: String(props.user.tanga),
-    link: { to: '/tanga', label: 'Tanga sotib olish' },
+    link: { to: '/tanga', label: t('appShell.topbar.buy') },
   },
   {
     key: 'activity',
     icon: 'clock',
-    label: 'Oxirgi faoliyat',
+    label: t('dashboard.stats.lastActivity'),
     value: hasHistory.value ? relativeDate(lastActivity.value) : '—',
     // The exact date is still one hover away for anyone who wants it.
     title: hasHistory.value && lastActivity.value ? formatDate(lastActivity.value) : undefined,
     note: hasHistory.value
       ? todayCount.value
-        ? `Bugun ${todayCount.value} ta test yechildi`
-        : `Jami ${finishedAttempts.value.length} ta urinish`
-      : 'Faoliyat yo‘q',
+        ? t('dashboard.stats.solvedToday', todayCount.value)
+        : t('dashboard.stats.totalAttempts', finishedAttempts.value.length)
+      : t('dashboard.stats.noActivity'),
   },
 ])
 
@@ -146,10 +148,9 @@ const stats = computed(() => [
 // a percentage resolved (one request each), so a ten-week axis would draw ten
 // columns over however few weeks those attempts happen to fall in. See
 // useDashboardData's scorePoints.
-const windowOptions = [
-  { value: 5, label: 'Oxirgi 5 ta test' },
-  { value: 10, label: 'Oxirgi 10 ta test' },
-]
+const windowOptions = computed(() =>
+  [5, 10].map((value) => ({ value, label: t('dashboard.chart.lastTests', value) })),
+)
 const chartWindow = ref(10)
 
 const chartPoints = computed(() => (forceEmpty.value ? [] : scorePoints(chartWindow.value)))
@@ -180,9 +181,9 @@ const chartWidth = computed(() => (isNarrow.value ? CHART_BOX.narrow : CHART_BOX
 
 const growthLabel = computed(() => {
   if (!growth.value) return ''
-  if (growth.value.direction === 'up') return 'o‘sish'
-  if (growth.value.direction === 'down') return 'pasayish'
-  return 'o‘zgarishsiz'
+  if (growth.value.direction === 'up') return t('dashboard.chart.growthUp')
+  if (growth.value.direction === 'down') return t('dashboard.chart.growthDown')
+  return t('dashboard.chart.growthFlat')
 })
 
 const growthValue = computed(() => {
@@ -216,13 +217,13 @@ const recentTests = computed(() => {
       meta: [
         subject.label,
         formatDate(attempt.finishedAt),
-        `${attempt.questionCount} savol`,
-        ...(attempt.expired ? ['Vaqt tugadi'] : []),
+        t('appUi.questionCount', attempt.questionCount),
+        ...(attempt.expired ? [t('appUi.timeUp')] : []),
         percent === null
-          ? 'Natija hisoblanmoqda'
+          ? t('dashboard.recent.scoring')
           : hasCertificateGrade(percent)
-            ? `${gradeFromPercentage(percent)} daraja`
-            : 'Sertifikatsiz',
+            ? t('dashboard.recent.grade', { grade: gradeFromPercentage(percent) })
+            : t('dashboard.recent.noCertificate'),
       ].join(' · '),
       percent,
     }
@@ -232,8 +233,8 @@ const recentTests = computed(() => {
 
 <template>
   <AppTopbar
-    :title="`Xush kelibsiz, ${user.name}! 👋`"
-    subtitle="Bugun o‘qish uchun ajoyib kun!"
+    :title="t('dashboard.title', { name: user.name })"
+    :subtitle="t('dashboard.subtitle')"
     :user="user"
     @open-menu="$emit('openMenu')"
   />
@@ -246,7 +247,7 @@ const recentTests = computed(() => {
          above it. -->
     <section
       class="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4"
-      aria-label="Umumiy ko‘rsatkichlar"
+      :aria-label="t('dashboard.statsLabel')"
     >
       <AppCard v-for="stat in stats" :key="stat.key" class="max-sm:p-3.5">
         <!-- Label, figure, note — one column, no icon tile. The 48px chip was
@@ -295,7 +296,7 @@ const recentTests = computed(() => {
               :size="13"
               :class="stat.trend.direction === 'up' ? '' : 'rotate-180'"
             />
-            {{ stat.trend.direction === 'flat' ? 'O‘zgarishsiz' : stat.trend.amount }}
+            {{ stat.trend.direction === 'flat' ? t('dashboard.stats.unchanged') : stat.trend.amount }}
           </span>
           <span class="text-app-muted">{{ stat.trend.note }}</span>
         </p>
@@ -321,7 +322,7 @@ const recentTests = computed(() => {
             id="results-chart-heading"
             class="text-[20px] font-bold tracking-[-0.015em] text-app-ink"
           >
-            Mening natijalarim
+            {{ t('dashboard.chart.heading') }}
           </h2>
 
           <!-- A real control, not the mockup's decorative pill: it re-draws the
@@ -330,7 +331,7 @@ const recentTests = computed(() => {
           <AppSelect
             v-model="chartWindow"
             :options="windowOptions"
-            aria-label="Grafik oralig‘i"
+            :aria-label="t('dashboard.chart.windowLabel')"
             class="w-[190px] shrink-0"
           />
         </div>
@@ -342,8 +343,10 @@ const recentTests = computed(() => {
         <EmptyState
           v-else-if="errorKind"
           icon="close"
-          :title="errorKind === 'network' ? 'Internetda uzilish bor' : 'Ma’lumotlarni yuklab bo‘lmadi'"
-          description="Biroz kuting va sahifani yangilang."
+          :title="
+            errorKind === 'network' ? t('appUi.loadErrors.offline') : t('dashboard.chart.loadFailed')
+          "
+          :description="t('appUi.loadErrors.waitAndReload')"
         />
 
         <!-- One point is a score, not a line. Below two the chart would draw a
@@ -351,9 +354,9 @@ const recentTests = computed(() => {
         <EmptyState
           v-else-if="chartPoints.length < 2"
           icon="trend"
-          title="Grafik hali chizilmagan"
-          description="Kamida ikkita test yechilgach, natijalaringiz shu yerda chiziq bo‘lib ko‘rinadi."
-          action-label="Testni boshlash"
+          :title="t('dashboard.chart.emptyTitle')"
+          :description="t('dashboard.chart.emptyDescription')"
+          :action-label="t('appUi.startTest')"
           action-to="/testlar"
         />
 
@@ -397,7 +400,7 @@ const recentTests = computed(() => {
         </div>
 
         <p v-if="chartPoints.length >= 2" class="mt-3 text-[12px] text-app-muted">
-          Har bir nuqta — bitta yechilgan test, eskisidan yangisiga qarab.
+          {{ t('dashboard.chart.caption') }}
         </p>
       </AppCard>
     </section>
@@ -410,13 +413,13 @@ const recentTests = computed(() => {
             id="recent-tests-heading"
             class="text-[20px] font-bold tracking-[-0.015em] text-app-ink"
           >
-            So‘nggi testlar
+            {{ t('dashboard.recent.heading') }}
           </h2>
           <RouterLink
             to="/natijalarim"
             class="inline-flex shrink-0 items-center gap-1.5 rounded-md text-[13px] font-medium text-app-muted transition-colors hover:text-app-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
           >
-            <span class="hidden sm:inline">Barcha natijalar</span>
+            <span class="hidden sm:inline">{{ t('dashboard.recent.allResults') }}</span>
             <AppIcon name="arrowRight" :size="15" />
           </RouterLink>
         </div>
@@ -434,9 +437,9 @@ const recentTests = computed(() => {
         <EmptyState
           v-else-if="!recentTests.length"
           icon="tests"
-          title="Siz hali test yechmagansiz"
-          description="Yechgan testlaringiz va ularning tahlili shu yerda to‘planib boradi."
-          action-label="Testlarni ko‘rish"
+          :title="t('dashboard.recent.emptyTitle')"
+          :description="t('dashboard.recent.emptyDescription')"
+          :action-label="t('appUi.browseTests')"
           action-to="/testlar"
         />
 
@@ -472,7 +475,7 @@ const recentTests = computed(() => {
                 :aria-valuenow="test.percent ?? undefined"
                 aria-valuemin="0"
                 aria-valuemax="100"
-                :aria-label="`${test.title} — natija`"
+                :aria-label="t('dashboard.recent.progressLabel', { title: test.title })"
               >
                 <div
                   v-if="test.percent !== null"
@@ -496,9 +499,9 @@ const recentTests = computed(() => {
               <RouterLink
                 to="/natijalarim"
                 class="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-app-ink px-3.5 py-2 text-[13px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
-                :aria-label="`${test.title} — natijalarni ko‘rish`"
+                :aria-label="t('dashboard.recent.analysisLabel', { title: test.title })"
               >
-                Tahlil
+                {{ t('dashboard.recent.analysis') }}
                 <AppIcon name="arrowRight" :size="14" />
               </RouterLink>
             </div>

@@ -17,6 +17,7 @@
 // 404 means the payment is not this student's, or does not exist — one
 // generic message for both, so the page never confirms that an id exists.
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import AppTopbar from '@/components/app/AppTopbar.vue'
 import AppCard from '@/components/app/AppCard.vue'
@@ -38,6 +39,7 @@ const POLL_INTERVAL_MS = 2000
 const POLL_WINDOW_MS = 60000
 const SUPPORT_URL = 'https://t.me/Milliymocksupport'
 
+const { t } = useI18n()
 const route = useRoute()
 const balanceStore = useBalanceStore()
 const { plans } = usePricingPlans()
@@ -132,60 +134,66 @@ const isWaiting = computed(() => phase.value === 'checking' || phase.value === '
 
 const provider = computed(() => providerLabel(payment.value?.provider))
 
+// With no provider named yet, the copy says "to‘lov tizimi" — as its own
+// sentence where the language agrees the verb with it (Russian), as a
+// stand-in word where it doesn't.
 const view = computed(() => {
+  const name = provider.value
+  const copy = (key, params) => t(`paymentApp.result.${key}`, params ?? {})
   switch (phase.value) {
     case 'pending':
       return {
         icon: 'clock',
         tone: 'info',
-        badge: 'Tasdiq kutilmoqda',
-        title: provider.value
-          ? `${provider.value}’dan tasdiq kutilmoqda…`
-          : 'To‘lov tizimidan tasdiq kutilmoqda…',
-        description: 'Odatda bu bir necha soniya oladi. Tasdiq kelishi bilan shu yerda ko‘rasiz.',
+        badge: copy('badges.pending'),
+        title: name ? copy('pending.titleProvider', { provider: name }) : copy('pending.title'),
+        description: copy('pending.description'),
       }
-    case 'approved':
+    case 'approved': {
+      const coins = payment.value?.coins ?? 0
       return {
         icon: 'checkCircle',
         tone: 'good',
-        badge: 'To‘landi',
-        title: `${payment.value?.coins ?? 0} tanga hisobingizga qo‘shildi`,
-        description:
-          'To‘lov qabul qilindi. Tangalarni premium testlar va AI insho tekshiruviga sarflashingiz mumkin.',
+        badge: copy('badges.approved'),
+        title: t('paymentApp.result.approved.title', coins),
+        description: copy('approved.description'),
       }
+    }
     case 'cancelled':
       return {
         icon: 'close',
         tone: 'bad',
-        badge: 'Bekor qilindi',
-        title: 'To‘lov amalga oshmadi',
-        description:
-          `${provider.value || 'To‘lov tizimi'} to‘lovni tasdiqlamadi, shuning uchun tanga qo‘shilmadi. Qayta urinib ko‘rishingiz mumkin — yangi to‘lov ochiladi.`,
+        badge: copy('badges.cancelled'),
+        title: copy('cancelled.title'),
+        description: name
+          ? copy('cancelled.descriptionProvider', { provider: name })
+          : copy('cancelled.description'),
       }
     case 'timeout':
       return {
         icon: 'clock',
         tone: 'info',
-        badge: 'Tasdiq kutilmoqda',
-        title: `${provider.value || 'To‘lov tizimi'} hali tasdiqlamadi`,
-        description: `Bu sahifada kutish shart emas: ${provider.value || 'to‘lov tizimi'} to‘lovni tasdiqlashi bilan tangalar hisobingizga avtomatik tushadi. Uzoq vaqt tushmasa, qo‘llab-quvvatlash xizmatiga yozing.`,
+        badge: copy('badges.pending'),
+        title: name ? copy('timeout.titleProvider', { provider: name }) : copy('timeout.title'),
+        description: copy('timeout.description', {
+          provider: name || copy('providerFallback'),
+        }),
       }
     case 'notFound':
       return {
         icon: 'info',
         tone: 'neutral',
-        badge: 'Xatolik',
-        title: 'To‘lov ma’lumotlarini ochib bo‘lmadi',
-        description:
-          'Bu havola orqali to‘lovni ko‘rsatib bo‘lmadi. Tanga balansingizni yuqori burchakda ko‘rishingiz mumkin; savol bo‘lsa, qo‘llab-quvvatlash xizmatiga yozing.',
+        badge: copy('badges.error'),
+        title: copy('notFound.title'),
+        description: copy('notFound.description'),
       }
     default:
       return {
         icon: 'clock',
         tone: 'info',
-        badge: 'Tekshirilmoqda',
-        title: 'To‘lov holati tekshirilmoqda…',
-        description: 'Bir necha soniya kuting.',
+        badge: copy('badges.checking'),
+        title: copy('checking.title'),
+        description: copy('checking.description'),
       }
   }
 })
@@ -233,8 +241,12 @@ const secondaryPill =
 
 <template>
   <AppTopbar
-    title="To‘lov"
-    :subtitle="provider ? `${provider} orqali tanga xaridi.` : 'Tanga xaridi.'"
+    :title="t('paymentApp.result.title')"
+    :subtitle="
+      provider
+        ? t('paymentApp.result.subtitleProvider', { provider })
+        : t('paymentApp.result.subtitle')
+    "
     :user="user"
     @open-menu="$emit('openMenu')"
   />
@@ -273,14 +285,14 @@ const secondaryPill =
         class="mt-5 divide-y divide-app-border rounded-2xl border border-app-border bg-app-sunken px-4 text-[14px]"
       >
         <div class="flex items-center justify-between gap-4 py-3">
-          <dt class="text-app-muted">Paket</dt>
+          <dt class="text-app-muted">{{ t('paymentApp.result.details.pack') }}</dt>
           <dd class="min-w-0 truncate text-right font-semibold text-app-ink">
             <SkeletonBlock v-if="!payment" class="h-4 w-28" />
             <template v-else>{{ payment.tariffName || '—' }}</template>
           </dd>
         </div>
         <div class="flex items-center justify-between gap-4 py-3">
-          <dt class="text-app-muted">Tanga</dt>
+          <dt class="text-app-muted">{{ t('paymentApp.result.details.coins') }}</dt>
           <dd class="font-semibold text-app-ink">
             <SkeletonBlock v-if="!payment" class="h-4 w-14" />
             <span v-else class="inline-flex items-center gap-1.5">
@@ -290,14 +302,14 @@ const secondaryPill =
           </dd>
         </div>
         <div class="flex items-center justify-between gap-4 py-3">
-          <dt class="text-app-muted">Summa</dt>
+          <dt class="text-app-muted">{{ t('paymentApp.result.details.amount') }}</dt>
           <dd class="font-semibold text-app-ink">
             <SkeletonBlock v-if="!payment" class="h-4 w-24" />
             <template v-else>{{ formatSom(payment.amount) }}</template>
           </dd>
         </div>
         <div class="flex items-center justify-between gap-4 py-3">
-          <dt class="text-app-muted">To‘lov raqami</dt>
+          <dt class="text-app-muted">{{ t('paymentApp.result.details.number') }}</dt>
           <dd class="font-mono text-[13px] text-app-muted">
             <SkeletonBlock v-if="!payment" class="h-4 w-12" />
             <template v-else>#{{ payment.id }}</template>
@@ -308,10 +320,10 @@ const secondaryPill =
       <div v-if="!isWaiting" class="mt-6 flex flex-wrap gap-3">
         <template v-if="phase === 'approved'">
           <RouterLink to="/testlar" :class="primaryPill">
-            Testlarga o‘tish
+            {{ t('paymentApp.result.actions.tests') }}
             <AppIcon name="arrowRight" :size="15" />
           </RouterLink>
-          <RouterLink to="/essay" :class="secondaryPill">Insho tekshirish</RouterLink>
+          <RouterLink to="/essay" :class="secondaryPill">{{ t('paymentApp.result.actions.essay') }}</RouterLink>
         </template>
 
         <template v-else-if="phase === 'cancelled'">
@@ -323,18 +335,18 @@ const secondaryPill =
             @click="retry"
           >
             <AppIcon name="refresh" :size="15" />
-            Qayta urinish
+            {{ t('paymentApp.result.actions.retry') }}
           </button>
           <RouterLink to="/tanga" :class="retryPlan ? secondaryPill : primaryPill">
-            Boshqa paket tanlash
+            {{ t('paymentApp.result.actions.otherPack') }}
           </RouterLink>
         </template>
 
         <template v-else>
           <RouterLink v-if="phase === 'timeout'" to="/dashboard" :class="primaryPill">
-            Bosh sahifaga o‘tish
+            {{ t('paymentApp.result.actions.home') }}
           </RouterLink>
-          <RouterLink v-else to="/tanga" :class="primaryPill">Narxlarga o‘tish</RouterLink>
+          <RouterLink v-else to="/tanga" :class="primaryPill">{{ t('paymentApp.result.actions.pricing') }}</RouterLink>
           <a :href="SUPPORT_URL" target="_blank" rel="noopener" :class="secondaryPill">
             <AppIcon name="send" :size="15" />
             @Milliymocksupport

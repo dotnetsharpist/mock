@@ -84,7 +84,9 @@ const fileFromUrl = async (url) => {
 /**
  * @param onFiles  called with an array of image Files to add
  * @param enabled  ref or getter deciding whether a drop does anything
- * @param onError  optional; called with a message when nothing usable arrived
+ * @param onError  optional; called when nothing usable arrived, with the message
+ *                 as an i18n key — { key } — so the caller can word it at render
+ *                 and it follows a language switch while it is on screen
  * @returns {{ isDragging: import('vue').Ref<boolean> }}
  */
 export function useWindowFileDrop(onFiles, enabled = true, onError = null) {
@@ -162,13 +164,13 @@ export function useWindowFileDrop(onFiles, enabled = true, onError = null) {
       return
     }
     if (!url) {
-      onError?.('Bu rasmni o‘qib bo‘lmadi. Faylni kompyuterga saqlab, qayta tashlang.')
+      onError?.({ key: 'essayPage.errors.dropUnreadable' })
       return
     }
     try {
       onFiles([await fileFromUrl(url)])
     } catch {
-      onError?.('Bu rasmni sayt bermadi. Avval kompyuterga saqlang, so‘ng tashlang.')
+      onError?.({ key: 'essayPage.errors.dropBlocked' })
     }
   }
 

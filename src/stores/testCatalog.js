@@ -18,6 +18,7 @@ import {
   subjectKeyFromApi,
   unknownSubject,
 } from '@/components/app/subjects.js'
+import { t } from '@/i18n'
 
 // TEMP: subjects held back from the platform. Their tests are dropped from the
 // catalogue here, which is the single place the Fanlar grid, the subject lists
@@ -150,7 +151,7 @@ export const useTestCatalogStore = defineStore('testCatalog', () => {
         const attempt = attemptByTest.value.get(Number(test.id))
         return {
           id: Number(test.id),
-          title: String(test.title || '').trim() || 'Nomsiz test',
+          title: String(test.title || '').trim() || t('appUi.untitledTest'),
           subjectKey,
           subjectRaw: test.subject,
           questionCount: Number(test.questionCount) || 0,

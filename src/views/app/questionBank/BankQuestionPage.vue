@@ -4,6 +4,7 @@
 // opened from (stores/questionBank.js keeps that list).
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AppIcon from '@/components/app/AppIcon.vue'
 import EmptyState from '@/components/app/EmptyState.vue'
 import SkeletonBlock from '@/components/app/SkeletonBlock.vue'
@@ -15,6 +16,7 @@ import { useBankClock } from '@/composables/useBankClock'
 import { useQuestionBankStore } from '@/stores/questionBank'
 import { questionBankApi } from '@/utils/questionBankApi'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const bank = useQuestionBankStore()
@@ -180,7 +182,7 @@ async function toggleSave() {
   try {
     const saved = await questionBankApi.toggleSave(asked.id)
     asked.isSaved = Boolean(saved)
-    showToast(saved ? 'Savol saqlandi' : 'Saqlanganlardan olib tashlandi')
+    showToast(saved ? t('bank.toasts.saved') : t('bank.toasts.unsaved'))
   } catch (error) {
     showToast(error.message)
   } finally {
@@ -190,7 +192,7 @@ async function toggleSave() {
 
 function onReported() {
   reportOpen.value = false
-  showToast('Rahmat! Xabaringiz yuborildi.')
+  showToast(t('bank.toasts.reported'))
 }
 
 // ── Previous / next in the list ──────────────────────────────────────────
@@ -260,8 +262,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 <template>
   <BankPlayerLayout
     :back-to="listPath"
-    back-label="Ro‘yxatga qaytish"
-    :title="subject ? `${subject.label} · Savollar banki` : 'Savollar banki'"
+    :back-label="t('bank.actions.backToList')"
+    :title="subject ? t('bank.questionPage.title', { subject: subject.label }) : t('bank.title')"
     :subtitle="question ? `${question.domainName} · ${question.skillName}` : ''"
     :wide="Boolean(question?.passage)"
   >
@@ -269,7 +271,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       <span
         v-if="question"
         class="hidden items-center gap-1.5 rounded-full border border-app-border px-3 py-1.5 text-[13px] font-semibold tabular-nums text-app-ink sm:inline-flex"
-        title="Shu savolga sarflangan vaqt"
+        :title="t('bank.labels.timeSpentHere')"
       >
         <AppIcon name="clock" :size="15" class="text-app-muted" />
         {{ formatClock(clock.seconds.value) }}
@@ -280,8 +282,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         class="flex h-10 w-10 items-center justify-center rounded-full border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
         :class="question.isSaved ? 'border-app-ink bg-app-ink text-app-surface' : 'border-app-border text-app-ink hover:bg-app-tile'"
         :aria-pressed="question.isSaved"
-        :aria-label="question.isSaved ? 'Saqlanganlardan olib tashlash' : 'Savolni saqlash'"
-        :title="question.isSaved ? 'Saqlangan' : 'Saqlash'"
+        :aria-label="question.isSaved ? t('bank.actions.unsave') : t('bank.actions.saveQuestion')"
+        :title="question.isSaved ? t('bank.labels.saved') : t('bank.actions.save')"
         :disabled="savingBookmark"
         @click="toggleSave"
       >
@@ -291,8 +293,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         v-if="question"
         type="button"
         class="flex h-10 w-10 items-center justify-center rounded-full border border-app-border text-app-ink transition-colors hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
-        aria-label="Xato haqida xabar berish"
-        title="Xato haqida xabar berish"
+        :aria-label="t('bank.actions.report')"
+        :title="t('bank.actions.report')"
         @click="reportOpen = true"
       >
         <AppIcon name="flag" :size="18" />
@@ -312,12 +314,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       <EmptyState
         v-if="loadError === 'not-found'"
         icon="layers"
-        title="Savol topilmadi"
-        description="U olib tashlangan yoki havola eskirgan bo‘lishi mumkin."
-        action-label="Ro‘yxatga qaytish"
+        :title="t('bank.questionPage.notFoundTitle')"
+        :description="t('bank.questionPage.notFoundText')"
+        :action-label="t('bank.actions.backToList')"
         :action-to="listPath"
       />
-      <EmptyState v-else icon="close" title="Savolni yuklab bo‘lmadi" :description="loadError" />
+      <EmptyState v-else icon="close" :title="t('bank.labels.questionLoadError')" :description="loadError" />
     </div>
 
     <template v-else-if="question">
@@ -331,17 +333,25 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           :size="18"
           :class="question.lastIsCorrect ? 'text-app-good' : 'text-app-bad'"
         />
-        <p class="min-w-0 flex-1 text-[13.5px] text-app-ink">
-          Avval yechgansiz — oxirgi javobingiz
-          <span class="font-semibold">{{ question.lastIsCorrect ? 'to‘g‘ri' : 'xato' }}</span> edi.
-        </p>
+        <i18n-t
+          keypath="bank.questionPage.answeredBefore"
+          tag="p"
+          class="min-w-0 flex-1 text-[13.5px] text-app-ink"
+          scope="global"
+        >
+          <template #verdict>
+            <span class="font-semibold">{{
+              question.lastIsCorrect ? t('bank.questionPage.lastCorrect') : t('bank.questionPage.lastWrong')
+            }}</span>
+          </template>
+        </i18n-t>
         <button
           type="button"
           class="rounded-full border border-app-border bg-app-surface px-3.5 py-1.5 text-[13px] font-semibold text-app-ink hover:bg-app-tile disabled:opacity-60"
           :disabled="loadingSolution"
           @click="showSolution"
         >
-          {{ loadingSolution ? 'Yuklanmoqda…' : 'Yechimni ko‘rish' }}
+          {{ loadingSolution ? t('bank.labels.loading') : t('bank.questionPage.showSolution') }}
         </button>
       </div>
 
@@ -360,8 +370,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
       <p v-if="actionError" class="mt-4 text-[13.5px] text-app-bad" role="alert">{{ actionError }}</p>
       <p v-if="reachedEnd" class="mt-4 text-[13.5px] text-app-muted" role="status">
-        Ro‘yxatdagi savollar tugadi.
-        <RouterLink :to="listPath" class="font-semibold text-app-ink underline underline-offset-2">Ro‘yxatga qaytish</RouterLink>
+        {{ t('bank.questionPage.endOfList') }}
+        <RouterLink :to="listPath" class="font-semibold text-app-ink underline underline-offset-2">{{ t('bank.actions.backToList') }}</RouterLink>
       </p>
     </template>
 
@@ -370,11 +380,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         type="button"
         class="flex h-11 items-center gap-2 rounded-full border border-app-border bg-app-surface px-3 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40 sm:px-4"
         :disabled="!canGoBack || navigating"
-        aria-label="Oldingi savol"
+        :aria-label="t('bank.actions.previousQuestion')"
         @click="goPrevious"
       >
         <AppIcon name="arrowLeft" :size="17" />
-        <span class="hidden sm:inline">Oldingi</span>
+        <span class="hidden sm:inline">{{ t('bank.actions.previous') }}</span>
       </button>
 
       <div class="flex flex-1 justify-center">
@@ -385,7 +395,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           :disabled="!hasAnswer || submitting"
           @click="check"
         >
-          {{ submitting ? 'Tekshirilmoqda…' : 'Tekshirish' }}
+          {{ submitting ? t('bank.actions.checking') : t('bank.actions.check') }}
         </button>
         <button
           v-else-if="question"
@@ -394,7 +404,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           @click="tryAgain"
         >
           <AppIcon name="refresh" :size="16" />
-          Qayta yechish
+          {{ t('bank.questionPage.tryAgain') }}
         </button>
       </div>
 
@@ -403,10 +413,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         class="flex h-11 items-center gap-2 rounded-full px-3 text-[14px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 sm:px-4"
         :class="reveal ? 'bg-app-ink text-app-surface hover:opacity-90' : 'border border-app-border bg-app-surface text-app-ink hover:bg-app-tile'"
         :disabled="!canGoForward || navigating"
-        aria-label="Keyingi savol"
+        :aria-label="t('bank.actions.nextQuestion')"
         @click="goNext"
       >
-        <span class="hidden sm:inline">Keyingi</span>
+        <span class="hidden sm:inline">{{ t('bank.actions.next') }}</span>
         <AppIcon name="arrowRight" :size="17" />
       </button>
     </template>

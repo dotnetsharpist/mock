@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 
@@ -90,7 +90,7 @@ const emit = defineEmits<{
   (event: 'authenticated'): void;
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const authStore = useAuthStore()
 
 const telegramButton = ref<HTMLElement | null>(null)
@@ -161,6 +161,25 @@ const loginWithTelegram = () => {
   })
 }
 
+// Google draws the button's label itself, in whatever language it picks at
+// render time — so it is told ours, and drawn again when the user switches.
+const renderGoogleButton = () => {
+  if (!window.google?.accounts?.id || !googleContainer.value) return
+  googleContainer.value.replaceChildren()
+  window.google.accounts.id.renderButton(googleContainer.value, {
+    type: 'standard',
+    theme: 'outline',
+    size: 'large',
+    shape: 'pill',
+    text: props.googleText,
+    logo_alignment: 'center',
+    width: 320,
+    locale: locale.value,
+  })
+}
+
+watch(locale, renderGoogleButton)
+
 // Google Identity Services. Loads the GIS client, then renders the official
 // sign-in button. On success Google hands us a `credential` (a JWT id token)
 // which we forward to the backend for verification.
@@ -186,15 +205,7 @@ onMounted(() => {
       },
     })
 
-    window.google.accounts.id.renderButton(googleContainer.value, {
-      type: 'standard',
-      theme: 'outline',
-      size: 'large',
-      shape: 'pill',
-      text: props.googleText,
-      logo_alignment: 'center',
-      width: 320,
-    })
+    renderGoogleButton()
   }
 
   // The script may already be loaded (e.g. SPA navigation back to /login).

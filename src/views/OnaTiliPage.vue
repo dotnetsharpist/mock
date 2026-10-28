@@ -110,8 +110,8 @@ const filteredTests = computed(() =>
 const SKELETON_COUNT = 6
 
 const mainTabs = [
-  { id: 'tests', label: 'Mock testlar' },
-  { id: 'essay', label: 'Essay tekshirish' },
+  { id: 'tests', labelKey: 'onaTili.tabs.tests' },
+  { id: 'essay', labelKey: 'essayPage.title' },
 ]
 </script>
 
@@ -175,7 +175,7 @@ const mainTabs = [
           class="rounded-full px-6 py-2.5 text-sm font-semibold transition active:scale-[0.98]"
           :class="mainTab === tab.id ? 'bg-[#1a1814] text-white shadow-[0_8px_22px_rgba(26,24,20,0.18)]' : 'bg-white text-[#3a362f] shadow-[0_2px_8px_rgba(26,24,20,0.08)] hover:text-[#1a1814]'"
         >
-          {{ tab.label }}
+          {{ t(tab.labelKey) }}
         </button>
       </div>
 

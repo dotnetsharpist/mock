@@ -15,6 +15,7 @@
 // answered yet are kept in sessionStorage so a reload does not reset them.
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AppIcon from '@/components/app/AppIcon.vue'
 import EmptyState from '@/components/app/EmptyState.vue'
 import SkeletonBlock from '@/components/app/SkeletonBlock.vue'
@@ -28,16 +29,17 @@ import BankPalette from '@/components/questionBank/BankPalette.vue'
 import BankStatusMark from '@/components/questionBank/BankStatusMark.vue'
 import BankRichText from '@/components/questionBank/BankRichText.vue'
 import {
-  MODE_LABELS,
   formatBankDate,
   formatClock,
   formatDuration,
+  modeLabel,
   percent,
 } from '@/components/questionBank/bankLabels.js'
 import { SUBJECTS, subjectKeyFromApi } from '@/components/app/subjects.js'
 import { useBankClock } from '@/composables/useBankClock'
 import { questionBankApi } from '@/utils/questionBankApi'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const clock = useBankClock()
@@ -523,7 +525,7 @@ async function toggleSave() {
   savingBookmark.value = true
   try {
     question.isSaved = Boolean(await questionBankApi.toggleSave(question.id))
-    showToast(question.isSaved ? 'Savol saqlandi' : 'Saqlanganlardan olib tashlandi')
+    showToast(question.isSaved ? t('bank.toasts.saved') : t('bank.toasts.unsaved'))
   } catch (error) {
     showToast(error.message)
   } finally {
@@ -533,7 +535,7 @@ async function toggleSave() {
 
 function onReported() {
   reportOpen.value = false
-  showToast('Rahmat! Xabaringiz yuborildi.')
+  showToast(t('bank.toasts.reported'))
 }
 
 // A dialog over the question stops its clock — reading the report form is
@@ -565,15 +567,15 @@ const viewTextAnswer = computed(() => (unsentInReview.value ? '' : current.value
 
 const currentNote = computed(() => {
   if (finished.value || view.value !== 'play') return ''
-  if (isTimed.value && currentAnswer.value) return 'Javob qabul qilindi. Natija mashq yakunida chiqadi.'
-  if (isTimedOut(currentId.value)) return 'Vaqt tugadi — bu savol javobsiz qoldi.'
+  if (isTimed.value && currentAnswer.value) return t('bank.session.answerAccepted')
+  if (isTimedOut(currentId.value)) return t('bank.session.timeUp')
   return ''
 })
 
 const headerSubtitle = computed(() => {
   if (!session.value) return ''
-  if (view.value === 'results') return 'Natijalar'
-  return `${currentIndex.value + 1} / ${ids.value.length}-savol`
+  if (view.value === 'results') return t('bank.session.results')
+  return t('bank.session.position', { current: currentIndex.value + 1, total: ids.value.length })
 })
 
 const progress = computed(() =>
@@ -627,8 +629,8 @@ const leave = () => router.push(backPath.value)
 <template>
   <BankPlayerLayout
     :back-to="backPath"
-    back-label="Chiqish"
-    :title="session ? `${subjectLabel} · ${MODE_LABELS[session.mode]}` : 'Mashq'"
+    :back-label="t('bank.session.exit')"
+    :title="session ? `${subjectLabel} · ${modeLabel(session.mode)}` : t('bank.session.fallbackTitle')"
     :subtitle="headerSubtitle"
     :progress="progress"
     :wide="view === 'play' && Boolean(currentQuestion?.passage)"
@@ -639,7 +641,7 @@ const leave = () => router.push(backPath.value)
           v-if="!finished && !currentAnswer && !isTimedOut(currentId)"
           class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold tabular-nums"
           :class="isTimed && remaining <= 10 ? 'border-app-bad text-app-bad' : 'border-app-border text-app-ink'"
-          :title="isTimed ? 'Shu savolga qolgan vaqt' : 'Shu savolga sarflangan vaqt'"
+          :title="isTimed ? t('bank.session.timeLeftHere') : t('bank.labels.timeSpentHere')"
           role="timer"
         >
           <AppIcon name="clock" :size="15" :class="isTimed && remaining <= 10 ? '' : 'text-app-muted'" />
@@ -650,7 +652,7 @@ const leave = () => router.push(backPath.value)
           class="hidden h-10 w-10 items-center justify-center rounded-full border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink sm:flex"
           :class="currentQuestion.isSaved ? 'border-app-ink bg-app-ink text-app-surface' : 'border-app-border text-app-ink hover:bg-app-tile'"
           :aria-pressed="currentQuestion.isSaved"
-          :aria-label="currentQuestion.isSaved ? 'Saqlanganlardan olib tashlash' : 'Savolni saqlash'"
+          :aria-label="currentQuestion.isSaved ? t('bank.actions.unsave') : t('bank.actions.saveQuestion')"
           :disabled="savingBookmark"
           @click="toggleSave"
         >
@@ -659,8 +661,8 @@ const leave = () => router.push(backPath.value)
         <button
           type="button"
           class="hidden h-10 w-10 items-center justify-center rounded-full border border-app-border text-app-ink transition-colors hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink sm:flex"
-          aria-label="Xato haqida xabar berish"
-          title="Xato haqida xabar berish"
+          :aria-label="t('bank.actions.report')"
+          :title="t('bank.actions.report')"
           @click="reportOpen = true"
         >
           <AppIcon name="flag" :size="18" />
@@ -671,7 +673,7 @@ const leave = () => router.push(backPath.value)
           class="rounded-full border border-app-border px-3.5 py-2 text-[13px] font-semibold text-app-ink transition-colors hover:bg-app-tile"
           @click="askFinish"
         >
-          Yakunlash
+          {{ t('bank.actions.finish') }}
         </button>
       </template>
     </template>
@@ -690,12 +692,12 @@ const leave = () => router.push(backPath.value)
       <EmptyState
         v-if="loadError === 'not-found'"
         icon="layers"
-        title="Mashq topilmadi"
-        description="Havola eskirgan yoki bu mashq boshqa hisobga tegishli."
-        action-label="Savollar banki"
+        :title="t('bank.session.notFoundTitle')"
+        :description="t('bank.session.notFoundText')"
+        :action-label="t('bank.title')"
         action-to="/savollar-banki"
       />
-      <EmptyState v-else icon="close" title="Mashqni yuklab bo‘lmadi" :description="loadError" />
+      <EmptyState v-else icon="close" :title="t('bank.session.loadError')" :description="loadError" />
     </div>
 
     <!-- Results -->
@@ -708,29 +710,32 @@ const leave = () => router.push(backPath.value)
           </div>
           <div class="min-w-0">
             <p class="text-[13px] font-medium text-app-muted">
-              {{ MODE_LABELS[session.mode] }} · {{ formatBankDate(session.startedAt) }}
+              {{ modeLabel(session.mode) }} · {{ formatBankDate(session.startedAt) }}
             </p>
             <h1 class="mt-1 text-[22px] font-bold tracking-[-0.02em] text-app-ink sm:text-[26px]">
-              {{ session.correctCount }} / {{ ids.length }} to‘g‘ri
+              {{ t('bank.session.score', { correct: session.correctCount, total: ids.length }) }}
             </h1>
             <p class="mt-1 text-[14px] text-app-muted">
-              {{ session.answeredCount }} ta savolga javob berildi<template v-if="unansweredCount">,
-                {{ unansweredCount }} tasi javobsiz qoldi</template>.
+              {{
+                unansweredCount
+                  ? t('bank.session.answeredSummaryWithSkipped', { n: session.answeredCount, skipped: unansweredCount })
+                  : t('bank.session.answeredSummary', { n: session.answeredCount })
+              }}
             </p>
           </div>
         </div>
 
         <dl class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div class="rounded-xl bg-app-sunken px-4 py-3">
-            <dt class="text-[12.5px] text-app-muted">Sarflangan vaqt</dt>
+            <dt class="text-[12.5px] text-app-muted">{{ t('bank.session.timeSpent') }}</dt>
             <dd class="mt-1 text-[16px] font-bold text-app-ink">{{ formatDuration(session.totalTimeSeconds) }}</dd>
           </div>
           <div class="rounded-xl bg-app-sunken px-4 py-3">
-            <dt class="text-[12.5px] text-app-muted">O‘rtacha bir savolga</dt>
+            <dt class="text-[12.5px] text-app-muted">{{ t('bank.session.averagePerQuestion') }}</dt>
             <dd class="mt-1 text-[16px] font-bold text-app-ink">{{ averageTime ? formatDuration(averageTime) : '—' }}</dd>
           </div>
           <div class="col-span-2 rounded-xl bg-app-sunken px-4 py-3 sm:col-span-1">
-            <dt class="text-[12.5px] text-app-muted">Xato va javobsiz</dt>
+            <dt class="text-[12.5px] text-app-muted">{{ t('bank.session.wrongAndSkipped') }}</dt>
             <dd class="mt-1 text-[16px] font-bold text-app-ink">{{ ids.length - session.correctCount }}</dd>
           </div>
         </dl>
@@ -742,7 +747,7 @@ const leave = () => router.push(backPath.value)
             class="inline-flex items-center justify-center gap-2 rounded-full bg-app-ink px-5 py-2.5 text-[14px] font-semibold text-app-surface transition-opacity hover:opacity-90"
             @click="goTo(firstWrongIndex)"
           >
-            Xatolarni ko‘rib chiqish
+            {{ t('bank.session.reviewMistakes') }}
             <AppIcon name="arrowRight" :size="16" />
           </button>
           <button
@@ -750,20 +755,20 @@ const leave = () => router.push(backPath.value)
             class="inline-flex items-center justify-center gap-2 rounded-full border border-app-border bg-app-surface px-5 py-2.5 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile"
             @click="goTo(0)"
           >
-            Barchasini ko‘rish
+            {{ t('bank.session.reviewAll') }}
           </button>
           <button
             type="button"
             class="inline-flex items-center justify-center gap-2 rounded-full border border-app-border bg-app-surface px-5 py-2.5 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile"
             @click="leave"
           >
-            Yangi mashq
+            {{ t('bank.session.newSession') }}
           </button>
         </div>
       </section>
 
       <section class="mt-6 overflow-hidden rounded-2xl border border-app-border bg-app-surface shadow-app-card">
-        <h2 class="px-5 pb-2 pt-5 text-[16px] font-bold text-app-ink">Savollar</h2>
+        <h2 class="px-5 pb-2 pt-5 text-[16px] font-bold text-app-ink">{{ t('bank.labels.questions') }}</h2>
         <ul class="divide-y divide-app-border">
           <li v-for="(id, index) in ids" :key="id">
             <button
@@ -781,11 +786,11 @@ const leave = () => router.push(backPath.value)
                   tag="span"
                   class="line-clamp-1 text-[14px] text-app-ink"
                 />
-                <span v-else-if="questions[id] === 'missing'" class="text-[14px] text-app-muted">Savol olib tashlangan</span>
-                <span v-else class="text-[14px] text-app-muted">Savol #{{ id }}</span>
+                <span v-else-if="questions[id] === 'missing'" class="text-[14px] text-app-muted">{{ t('bank.session.questionRemoved') }}</span>
+                <span v-else class="text-[14px] text-app-muted">{{ t('bank.session.questionNumber', { id }) }}</span>
               </span>
               <span class="shrink-0 text-[12.5px] tabular-nums text-app-muted">
-                {{ answersById.get(id) ? formatDuration(answersById.get(id).timeSpentSeconds) : 'javobsiz' }}
+                {{ answersById.get(id) ? formatDuration(answersById.get(id).timeSpentSeconds) : t('bank.session.unansweredShort') }}
               </span>
             </button>
           </li>
@@ -798,15 +803,15 @@ const leave = () => router.push(backPath.value)
       <div v-if="currentMissing" class="rounded-2xl border border-app-border bg-app-surface shadow-app-card">
         <EmptyState
           icon="layers"
-          title="Savol olib tashlangan"
-          description="Bu savol mashq boshlangandan keyin bankdan olib tashlandi. Keyingisiga o‘ting."
+          :title="t('bank.session.questionRemoved')"
+          :description="t('bank.session.questionRemovedText')"
         />
       </div>
       <div
         v-else-if="!currentQuestion && questionErrors[currentId]"
         class="rounded-2xl border border-app-border bg-app-surface shadow-app-card"
       >
-        <EmptyState icon="close" title="Savolni yuklab bo‘lmadi" :description="questionErrors[currentId]" />
+        <EmptyState icon="close" :title="t('bank.labels.questionLoadError')" :description="questionErrors[currentId]" />
         <div class="-mt-6 flex justify-center pb-8">
           <button
             type="button"
@@ -814,7 +819,7 @@ const leave = () => router.push(backPath.value)
             @click="retryQuestion"
           >
             <AppIcon name="refresh" :size="15" />
-            Qayta urinish
+            {{ t('bank.actions.retry') }}
           </button>
         </div>
       </div>
@@ -854,7 +859,7 @@ const leave = () => router.push(backPath.value)
           @click="toggleSave"
         >
           <AppIcon name="bookmark" :size="15" />
-          {{ currentQuestion.isSaved ? 'Saqlangan' : 'Saqlash' }}
+          {{ currentQuestion.isSaved ? t('bank.labels.saved') : t('bank.actions.save') }}
         </button>
         <button
           type="button"
@@ -862,7 +867,7 @@ const leave = () => router.push(backPath.value)
           @click="reportOpen = true"
         >
           <AppIcon name="flag" :size="15" />
-          Xato haqida xabar berish
+          {{ t('bank.actions.report') }}
         </button>
       </div>
     </template>
@@ -872,18 +877,18 @@ const leave = () => router.push(backPath.value)
         type="button"
         class="flex h-11 items-center gap-2 rounded-full border border-app-border bg-app-surface px-3 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40 sm:px-4"
         :disabled="currentIndex === 0"
-        aria-label="Oldingi savol"
+        :aria-label="t('bank.actions.previousQuestion')"
         @click="goTo(currentIndex - 1)"
       >
         <AppIcon name="arrowLeft" :size="17" />
-        <span class="hidden sm:inline">Oldingi</span>
+        <span class="hidden sm:inline">{{ t('bank.actions.previous') }}</span>
       </button>
 
       <button
         type="button"
         class="flex h-11 items-center gap-2 rounded-full border border-app-border bg-app-surface px-3.5 text-[14px] font-semibold tabular-nums text-app-ink transition-colors hover:bg-app-tile"
         :aria-expanded="paletteOpen"
-        aria-label="Savollar xaritasi"
+        :aria-label="t('bank.palette.label')"
         @click="paletteOpen = !paletteOpen"
       >
         <AppIcon name="grid" :size="17" />
@@ -899,7 +904,7 @@ const leave = () => router.push(backPath.value)
           class="hidden h-11 items-center gap-2 rounded-full px-3 text-[14px] font-semibold text-app-muted transition-colors hover:bg-app-tile hover:text-app-ink sm:flex"
           @click="goTo(currentIndex + 1)"
         >
-          O‘tkazib yuborish
+          {{ t('bank.session.skip') }}
         </button>
         <button
           type="button"
@@ -907,7 +912,7 @@ const leave = () => router.push(backPath.value)
           :disabled="!hasAnswer || submitting"
           @click="submit()"
         >
-          {{ submitting ? 'Yuborilmoqda…' : isTimed ? 'Javob berish' : 'Tekshirish' }}
+          {{ submitting ? t('bank.actions.sending') : isTimed ? t('bank.session.answer') : t('bank.actions.check') }}
         </button>
       </template>
       <template v-else>
@@ -918,14 +923,22 @@ const leave = () => router.push(backPath.value)
           class="hidden h-11 items-center rounded-full border border-app-border bg-app-surface px-4 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile sm:flex"
           @click="view = 'results'"
         >
-          Natijalar
+          {{ t('bank.session.results') }}
         </button>
         <button
           type="button"
           class="flex h-11 items-center gap-2 rounded-full bg-app-ink px-5 text-[14px] font-semibold text-app-surface transition-opacity hover:opacity-90"
           @click="goForward"
         >
-          {{ finished ? (isLast ? 'Natijalar' : 'Keyingi') : isLast ? 'Yakunlash' : 'Keyingi' }}
+          {{
+            finished
+              ? isLast
+                ? t('bank.session.results')
+                : t('bank.actions.next')
+              : isLast
+                ? t('bank.actions.finish')
+                : t('bank.actions.next')
+          }}
           <AppIcon name="arrowRight" :size="17" />
         </button>
       </template>
@@ -943,19 +956,26 @@ const leave = () => router.push(backPath.value)
 
   <BankDialog
     :open="finishOpen"
-    title="Mashqni yakunlaysizmi?"
+    :title="t('bank.session.finishTitle')"
     icon="checkCircle"
-    :confirm-label="finishing ? 'Yakunlanmoqda…' : 'Yakunlash'"
-    cancel-label="Davom etish"
+    :confirm-label="finishing ? t('bank.session.finishing') : t('bank.actions.finish')"
+    :cancel-label="t('bank.actions.continue')"
     :busy="finishing"
     :error="finishError"
     @confirm="finish"
     @close="closeFinish"
   >
-    <p class="text-[14px] leading-[1.6] text-app-muted">
-      <span class="font-semibold text-app-ink">{{ unansweredCount }} ta savol</span> javobsiz qoladi.
-      Yakunlangandan keyin ularga javob berib bo‘lmaydi, lekin yechimlarini ko‘rasiz.
-    </p>
+    <i18n-t
+      keypath="bank.session.finishWarning"
+      :plural="unansweredCount"
+      tag="p"
+      class="text-[14px] leading-[1.6] text-app-muted"
+      scope="global"
+    >
+      <template #questions>
+        <span class="font-semibold text-app-ink">{{ t('bank.labels.questionCount', unansweredCount) }}</span>
+      </template>
+    </i18n-t>
   </BankDialog>
 
   <BankReportDialog
