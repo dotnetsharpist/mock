@@ -106,7 +106,8 @@ async function request(method, path, { query, body } = {}) {
 
 export const questionBankApi = {
   topics: (subject, language) => request('GET', '/topics', { query: { subject, language } }),
-  questions: (query) => request('GET', '/questions', { query }),
+  // How many questions a filter set matches, with the count behind each setup choice.
+  summary: (filter) => request('GET', '/questions/summary', { query: filter }),
   question: (id) => request('GET', `/questions/${id}`),
   solution: (id) => request('GET', `/questions/${id}/solution`),
   answer: (dto) => request('POST', '/answer', { body: dto }),

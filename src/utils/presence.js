@@ -43,7 +43,6 @@ const SECTION_BY_ROUTE = {
   'savollar-banki': 'QuestionBank',
   'savollar-banki-subject': 'QuestionBank',
   'savollar-banki-stats': 'QuestionBank',
-  'savollar-banki-question': 'QuestionBank',
   'savollar-banki-session': 'QuestionBank',
   essay: 'Essay',
   narxlar: 'Payment',

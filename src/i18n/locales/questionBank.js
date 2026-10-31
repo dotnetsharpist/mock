@@ -1,6 +1,6 @@
-// Savollar banki — the subject picker, one subject's list and stats, the
-// single-question player and the session player, plus the dialogs and the
-// error wording of utils/questionBankApi.js.
+// Savollar banki — the subject picker, one subject's practice setup and stats,
+// the session player, plus the dialogs and the error wording of
+// utils/questionBankApi.js.
 //
 // Russian messages that agree with a number carry four forms —
 // zero | one | few | many — see russianPluralRule in i18n/index.js. Uzbek
@@ -15,12 +15,12 @@ export default {
         medium: 'O‘rta',
         hard: 'Qiyin',
       },
-      statusFilter: {
+      // Where a session draws its questions from (SOURCE_OPTIONS).
+      source: {
         all: 'Hammasi',
         unanswered: 'Yechilmagan',
-        answered: 'Yechilgan',
-        correct: 'To‘g‘ri',
-        incorrect: 'Xato',
+        incorrect: 'Xatolar',
+        saved: 'Saqlanganlar',
       },
       questionType: {
         all: 'Barcha turlar',
@@ -51,7 +51,6 @@ export default {
         hoursMinutes: '{h} soat {m} daq',
       },
       labels: {
-        question: 'Savol',
         questions: 'Savollar',
         // t('bank.labels.questionCount', n)
         questionCount: '{n} ta savol',
@@ -63,7 +62,6 @@ export default {
         correct: 'To‘g‘ri',
         wrong: 'Xato',
         saved: 'Saqlangan',
-        loading: 'Yuklanmoqda…',
         timeSpentHere: 'Shu savolga sarflangan vaqt',
         firstTry: 'Birinchi urinishda',
         subjectNotFound: 'Fan topilmadi',
@@ -90,7 +88,6 @@ export default {
         unsave: 'Saqlanganlardan olib tashlash',
         report: 'Xato haqida xabar berish',
         retry: 'Qayta urinish',
-        backToList: 'Ro‘yxatga qaytish',
       },
       toasts: {
         saved: 'Savol saqlandi',
@@ -125,13 +122,15 @@ export default {
         details: 'Batafsil',
         placeholder: 'Masalan: B javob ham to‘g‘ri, chunki…',
       },
+      // The setup panel (BankSetupPanel) and the phone's Boshlash bar.
       start: {
-        title: 'Mashqni boshlash',
+        title: 'Yangi mashq',
         starting: 'Boshlanmoqda…',
         start: 'Boshlash',
-        // <i18n-t>: {questions} is the bold "12 ta savol".
-        matches: '{questions} tanlangan filtrlarga mos keladi.',
-        matchesWithFilters: '{questions} tanlangan filtrlarga mos keladi: {filters}.',
+        allTopics: 'Barcha mavzular',
+        moreTopics: '{names} va yana {n} ta mavzu',
+        source: 'Qaysi savollar',
+        difficulty: 'Qiyinlik',
         mode: 'Rejim',
         practiceHint: 'Har savoldan keyin javob va yechim ko‘rsatiladi.',
         timedHint: 'Har savolga vaqt beriladi, natija oxirida chiqadi.',
@@ -141,6 +140,14 @@ export default {
         total: 'Jami: {time}',
         shuffle: 'Aralash tartibda',
         shuffleHint: 'O‘chirilsa, savollar mavzu tartibida keladi.',
+        more: 'Qo‘shimcha',
+        typeLabel: 'Savol turi',
+        languageLabel: 'Savol tili',
+        // <i18n-t>: {questions} is the bold "12 ta savol".
+        matches: 'Tanlovga mos: {questions}',
+        counting: 'Savollar sanalmoqda…',
+        countError: 'Savollar sonini aniqlab bo‘lmadi — baribir boshlab ko‘ring.',
+        noMatches: 'Bu tanlovga mos savol yo‘q. Boshqa mavzu yoki qiyinlikni tanlang.',
       },
       mark: {
         correct: 'To‘g‘ri yechilgan',
@@ -151,6 +158,7 @@ export default {
         solved: '{answered}/{total} yechilgan',
         expand: '{name} mavzularini ochish',
         collapse: '{name} mavzularini yopish',
+        noneHint: 'Hech biri belgilanmasa, savollar barcha mavzulardan keladi.',
       },
       home: {
         subtitle: 'Mavzular bo‘yicha savollar yeching va xatolaringiz ustida ishlang.',
@@ -168,7 +176,7 @@ export default {
       },
       subject: {
         title: '{subject} — savollar banki',
-        subtitle: 'Mavzu tanlang, savollarni yeching va yechimlarini o‘rganing.',
+        subtitle: 'Mavzularni tanlang, mashqni sozlang va boshlang.',
         noSuchText: 'Havola eskirgan bo‘lishi mumkin. Fanlar ro‘yxatidan tanlang.',
         topicsError: 'Savollarni yuklab bo‘lmadi',
         emptyTitle: 'Bu fandan savol qo‘shilmagan',
@@ -180,25 +188,6 @@ export default {
         topics: 'Mavzular',
         noTopicsInLanguage: 'Bu tilda savol yo‘q.',
         recentSessions: 'So‘nggi mashqlar',
-        savedChip: 'Saqlanganlar',
-        // Inside the start dialog's filter summary.
-        savedSummary: 'saqlanganlar',
-        moreTopics: '{names} va yana {n} ta mavzu',
-        typeLabel: 'Savol turi',
-        languageLabel: 'Savol tili',
-        // <i18n-t>: {questions} is the bold number.
-        total: '{questions} ta savol',
-        listError: 'Ro‘yxatni yuklab bo‘lmadi',
-        freeAnswerTag: 'yozma javob',
-        pages: 'Sahifalar',
-        previousPage: 'Oldingi sahifa',
-        nextPage: 'Keyingi sahifa',
-        emptySavedTitle: 'Saqlangan savollar yo‘q',
-        emptySavedText: 'Savol ichidagi belgi tugmasini bosing — u shu yerda to‘planadi.',
-        emptyMistakesTitle: 'Xato javoblar yo‘q',
-        emptyMistakesText: 'Xato yechilgan savollar shu yerda yig‘iladi, ularni qayta ishlashingiz mumkin.',
-        emptyFilteredTitle: 'Bu filtrlarga mos savol yo‘q',
-        emptyFilteredText: 'Boshqa mavzu yoki qiyinlikni tanlab ko‘ring.',
       },
       stats: {
         title: '{subject} — statistika',
@@ -236,7 +225,7 @@ export default {
         average: 'O‘rtacha {time}',
         byDomain: 'Bo‘limlar bo‘yicha',
         accuracyNote: 'Aniqlik — birinchi urinishdagi natija.',
-        openSkill: '{name} savollarini ochish',
+        openSkill: '{name} bo‘yicha mashq qilish',
         weakTopics: 'Zaif mavzular',
         weakTopicsNote: 'Kamida 3 ta savol yechilgan mavzular ichida eng pasti.',
         solvedCount: '{n} ta yechilgan',
@@ -250,18 +239,6 @@ export default {
         resetConfirm: 'Ha, tozalash',
         resetWarning:
           '{subject} bo‘yicha barcha javoblaringiz, mashqlar tarixi va statistika butunlay o‘chiriladi. Buni ortga qaytarib bo‘lmaydi.',
-      },
-      questionPage: {
-        title: '{subject} · Savollar banki',
-        notFoundTitle: 'Savol topilmadi',
-        notFoundText: 'U olib tashlangan yoki havola eskirgan bo‘lishi mumkin.',
-        // <i18n-t>: {verdict} is the bold lastCorrect / lastWrong.
-        answeredBefore: 'Avval yechgansiz — oxirgi javobingiz {verdict} edi.',
-        lastCorrect: 'to‘g‘ri',
-        lastWrong: 'xato',
-        showSolution: 'Yechimni ko‘rish',
-        endOfList: 'Ro‘yxatdagi savollar tugadi.',
-        tryAgain: 'Qayta yechish',
       },
       session: {
         fallbackTitle: 'Mashq',
@@ -335,12 +312,11 @@ export default {
         medium: 'Средний',
         hard: 'Сложный',
       },
-      statusFilter: {
+      source: {
         all: 'Все',
         unanswered: 'Нерешённые',
-        answered: 'Решённые',
-        correct: 'Верные',
-        incorrect: 'Неверные',
+        incorrect: 'Ошибки',
+        saved: 'Сохранённые',
       },
       questionType: {
         all: 'Все типы',
@@ -371,7 +347,6 @@ export default {
         hoursMinutes: '{h} ч {m} мин',
       },
       labels: {
-        question: 'Вопрос',
         questions: 'Вопросы',
         // zero | one | few | many
         questionCount: '{n} вопросов | {n} вопрос | {n} вопроса | {n} вопросов',
@@ -382,7 +357,6 @@ export default {
         correct: 'Верно',
         wrong: 'Ошибка',
         saved: 'Сохранено',
-        loading: 'Загрузка…',
         timeSpentHere: 'Время, потраченное на этот вопрос',
         firstTry: 'С первой попытки',
         subjectNotFound: 'Предмет не найден',
@@ -409,7 +383,6 @@ export default {
         unsave: 'Удалить из сохранённых',
         report: 'Сообщить об ошибке',
         retry: 'Повторить',
-        backToList: 'Вернуться к списку',
       },
       toasts: {
         saved: 'Вопрос сохранён',
@@ -445,14 +418,14 @@ export default {
         placeholder: 'Например: ответ B тоже верный, потому что…',
       },
       start: {
-        title: 'Начать сессию',
+        title: 'Новая сессия',
         starting: 'Запуск…',
         start: 'Начать',
-        // zero | one | few | many — the verb agrees with {questions}.
-        matches:
-          '{questions} подходят под выбранные фильтры. | {questions} подходит под выбранные фильтры. | {questions} подходят под выбранные фильтры. | {questions} подходят под выбранные фильтры.',
-        matchesWithFilters:
-          '{questions} подходят под выбранные фильтры: {filters}. | {questions} подходит под выбранные фильтры: {filters}. | {questions} подходят под выбранные фильтры: {filters}. | {questions} подходят под выбранные фильтры: {filters}.',
+        allTopics: 'Все темы',
+        // zero | one | few | many
+        moreTopics: '{names} и ещё {n} тем | {names} и ещё {n} тема | {names} и ещё {n} темы | {names} и ещё {n} тем',
+        source: 'Какие вопросы',
+        difficulty: 'Сложность',
         mode: 'Режим',
         practiceHint: 'После каждого вопроса показываются ответ и решение.',
         timedHint: 'На каждый вопрос даётся время, результат — в конце.',
@@ -462,6 +435,14 @@ export default {
         total: 'Всего: {time}',
         shuffle: 'Вперемешку',
         shuffleHint: 'Если выключить, вопросы пойдут по порядку тем.',
+        more: 'Дополнительно',
+        typeLabel: 'Тип вопроса',
+        languageLabel: 'Язык вопроса',
+        // <i18n-t>: {questions} is the bold «12 вопросов»; the noun carries the number, so no verb to agree.
+        matches: 'Подходит под выбор: {questions}',
+        counting: 'Считаем вопросы…',
+        countError: 'Не удалось подсчитать вопросы — всё равно попробуйте начать.',
+        noMatches: 'Под этот выбор нет вопросов. Выберите другие темы или сложность.',
       },
       mark: {
         correct: 'Решён верно',
@@ -472,6 +453,7 @@ export default {
         solved: 'Решено {answered}/{total}',
         expand: 'Развернуть темы: {name}',
         collapse: 'Свернуть темы: {name}',
+        noneHint: 'Если ничего не отмечено, вопросы берутся из всех тем.',
       },
       home: {
         subtitle: 'Решайте вопросы по темам и работайте над ошибками.',
@@ -488,7 +470,7 @@ export default {
       },
       subject: {
         title: '{subject} — банк вопросов',
-        subtitle: 'Выберите тему, решайте вопросы и разбирайте решения.',
+        subtitle: 'Выберите темы, настройте сессию и начните.',
         noSuchText: 'Возможно, ссылка устарела. Выберите предмет из списка.',
         topicsError: 'Не удалось загрузить вопросы',
         emptyTitle: 'По этому предмету вопросов пока нет',
@@ -500,25 +482,6 @@ export default {
         topics: 'Темы',
         noTopicsInLanguage: 'На этом языке вопросов нет.',
         recentSessions: 'Последние сессии',
-        savedChip: 'Сохранённые',
-        savedSummary: 'сохранённые',
-        // zero | one | few | many
-        moreTopics: '{names} и ещё {n} тем | {names} и ещё {n} тема | {names} и ещё {n} темы | {names} и ещё {n} тем',
-        typeLabel: 'Тип вопроса',
-        languageLabel: 'Язык вопроса',
-        // zero | one | few | many
-        total: '{questions} вопросов | {questions} вопрос | {questions} вопроса | {questions} вопросов',
-        listError: 'Не удалось загрузить список',
-        freeAnswerTag: 'открытый ответ',
-        pages: 'Страницы',
-        previousPage: 'Предыдущая страница',
-        nextPage: 'Следующая страница',
-        emptySavedTitle: 'Нет сохранённых вопросов',
-        emptySavedText: 'Нажмите на закладку в вопросе — он появится здесь.',
-        emptyMistakesTitle: 'Нет неверных ответов',
-        emptyMistakesText: 'Здесь собираются вопросы, решённые с ошибкой, — их можно решить заново.',
-        emptyFilteredTitle: 'Нет вопросов под эти фильтры',
-        emptyFilteredText: 'Попробуйте выбрать другую тему или сложность.',
       },
       stats: {
         title: '{subject} — статистика',
@@ -558,7 +521,7 @@ export default {
         average: 'В среднем {time}',
         byDomain: 'По разделам',
         accuracyNote: 'Точность — результат с первой попытки.',
-        openSkill: 'Открыть вопросы темы «{name}»',
+        openSkill: 'Практиковать тему «{name}»',
         weakTopics: 'Слабые темы',
         weakTopicsNote: 'Самые слабые из тем, где решено не меньше 3 вопросов.',
         solvedCount: 'решено: {n}',
@@ -572,17 +535,6 @@ export default {
         resetConfirm: 'Да, сбросить',
         resetWarning:
           'Все ваши ответы, история сессий и статистика по предмету «{subject}» будут удалены безвозвратно. Это действие нельзя отменить.',
-      },
-      questionPage: {
-        title: '{subject} · Банк вопросов',
-        notFoundTitle: 'Вопрос не найден',
-        notFoundText: 'Возможно, его удалили или ссылка устарела.',
-        answeredBefore: 'Вы уже решали этот вопрос — последний ответ был {verdict}.',
-        lastCorrect: 'верным',
-        lastWrong: 'неверным',
-        showSolution: 'Показать решение',
-        endOfList: 'Вопросы в списке закончились.',
-        tryAgain: 'Решить заново',
       },
       session: {
         fallbackTitle: 'Сессия',

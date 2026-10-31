@@ -426,13 +426,6 @@ const routes = [
         meta: { requiresAuth: true, chrome: false, support: false, seo: { robots: 'noindex, nofollow' } },
       },
       {
-        // One question opened from the bank list.
-        path: 'savollar-banki/:subject/savol/:id',
-        name: 'savollar-banki-question',
-        component: () => import('@/views/app/questionBank/BankQuestionPage.vue'),
-        meta: { requiresAuth: true, chrome: false, support: false, seo: { titleKey: 'seo.app.questionBank', robots: 'noindex, nofollow' } },
-      },
-      {
         // A practice / timed session and, once finished, its results.
         path: 'savollar-banki/sessiya/:id',
         name: 'savollar-banki-session',

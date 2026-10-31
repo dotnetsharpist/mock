@@ -32,13 +32,14 @@ export const DIFFICULTIES = withLabels([
 
 export const difficultyOf = (value) => DIFFICULTIES.find((d) => d.value === value) ?? DIFFICULTIES[1]
 
-// Status filters read the student's latest answer to each question.
-export const STATUS_FILTERS = withLabels([
-  { value: '', labelKey: 'bank.statusFilter.all' },
-  { value: 'Unanswered', labelKey: 'bank.statusFilter.unanswered' },
-  { value: 'Answered', labelKey: 'bank.statusFilter.answered' },
-  { value: 'Correct', labelKey: 'bank.statusFilter.correct' },
-  { value: 'Incorrect', labelKey: 'bank.statusFilter.incorrect' },
+// Where a session draws its questions from: everything, or one of the three
+// sets a student comes back to. Each maps onto the API's status / saved filter
+// (stores/questionBank.js, toApiFilter); the latest answer decides a mistake.
+export const SOURCE_OPTIONS = withLabels([
+  { value: '', labelKey: 'bank.source.all' },
+  { value: 'Unanswered', labelKey: 'bank.source.unanswered' },
+  { value: 'Incorrect', labelKey: 'bank.source.incorrect' },
+  { value: 'Saved', labelKey: 'bank.source.saved' },
 ])
 
 export const TYPE_OPTIONS = withLabels([
