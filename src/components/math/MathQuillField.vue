@@ -1,5 +1,5 @@
 <script setup>
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import 'mathquill/build/mathquill.css'
 
 const props = defineProps({
@@ -60,7 +60,14 @@ const loadMathQuill = async () => {
 }
 
 const mathFieldHostRef = ref(null)
-const mathFieldRef = ref(null)
+// shallowRef, NOT ref: a plain ref() makes the MathQuill field object deeply
+// reactive, so every call made through it (on-screen keyboard, clear, …)
+// runs on Vue Proxies and stores Proxy objects as `parent`/`[L]`/`[R]` links
+// in MathQuill's node tree. MathQuill's own keyboard path then works on the raw
+// objects, its identity checks (`leftward.parent === parent`) fail with
+// "prayer failed", and a physical Backspace removes the glyph from the DOM but
+// not from the tree — the field looks stuck until Tozalash.
+const mathFieldRef = shallowRef(null)
 const currentLatex = ref('')
 const isFocused = ref(false)
 const hasLoadError = ref(false)
@@ -79,16 +86,32 @@ let isUnmounted = false
 // real superscripted variables like `x^{o+1}` are left untouched. Outside a
 // superscript we never reinterpret a lone `o`.
 const normalizeLatexInput = (value) => {
-  return String(value || '')
+  // `\text{…}` groups — notably the `\text{°}` this function produces, which
+  // is also what MathQuill emits for a degree mark — are set aside before the
+  // rewrites and restored after, so the function is idempotent. Without this,
+  // the glyph rule re-wrapped `\text{°}` into `\text{\text{°}}` on every sync;
+  // the watcher then saw a value that differed from the field, re-rendered it,
+  // and MathQuill wiped the whole answer because it can't parse nested \text.
+  const textGroups = []
+  const protectedValue = String(value || '').replace(/\\text\{[^{}]*\}/g, (group) => {
+    textGroups.push(group)
+    return `\u0001${textGroups.length - 1}\u0001`
+  })
+
+  // The rewrites emit a \u0002 stand-in rather than `\text{°}` itself, so the
+  // bare-glyph rule can't re-wrap the `°` of a mark produced one line earlier.
+  return protectedValue
     // A bare brace group right after a number is the API's shorthand for a
     // degree mark — `94{o}` means 94°. Convert it BEFORE the other patterns
     // so the `o` inside doesn't get reinterpreted as a variable.
-    .replace(/(\d)\s*\{\s*(?:∘|°|º|˚|ᵒ|o|о|\\circ)\s*\}/g, '$1^{\\text{°}}')
-    .replace(/\^\s*\{\s*(?:∘|°|º|˚|ᵒ|o|о|\\circ)\s*\}/g, '^{\\text{°}}')
-    .replace(/\^\s*(?:∘|°|º|˚|ᵒ|\\circ)\b/g, '^{\\text{°}}')
-    .replace(/(\d)\s*(?:∘|°|º|˚|ᵒ)/g, '$1^{\\text{°}}')
-    .replace(/\\circ\b/g, '\\text{°}')
-    .replace(/[∘°º˚ᵒ]/g, '\\text{°}')
+    .replace(/(\d)\s*\{\s*(?:∘|°|º|˚|ᵒ|o|о|\\circ)\s*\}/g, '$1^{\u0002}')
+    .replace(/\^\s*\{\s*(?:∘|°|º|˚|ᵒ|o|о|\\circ)\s*\}/g, '^{\u0002}')
+    .replace(/\^\s*(?:∘|°|º|˚|ᵒ|\\circ)\b/g, '^{\u0002}')
+    .replace(/(\d)\s*(?:∘|°|º|˚|ᵒ)/g, '$1^{\u0002}')
+    .replace(/\\circ\b/g, '\u0002')
+    .replace(/[∘°º˚ᵒ]/g, '\u0002')
+    .replace(/\u0002/g, '\\text{°}')
+    .replace(/\u0001(\d+)\u0001/g, (_, index) => textGroups[Number(index)])
     .trim()
 }
 
@@ -146,12 +169,12 @@ const syncFromMathField = () => {
   }
 }
 
-// This old MathQuill build can throw internal "prayer failed" assertions on
-// some edit sequences. Most are NON-fatal — MathQuill keeps working fine — so
-// we must not "recover" by reverting to a previous value: doing that silently
-// undoes valid keystrokes and makes typing feel broken. We just swallow the
-// error so it can't crash the handler; the Tozalash/clear button is the escape
-// hatch for the rare case the field actually gets stuck.
+// Safety net for MathQuill's internal "prayer failed" assertions. The one
+// known cause (Vue Proxies leaking into MathQuill's tree via a deep ref — see
+// mathFieldRef) is fixed, so these should no longer fire; if one does, we must
+// not "recover" by reverting to a previous value, because that silently undoes
+// valid keystrokes. We just swallow the error so it can't crash the handler;
+// the Tozalash/clear button is the escape hatch if the field ever gets stuck.
 const safeOp = (fn) => {
   try {
     fn()
