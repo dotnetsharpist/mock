@@ -7,7 +7,7 @@
 // asked, and keeps them one thumb-reach away on every screen.
 //
 // Four tabs plus "Ko'proq", which opens the same drawer as before for the rest
-// (Kurslar, Statistika, Narxlar, Community, Sozlamalar). Four, not seven: a tab
+// (Savollar banki, Kurslar, Statistika, Narxlar, Community, Sozlamalar). Four, not seven: a tab
 // each would leave ~55px per label on a 390px screen and every one would be
 // truncated.
 import { useRoute } from 'vue-router'

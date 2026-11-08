@@ -30,10 +30,7 @@ const { t } = useI18n()
 const navItems = [
   { label: 'home', icon: 'home', to: '/dashboard' },
   { label: 'tests', icon: 'tests', to: '/testlar' },
-  // Savollar banki is hidden from the nav for now. /savollar-banki and its
-  // sub-routes still resolve for anyone who has the link — uncomment to bring
-  // the item back.
-  // { label: 'questionBank', icon: 'layers', to: '/savollar-banki' },
+  { label: 'questionBank', icon: 'layers', to: '/savollar-banki' },
   { label: 'essay', icon: 'essay', to: '/essay' },
   { label: 'results', icon: 'results', to: '/natijalarim' },
   { label: 'courses', icon: 'cap', to: '/kurslarim' },
