@@ -98,7 +98,7 @@ landing's Playfair — serif is the marketing voice.
 - **Score bars** (Bosh sahifa) — one rounded bar per recent test, `.app-texture-fine`, the best solid `app-ink` with its figure inside.
 - **Exam calendar** (Bosh sahifa) — a Monday-first month, always six rows, opening on the next exam's month. Exam days are filled `app-ink` tiles, today is an `app-ink` outline, days outside the month stay blank, and the "next exam" line below repeats the black tile as the legend. Dates live in `EXAM_DATES` in `DashboardPage.vue`. Names come from the messages: Chrome has no Uzbek calendar data, so never use `Intl` for them.
 - **Recent tests table** (Bosh sahifa) — hairline rules, subject mark, grade as an `app-ink` pill. Subject and date fold under the title below md.
-- **Icons** — Solar Line Duotone (open source, via Streamline) in `AppIcon.vue`: rounded joins and soft corners to match the edgeless UI; main stroke ink, secondary stroke ink at 45%, 1.5 stroke on a 24 grid, following `currentColor`. Check, plus and close are Phosphor glyphs. The only icon style.
+- **Icons** — Solar Line Duotone (open source, via Streamline) in `AppIcon.vue`: rounded joins and soft corners to match the edgeless UI; main stroke ink, secondary stroke ink at 70%, 1.9 stroke on a 24 grid, following `currentColor`. Check, plus and close are Phosphor glyphs. The only icon style.
 - **Icon tile** — 48px circle, `app-tile`, duotone icon inside.
 - **Nav item** — rounded, icon + label in `app-ink`; active is filled `app-ink` with white semibold text; hover is `app-tile`.
 - **Pill button** — fully rounded; primary is `app-ink` on white text, secondary is `app-surface` with an `app-border` hairline.
