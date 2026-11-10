@@ -45,7 +45,7 @@ const toggleDomain = (domain) => {
 <template>
   <ul class="space-y-1">
     <li v-for="domain in domains" :key="domain.id">
-      <div class="flex items-center gap-1 rounded-xl pr-1 hover:bg-app-tile">
+      <div class="flex items-center gap-1 rounded-xl pr-1 hover:bg-app-warm">
         <button
           type="button"
           class="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2.5 py-2.5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-app-ink"
@@ -70,7 +70,7 @@ const toggleDomain = (domain) => {
         </button>
         <button
           type="button"
-          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-app-muted hover:text-app-ink"
+          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-app-muted hover:text-app-ink"
           :aria-label="t(collapsed[domain.id] ? 'bank.topics.expand' : 'bank.topics.collapse', { name: domain.name })"
           :aria-expanded="!collapsed[domain.id]"
           @click="collapsed[domain.id] = !collapsed[domain.id]"
@@ -88,7 +88,7 @@ const toggleDomain = (domain) => {
         <li v-for="skill in domain.skills" :key="skill.id">
           <button
             type="button"
-            class="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-app-ink"
+            class="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left hover:bg-app-warm focus-visible:outline focus-visible:outline-2 focus-visible:outline-app-ink"
             role="checkbox"
             :aria-checked="isChecked(skill.id)"
             @click="toggleSkill(skill.id)"

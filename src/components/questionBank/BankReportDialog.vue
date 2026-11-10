@@ -72,8 +72,8 @@ async function send() {
         <label
           v-for="item in REPORT_CATEGORIES"
           :key="item.value"
-          class="flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-2.5 text-[14px] text-app-ink transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-app-ink"
-          :class="category === item.value ? 'border-app-ink' : 'border-app-border hover:bg-app-tile'"
+          class="flex cursor-pointer items-center gap-3 rounded-[18px] border-2 px-3.5 py-2.5 text-[14px] text-app-ink transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-app-ink"
+          :class="category === item.value ? 'border-app-ink bg-app-surface' : 'border-transparent bg-app-tile hover:bg-app-warm'"
         >
           <input v-model="category" type="radio" name="bank-report-category" :value="item.value" class="sr-only" />
           <span
@@ -95,7 +95,7 @@ async function send() {
         rows="4"
         :maxlength="MAX_LENGTH"
         :placeholder="t('bank.report.placeholder')"
-        class="mt-2 w-full resize-none rounded-xl border border-app-border bg-app-surface px-3.5 py-3 text-[14px] leading-[1.6] text-app-ink outline-none placeholder:text-app-ink/60 focus:border-app-ink"
+        class="mt-2 w-full resize-none rounded-[18px] border border-transparent bg-app-tile px-3.5 py-3 text-[14px] leading-[1.6] text-app-ink outline-none placeholder:text-app-ink/60 focus:border-app-ink"
       ></textarea>
       <span class="mt-1 block text-right text-[12px] text-app-muted">{{ message.length }}/{{ MAX_LENGTH }}</span>
     </label>

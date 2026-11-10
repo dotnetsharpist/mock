@@ -9,6 +9,7 @@ import AppIcon from '@/components/app/AppIcon.vue'
 import AppCard from '@/components/app/AppCard.vue'
 import SkeletonBlock from '@/components/app/SkeletonBlock.vue'
 import EmptyState from '@/components/app/EmptyState.vue'
+import { subjectTint } from '@/components/app/subjects.js'
 import { BANK_SUBJECT_KEYS, bankSubject, percent } from '@/components/questionBank/bankLabels.js'
 import { questionBankApi } from '@/utils/questionBankApi'
 
@@ -76,9 +77,9 @@ const errorCopy = computed(() =>
   <main>
     <template v-if="isLoading">
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-hidden="true">
-        <div v-for="n in 3" :key="n" class="rounded-2xl border border-app-border bg-app-surface p-5">
+        <div v-for="n in 3" :key="n" class="rounded-[24px] bg-app-surface shadow-app-card p-5">
           <div class="flex items-center gap-3.5">
-            <SkeletonBlock class="h-12 w-12 !rounded-[14px]" />
+            <SkeletonBlock class="h-12 w-12 !rounded-full" />
             <div class="flex-1">
               <SkeletonBlock class="h-4 w-28" />
               <SkeletonBlock class="mt-2 h-3 w-40" />
@@ -106,35 +107,40 @@ const errorCopy = computed(() =>
     <section v-else>
       <h2 class="sr-only text-[18px] font-bold tracking-[-0.015em] text-app-ink sm:not-sr-only">{{ t('bank.home.subjects') }}</h2>
       <div class="mt-3.5 grid grid-cols-1 gap-3 sm:mt-5 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+        <!-- Same card as the Testlar subject grid: filled with the subject's pastel,
+             white icon disc, the whole card is the link. -->
         <RouterLink
           v-for="entry in entries"
           :key="entry.key"
           :to="`/savollar-banki/${entry.key}`"
-          class="group flex flex-col rounded-2xl border border-app-border bg-app-surface p-5 shadow-app-card transition duration-200 hover:border-app-ink/15 hover:bg-app-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+          class="group flex flex-col rounded-[22px] p-5 transition duration-200 hover:-translate-y-1 hover:shadow-[0_18px_36px_-20px_rgba(60,40,120,0.35)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink motion-reduce:hover:translate-y-0"
+          :style="{ background: subjectTint(entry.key).background }"
         >
           <div class="flex items-center gap-3.5">
             <span
-              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-app-tile text-app-ink transition-colors group-hover:bg-app-surface"
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/70 text-app-ink ring-1 ring-white transition-colors group-hover:bg-white"
             >
               <AppIcon :name="entry.subject.icon" :size="24" />
             </span>
             <div class="min-w-0 flex-1">
-              <p class="text-[16px] font-bold tracking-[-0.01em] text-app-ink">{{ entry.subject.label }}</p>
-              <p class="mt-0.5 text-[13px] text-app-muted">
+              <p class="text-[17px] font-medium tracking-[-0.015em] text-app-ink">{{ entry.subject.label }}</p>
+              <p class="mt-0.5 text-[13px] text-app-ink">
                 {{ t('bank.labels.questionCount', entry.total) }} · {{ t('bank.labels.topicCount', entry.topics) }}
               </p>
             </div>
-            <AppIcon name="chevronRight" :size="18" class="shrink-0 text-app-muted" />
+            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/70 text-app-ink transition-colors group-hover:bg-app-ink group-hover:text-white">
+              <AppIcon name="arrowRight" :size="16" />
+            </span>
           </div>
 
-          <div class="mt-5">
-            <div class="h-1.5 overflow-hidden rounded-full bg-app-border" aria-hidden="true">
+          <div class="mt-6">
+            <div class="h-1.5 overflow-hidden rounded-full bg-white/70" aria-hidden="true">
               <div
                 class="h-full rounded-full bg-app-ink"
                 :style="{ width: `${percent(entry.answered, entry.total)}%` }"
               ></div>
             </div>
-            <p class="mt-2.5 text-[13px] text-app-muted">
+            <p class="mt-2.5 text-[13px] text-app-ink">
               <i18n-t v-if="entry.answered" keypath="bank.home.progress" scope="global">
                 <template #answered><span class="font-semibold text-app-ink">{{ entry.answered }}</span></template>
                 <template #correct>{{ entry.correct }}</template>

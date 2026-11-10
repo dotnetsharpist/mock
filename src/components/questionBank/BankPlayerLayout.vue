@@ -22,12 +22,12 @@ defineProps({
 </script>
 
 <template>
-  <div class="min-h-screen bg-app-bg text-app-ink">
-    <header class="sticky top-0 z-30 border-b border-app-border bg-app-surface/95 backdrop-blur">
+  <div class="app-shell min-h-screen bg-app-bg text-app-ink">
+    <header class="sticky top-0 z-30 bg-app-surface/95 shadow-[0_10px_30px_-24px_rgba(17,17,17,0.35)] backdrop-blur">
       <div class="mx-auto flex h-16 max-w-[1240px] items-center gap-3 px-4 sm:px-6">
         <RouterLink
           :to="backTo"
-          class="flex h-10 shrink-0 items-center gap-2 rounded-full pl-2 pr-3 text-[14px] font-medium text-app-muted transition-colors hover:bg-app-tile hover:text-app-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+          class="flex h-10 shrink-0 items-center gap-2 rounded-full pl-2 pr-3 text-[14px] font-medium text-app-muted transition-colors hover:bg-app-warm hover:text-app-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
         >
           <AppIcon name="arrowLeft" :size="18" />
           <span class="hidden sm:inline">{{ backLabel || t('bank.actions.back') }}</span>
@@ -56,7 +56,7 @@ defineProps({
 
     <footer
       v-if="$slots.footer"
-      class="fixed inset-x-0 bottom-0 z-30 border-t border-app-border bg-app-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+      class="fixed inset-x-0 bottom-0 z-30 bg-app-surface/95 shadow-[0_-10px_30px_-22px_rgba(17,17,17,0.35)] pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
       <div class="mx-auto flex h-[68px] max-w-[1240px] items-center gap-2 px-4 sm:gap-3 sm:px-6">
         <slot name="footer" />

@@ -283,7 +283,7 @@ const sessionTone = (session) =>
     <template v-else>
       <!-- Where the student stands; the last two are presets for the setup -->
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div class="rounded-2xl border border-app-border bg-app-surface p-4 shadow-app-card">
+        <div class="rounded-[24px] bg-app-surface shadow-app-card p-4">
           <p class="text-[13px] font-medium text-app-muted">{{ t('bank.subject.solved') }}</p>
           <p class="mt-1.5 text-[22px] font-bold tabular-nums text-app-ink">
             {{ answeredQuestions }}<span class="text-[15px] font-semibold text-app-muted">/{{ totalQuestions }}</span>
@@ -291,7 +291,7 @@ const sessionTone = (session) =>
         </div>
         <RouterLink
           :to="`/savollar-banki/${subjectKey}/statistika`"
-          class="rounded-2xl border border-app-border bg-app-surface p-4 shadow-app-card transition-colors hover:bg-app-sunken"
+          class="rounded-[24px] bg-app-surface shadow-app-card p-4 transition-colors hover:bg-app-sunken"
         >
           <p class="flex items-center justify-between text-[13px] font-medium text-app-muted">
             {{ t('bank.labels.firstTry') }}
@@ -303,8 +303,8 @@ const sessionTone = (session) =>
         </RouterLink>
         <button
           type="button"
-          class="rounded-2xl border bg-app-surface p-4 text-left shadow-app-card transition-colors hover:bg-app-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
-          :class="setup.source === 'Incorrect' ? 'border-app-ink' : 'border-app-border'"
+          class="rounded-[24px] border-2 bg-app-surface p-4 text-left shadow-app-card transition-colors hover:bg-app-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+          :class="setup.source === 'Incorrect' ? 'border-app-ink' : 'border-transparent'"
           :aria-pressed="setup.source === 'Incorrect'"
           @click="pickSource('Incorrect')"
         >
@@ -316,8 +316,8 @@ const sessionTone = (session) =>
         </button>
         <button
           type="button"
-          class="rounded-2xl border bg-app-surface p-4 text-left shadow-app-card transition-colors hover:bg-app-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
-          :class="setup.source === 'Saved' ? 'border-app-ink' : 'border-app-border'"
+          class="rounded-[24px] border-2 bg-app-surface p-4 text-left shadow-app-card transition-colors hover:bg-app-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+          :class="setup.source === 'Saved' ? 'border-app-ink' : 'border-transparent'"
           :aria-pressed="setup.source === 'Saved'"
           @click="pickSource('Saved')"
         >
@@ -383,7 +383,7 @@ const sessionTone = (session) =>
               <li v-for="session in sessions" :key="session.id">
                 <RouterLink
                   :to="`/savollar-banki/sessiya/${session.id}`"
-                  class="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-app-tile"
+                  class="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-app-warm"
                 >
                   <span class="min-w-0 flex-1">
                     <span class="block text-[13.5px] font-semibold text-app-ink">
@@ -423,7 +423,7 @@ const sessionTone = (session) =>
        however far down the topics the student has scrolled. -->
   <div
     v-if="view === 'setup'"
-    class="fixed inset-x-0 bottom-[calc(58px+env(safe-area-inset-bottom))] z-30 border-t border-app-border bg-app-surface/95 backdrop-blur lg:hidden"
+    class="fixed inset-x-0 bottom-[calc(58px+env(safe-area-inset-bottom))] z-30 bg-app-surface/95 shadow-[0_-10px_30px_-22px_rgba(17,17,17,0.35)] backdrop-blur lg:hidden"
   >
     <div class="mx-auto max-w-[640px] px-5 py-3">
       <p v-if="startError" class="mb-2 text-[13px] text-app-bad" role="alert">{{ startError }}</p>

@@ -107,15 +107,15 @@ const canStart = computed(() => !props.busy && !noMatches.value)
 const pick = (active) =>
   active
     ? 'border-app-ink bg-app-ink text-app-surface'
-    : 'border-app-border bg-app-surface text-app-ink hover:bg-app-tile'
+    : 'border-transparent bg-app-tile text-app-ink hover:bg-app-warm'
 const toggle = (active) =>
   active
-    ? 'border-app-ink bg-app-tile text-app-ink shadow-[0_0_0_1px_var(--color-app-ink)]'
-    : 'border-app-border bg-app-surface text-app-ink hover:bg-app-tile'
+    ? 'border-app-ink bg-app-surface text-app-ink'
+    : 'border-transparent bg-app-tile text-app-ink hover:bg-app-warm'
 </script>
 
 <template>
-  <section class="rounded-2xl border border-app-border bg-app-surface p-5 shadow-app-card" :aria-busy="summaryLoading">
+  <section class="rounded-[24px] bg-app-surface shadow-app-card p-5" :aria-busy="summaryLoading">
     <div>
       <h2 class="text-[17px] font-bold tracking-[-0.01em] text-app-ink">{{ t('bank.start.title') }}</h2>
       <p class="mt-0.5 truncate text-[13px] text-app-muted">{{ topicsSummary }}</p>
@@ -167,14 +167,14 @@ const toggle = (active) =>
 
     <fieldset class="mt-5">
       <legend class="text-[13px] font-semibold text-app-ink">{{ t('bank.start.mode') }}</legend>
-      <div class="mt-2 grid grid-cols-2 gap-1 rounded-xl border border-app-border p-1" role="radiogroup">
+      <div class="mt-2 grid grid-cols-2 gap-1 rounded-full bg-app-tile p-1" role="radiogroup">
         <button
           v-for="item in MODES"
           :key="item.value"
           type="button"
           role="radio"
-          class="rounded-lg px-3 py-2 text-[13.5px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-app-ink"
-          :class="setup.mode === item.value ? 'bg-app-ink text-app-surface' : 'text-app-ink hover:bg-app-tile'"
+          class="rounded-full px-3 py-2 text-[13.5px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-app-ink"
+          :class="setup.mode === item.value ? 'bg-app-ink text-app-surface' : 'text-app-ink hover:bg-app-warm'"
           :aria-checked="setup.mode === item.value"
           @click="set({ mode: item.value })"
         >
@@ -219,7 +219,7 @@ const toggle = (active) =>
       <p v-if="effectiveCount" class="mt-2 text-[12.5px] text-app-muted">{{ t('bank.start.total', { time: totalTime }) }}</p>
     </fieldset>
 
-    <label class="mt-5 flex cursor-pointer items-center justify-between gap-4 rounded-xl bg-app-sunken px-4 py-3">
+    <label class="mt-5 flex cursor-pointer items-center justify-between gap-4 rounded-[18px] bg-app-tile px-4 py-3">
       <span>
         <span class="block text-[14px] font-semibold text-app-ink">{{ t('bank.start.shuffle') }}</span>
         <span class="block text-[12.5px] text-app-muted">{{ t('bank.start.shuffleHint') }}</span>

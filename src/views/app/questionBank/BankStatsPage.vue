@@ -197,7 +197,7 @@ async function resetProgress() {
 
     <template v-else-if="loading && !stats">
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-hidden="true">
-        <div v-for="n in 4" :key="n" class="rounded-2xl border border-app-border bg-app-surface p-5">
+        <div v-for="n in 4" :key="n" class="rounded-[24px] bg-app-surface shadow-app-card p-5">
           <SkeletonBlock class="h-3 w-24" />
           <SkeletonBlock class="mt-3 h-7 w-16" />
         </div>
@@ -221,7 +221,7 @@ async function resetProgress() {
 
     <template v-else-if="stats">
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div class="rounded-2xl border border-app-border bg-app-surface p-4 shadow-app-card sm:p-5">
+        <div class="rounded-[24px] bg-app-surface shadow-app-card p-4 sm:p-5">
           <p class="text-[13px] font-medium text-app-muted">{{ t('bank.stats.answeredQuestions') }}</p>
           <p class="mt-1.5 text-[24px] font-bold tabular-nums text-app-ink sm:text-[28px]">
             {{ stats.answeredQuestionCount }}<span class="text-[15px] font-semibold text-app-muted">/{{ totalQuestions }}</span>
@@ -230,14 +230,14 @@ async function resetProgress() {
             <div class="h-full rounded-full bg-app-ink" :style="{ width: `${percent(stats.answeredQuestionCount, totalQuestions)}%` }"></div>
           </div>
         </div>
-        <div class="rounded-2xl border border-app-border bg-app-surface p-4 shadow-app-card sm:p-5">
+        <div class="rounded-[24px] bg-app-surface shadow-app-card p-4 sm:p-5">
           <p class="text-[13px] font-medium text-app-muted">{{ t('bank.labels.firstTry') }}</p>
           <p class="mt-1.5 text-[24px] font-bold tabular-nums sm:text-[28px]" :class="stats.firstTryAccuracy >= 70 ? 'text-app-good' : 'text-app-bad'">
             {{ stats.firstTryAccuracy }}%
           </p>
           <p class="mt-1 text-[12.5px] text-app-muted">{{ t('bank.stats.firstTryCorrect', { n: stats.firstTryCorrectCount }) }}</p>
         </div>
-        <div class="rounded-2xl border border-app-border bg-app-surface p-4 shadow-app-card sm:p-5">
+        <div class="rounded-[24px] bg-app-surface shadow-app-card p-4 sm:p-5">
           <p class="text-[13px] font-medium text-app-muted">{{ t('bank.stats.currentAccuracy') }}</p>
           <p class="mt-1.5 text-[24px] font-bold tabular-nums sm:text-[28px]" :class="stats.currentAccuracy >= 70 ? 'text-app-good' : 'text-app-bad'">
             {{ stats.currentAccuracy }}%
@@ -250,7 +250,7 @@ async function resetProgress() {
             </template>
           </i18n-t>
         </div>
-        <div class="rounded-2xl border border-app-border bg-app-surface p-4 shadow-app-card sm:p-5">
+        <div class="rounded-[24px] bg-app-surface shadow-app-card p-4 sm:p-5">
           <p class="flex items-center justify-between text-[13px] font-medium text-app-muted">
             {{ t('bank.stats.streak') }}
             <AppIcon name="flame" :size="16" />
@@ -383,7 +383,7 @@ async function resetProgress() {
                   </span>
                   <RouterLink
                     :to="`${listPath}?skill=${skill.bankSkillId}`"
-                    class="shrink-0 rounded-full p-1.5 text-app-muted hover:bg-app-tile hover:text-app-ink"
+                    class="shrink-0 rounded-full p-1.5 text-app-muted hover:bg-app-warm hover:text-app-ink"
                     :aria-label="t('bank.stats.openSkill', { name: skill.name })"
                   >
                     <AppIcon name="arrowRight" :size="15" />
@@ -403,7 +403,7 @@ async function resetProgress() {
               <li v-for="skill in stats.weakSkills" :key="skill.bankSkillId">
                 <RouterLink
                   :to="`${listPath}?skill=${skill.bankSkillId}`"
-                  class="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-app-tile"
+                  class="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-app-warm"
                 >
                   <span class="min-w-0 flex-1">
                     <span class="block truncate text-[14px] font-semibold text-app-ink">{{ skill.name }}</span>
@@ -415,7 +415,7 @@ async function resetProgress() {
                 </RouterLink>
               </li>
             </ul>
-            <p v-else class="mt-4 rounded-xl bg-app-sunken px-4 py-3 text-[13px] text-app-muted">
+            <p v-else class="mt-4 rounded-[18px] bg-app-tile px-4 py-3 text-[13px] text-app-muted">
               {{ t('bank.stats.notEnoughData') }}
             </p>
           </AppCard>
@@ -427,7 +427,7 @@ async function resetProgress() {
               <li v-for="session in sessions" :key="session.id">
                 <RouterLink
                   :to="`/savollar-banki/sessiya/${session.id}`"
-                  class="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-app-tile"
+                  class="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-app-warm"
                 >
                   <span class="min-w-0 flex-1">
                     <span class="block text-[13.5px] font-semibold text-app-ink">

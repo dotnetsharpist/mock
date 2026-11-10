@@ -117,6 +117,7 @@ landing's Playfair — serif is the marketing voice.
 ### Question bank (`components/questionBank/`)
 
 Built from the parts above; no new colours, shadows or icon style.
+Since 2026-11-10 in the landing look: borderless white sheets with the soft shadow, grey `app-tile` pills and option rows (selected = 2px ink outline), subject cards filled with `subjectTint()`, and the full-screen player wears `.app-shell` so it gets Inter Tight and the glossy buttons.
 
 - **Difficulty badge** (`BankDifficultyBadge.vue`) — a neutral pill with a three-step signal (Oson / O‘rta / Qiyin). Never green/amber/red: colour here means how the *student* did, and a hard question is not a bad one.
 - **Status mark** (`BankStatusMark.vue`) — the student's latest answer to a question: `checkCircle` good, `xCircle` bad, an empty hairline ring for not tried.

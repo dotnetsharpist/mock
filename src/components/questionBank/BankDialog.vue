@@ -84,7 +84,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
       <form
         ref="panel"
-        class="relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl border border-app-border bg-app-surface shadow-app-card sm:rounded-2xl"
+        class="relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-[28px] bg-app-surface shadow-app-card sm:rounded-[28px]"
         :class="wide ? 'sm:max-w-[520px]' : 'sm:max-w-[440px]'"
         role="dialog"
         aria-modal="true"
@@ -102,7 +102,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           <button
             type="button"
             data-dialog-close
-            class="-mr-2 -mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-app-muted transition-colors hover:bg-app-tile hover:text-app-ink"
+            class="-mr-2 -mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-app-muted transition-colors hover:bg-app-warm hover:text-app-ink"
             :aria-label="t('common.close')"
             :disabled="busy"
             @click="emit('close')"
@@ -121,7 +121,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           <button
             type="button"
             :disabled="busy"
-            class="rounded-full border border-app-border bg-app-surface px-5 py-2.5 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:opacity-60"
+            class="rounded-full bg-app-tile px-5 py-2.5 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-warm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:opacity-60"
             @click="emit('close')"
           >
             {{ cancelLabel || t('common.cancel') }}

@@ -40,7 +40,7 @@ const cellClass = (state, showResults) => {
   if (showResults && state === 'correct') return 'border-app-good bg-app-good-bg text-app-good'
   if (showResults && state === 'wrong') return 'border-app-bad bg-app-bad-bg text-app-bad'
   if (state !== 'none') return 'border-app-ink bg-app-ink text-app-surface'
-  return 'border-app-border bg-app-surface text-app-ink hover:bg-app-tile'
+  return 'border-transparent bg-app-tile text-app-ink hover:bg-app-warm'
 }
 </script>
 
@@ -48,7 +48,7 @@ const cellClass = (state, showResults) => {
   <Teleport to="body">
     <div class="fixed inset-0 z-[250]" @click="emit('close')"></div>
     <div
-      class="fixed inset-x-3 bottom-[84px] z-[260] mx-auto max-w-[460px] rounded-2xl border border-app-border bg-app-surface p-4 shadow-[0_18px_40px_rgba(10,10,10,0.14)] sm:p-5"
+      class="fixed inset-x-3 bottom-[84px] z-[260] mx-auto max-w-[460px] rounded-[24px] bg-app-surface shadow-app-card p-4 shadow-[0_18px_40px_rgba(10,10,10,0.14)] sm:p-5"
       role="dialog"
       :aria-label="t('bank.palette.label')"
     >
@@ -56,7 +56,7 @@ const cellClass = (state, showResults) => {
         <p class="text-[15px] font-bold text-app-ink">{{ t('bank.labels.questions') }}</p>
         <button
           type="button"
-          class="flex h-8 w-8 items-center justify-center rounded-full text-app-muted hover:bg-app-tile hover:text-app-ink"
+          class="flex h-8 w-8 items-center justify-center rounded-full text-app-muted hover:bg-app-warm hover:text-app-ink"
           :aria-label="t('common.close')"
           @click="emit('close')"
         >
@@ -71,7 +71,7 @@ const cellClass = (state, showResults) => {
           v-for="(item, index) in items"
           :key="item.id"
           type="button"
-          class="flex h-10 items-center justify-center rounded-lg border text-[13px] font-semibold tabular-nums transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+          class="flex h-10 items-center justify-center rounded-full border text-[13px] font-semibold tabular-nums transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
           :class="[cellClass(item.state, showResults), index === currentIndex ? 'ring-2 ring-app-ink ring-offset-2' : '']"
           :aria-current="index === currentIndex ? 'step' : undefined"
           @click="emit('go', index)"
@@ -86,7 +86,7 @@ const cellClass = (state, showResults) => {
           <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded border border-app-bad bg-app-bad-bg"></span>{{ t('bank.labels.wrong') }}</span>
         </template>
         <span v-else class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded bg-app-ink"></span>{{ t('bank.labels.answered') }}</span>
-        <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded border border-app-border"></span>{{ t('bank.labels.unanswered') }}</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded bg-app-tile"></span>{{ t('bank.labels.unanswered') }}</span>
       </div>
     </div>
   </Teleport>

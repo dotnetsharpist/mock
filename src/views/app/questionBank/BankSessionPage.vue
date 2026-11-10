@@ -640,7 +640,7 @@ const leave = () => router.push(backPath.value)
         <span
           v-if="!finished && !currentAnswer && !isTimedOut(currentId)"
           class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold tabular-nums"
-          :class="isTimed && remaining <= 10 ? 'border-app-bad text-app-bad' : 'border-app-border text-app-ink'"
+          :class="isTimed && remaining <= 10 ? 'border-app-bad text-app-bad' : 'border-transparent bg-app-tile text-app-ink'"
           :title="isTimed ? t('bank.session.timeLeftHere') : t('bank.labels.timeSpentHere')"
           role="timer"
         >
@@ -650,7 +650,7 @@ const leave = () => router.push(backPath.value)
         <button
           type="button"
           class="hidden h-10 w-10 items-center justify-center rounded-full border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink sm:flex"
-          :class="currentQuestion.isSaved ? 'border-app-ink bg-app-ink text-app-surface' : 'border-app-border text-app-ink hover:bg-app-tile'"
+          :class="currentQuestion.isSaved ? 'border-app-ink bg-app-ink text-app-surface' : 'border-transparent bg-app-tile text-app-ink hover:bg-app-warm'"
           :aria-pressed="currentQuestion.isSaved"
           :aria-label="currentQuestion.isSaved ? t('bank.actions.unsave') : t('bank.actions.saveQuestion')"
           :disabled="savingBookmark"
@@ -660,7 +660,7 @@ const leave = () => router.push(backPath.value)
         </button>
         <button
           type="button"
-          class="hidden h-10 w-10 items-center justify-center rounded-full border border-app-border text-app-ink transition-colors hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink sm:flex"
+          class="hidden h-10 w-10 items-center justify-center rounded-full bg-app-tile text-app-ink transition-colors hover:bg-app-warm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink sm:flex"
           :aria-label="t('bank.actions.report')"
           :title="t('bank.actions.report')"
           @click="reportOpen = true"
@@ -670,7 +670,7 @@ const leave = () => router.push(backPath.value)
         <button
           v-if="!finished"
           type="button"
-          class="rounded-full border border-app-border px-3.5 py-2 text-[13px] font-semibold text-app-ink transition-colors hover:bg-app-tile"
+          class="rounded-full bg-app-tile px-3.5 py-2 text-[13px] font-semibold text-app-ink transition-colors hover:bg-app-warm"
           @click="askFinish"
         >
           {{ t('bank.actions.finish') }}
@@ -688,7 +688,7 @@ const leave = () => router.push(backPath.value)
       </div>
     </div>
 
-    <div v-else-if="loadError" class="rounded-2xl border border-app-border bg-app-surface shadow-app-card">
+    <div v-else-if="loadError" class="rounded-[24px] bg-app-surface shadow-app-card">
       <EmptyState
         v-if="loadError === 'not-found'"
         icon="layers"
@@ -702,7 +702,7 @@ const leave = () => router.push(backPath.value)
 
     <!-- Results -->
     <template v-else-if="session && view === 'results'">
-      <section class="rounded-2xl border border-app-border bg-app-surface p-5 shadow-app-card sm:p-7">
+      <section class="rounded-[24px] bg-app-surface shadow-app-card p-5 sm:p-7">
         <div class="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
           <div class="relative flex h-[104px] w-[104px] shrink-0 items-center justify-center">
             <ScoreRing :percent="scorePercent" :size="104" :stroke="8" :tone="toneForScore(scorePercent)" class="absolute inset-0" />
@@ -726,15 +726,15 @@ const leave = () => router.push(backPath.value)
         </div>
 
         <dl class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <div class="rounded-xl bg-app-sunken px-4 py-3">
+          <div class="rounded-[18px] bg-app-tile px-4 py-3">
             <dt class="text-[12.5px] text-app-muted">{{ t('bank.session.timeSpent') }}</dt>
             <dd class="mt-1 text-[16px] font-bold text-app-ink">{{ formatDuration(session.totalTimeSeconds) }}</dd>
           </div>
-          <div class="rounded-xl bg-app-sunken px-4 py-3">
+          <div class="rounded-[18px] bg-app-tile px-4 py-3">
             <dt class="text-[12.5px] text-app-muted">{{ t('bank.session.averagePerQuestion') }}</dt>
             <dd class="mt-1 text-[16px] font-bold text-app-ink">{{ averageTime ? formatDuration(averageTime) : '—' }}</dd>
           </div>
-          <div class="col-span-2 rounded-xl bg-app-sunken px-4 py-3 sm:col-span-1">
+          <div class="col-span-2 rounded-[18px] bg-app-tile px-4 py-3 sm:col-span-1">
             <dt class="text-[12.5px] text-app-muted">{{ t('bank.session.wrongAndSkipped') }}</dt>
             <dd class="mt-1 text-[16px] font-bold text-app-ink">{{ ids.length - session.correctCount }}</dd>
           </div>
@@ -752,14 +752,14 @@ const leave = () => router.push(backPath.value)
           </button>
           <button
             type="button"
-            class="inline-flex items-center justify-center gap-2 rounded-full border border-app-border bg-app-surface px-5 py-2.5 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile"
+            class="inline-flex items-center justify-center gap-2 rounded-full bg-app-tile px-5 py-2.5 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-warm"
             @click="goTo(0)"
           >
             {{ t('bank.session.reviewAll') }}
           </button>
           <button
             type="button"
-            class="inline-flex items-center justify-center gap-2 rounded-full border border-app-border bg-app-surface px-5 py-2.5 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile"
+            class="inline-flex items-center justify-center gap-2 rounded-full bg-app-tile px-5 py-2.5 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-warm"
             @click="leave"
           >
             {{ t('bank.session.newSession') }}
@@ -767,7 +767,7 @@ const leave = () => router.push(backPath.value)
         </div>
       </section>
 
-      <section class="mt-6 overflow-hidden rounded-2xl border border-app-border bg-app-surface shadow-app-card">
+      <section class="mt-6 overflow-hidden rounded-[24px] bg-app-surface shadow-app-card">
         <h2 class="px-5 pb-2 pt-5 text-[16px] font-bold text-app-ink">{{ t('bank.labels.questions') }}</h2>
         <ul class="divide-y divide-app-border">
           <li v-for="(id, index) in ids" :key="id">
@@ -800,7 +800,7 @@ const leave = () => router.push(backPath.value)
 
     <!-- A question -->
     <template v-else-if="session">
-      <div v-if="currentMissing" class="rounded-2xl border border-app-border bg-app-surface shadow-app-card">
+      <div v-if="currentMissing" class="rounded-[24px] bg-app-surface shadow-app-card">
         <EmptyState
           icon="layers"
           :title="t('bank.session.questionRemoved')"
@@ -809,13 +809,13 @@ const leave = () => router.push(backPath.value)
       </div>
       <div
         v-else-if="!currentQuestion && questionErrors[currentId]"
-        class="rounded-2xl border border-app-border bg-app-surface shadow-app-card"
+        class="rounded-[24px] bg-app-surface shadow-app-card"
       >
         <EmptyState icon="close" :title="t('bank.labels.questionLoadError')" :description="questionErrors[currentId]" />
         <div class="-mt-6 flex justify-center pb-8">
           <button
             type="button"
-            class="inline-flex items-center gap-2 rounded-full border border-app-border px-4 py-2 text-[13px] font-semibold text-app-ink hover:bg-app-tile"
+            class="inline-flex items-center gap-2 rounded-full bg-app-tile px-4 py-2 text-[13px] font-semibold text-app-ink hover:bg-app-warm"
             @click="retryQuestion"
           >
             <AppIcon name="refresh" :size="15" />
@@ -853,7 +853,7 @@ const leave = () => router.push(backPath.value)
         <button
           type="button"
           class="inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-[13px] font-semibold"
-          :class="currentQuestion.isSaved ? 'border-app-ink bg-app-ink text-app-surface' : 'border-app-border text-app-ink'"
+          :class="currentQuestion.isSaved ? 'border-app-ink bg-app-ink text-app-surface' : 'border-transparent bg-app-tile text-app-ink'"
           :aria-pressed="currentQuestion.isSaved"
           :disabled="savingBookmark"
           @click="toggleSave"
@@ -863,7 +863,7 @@ const leave = () => router.push(backPath.value)
         </button>
         <button
           type="button"
-          class="inline-flex items-center gap-2 rounded-full border border-app-border px-3.5 py-2 text-[13px] font-semibold text-app-ink"
+          class="inline-flex items-center gap-2 rounded-full bg-app-tile px-3.5 py-2 text-[13px] font-semibold text-app-ink"
           @click="reportOpen = true"
         >
           <AppIcon name="flag" :size="15" />
@@ -875,7 +875,7 @@ const leave = () => router.push(backPath.value)
     <template v-if="session && view === 'play' && !loading" #footer>
       <button
         type="button"
-        class="flex h-11 items-center gap-2 rounded-full border border-app-border bg-app-surface px-3 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40 sm:px-4"
+        class="flex h-11 items-center gap-2 rounded-full bg-app-tile px-3 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-warm disabled:cursor-not-allowed disabled:opacity-40 sm:px-4"
         :disabled="currentIndex === 0"
         :aria-label="t('bank.actions.previousQuestion')"
         @click="goTo(currentIndex - 1)"
@@ -886,7 +886,7 @@ const leave = () => router.push(backPath.value)
 
       <button
         type="button"
-        class="flex h-11 items-center gap-2 rounded-full border border-app-border bg-app-surface px-3.5 text-[14px] font-semibold tabular-nums text-app-ink transition-colors hover:bg-app-tile"
+        class="flex h-11 items-center gap-2 rounded-full bg-app-tile px-3.5 text-[14px] font-semibold tabular-nums text-app-ink transition-colors hover:bg-app-warm"
         :aria-expanded="paletteOpen"
         :aria-label="t('bank.palette.label')"
         @click="paletteOpen = !paletteOpen"
@@ -901,7 +901,7 @@ const leave = () => router.push(backPath.value)
         <button
           v-if="!isLast"
           type="button"
-          class="hidden h-11 items-center gap-2 rounded-full px-3 text-[14px] font-semibold text-app-muted transition-colors hover:bg-app-tile hover:text-app-ink sm:flex"
+          class="hidden h-11 items-center gap-2 rounded-full px-3 text-[14px] font-semibold text-app-muted transition-colors hover:bg-app-warm hover:text-app-ink sm:flex"
           @click="goTo(currentIndex + 1)"
         >
           {{ t('bank.session.skip') }}
@@ -920,7 +920,7 @@ const leave = () => router.push(backPath.value)
         <button
           v-if="finished && !isLast"
           type="button"
-          class="hidden h-11 items-center rounded-full border border-app-border bg-app-surface px-4 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile sm:flex"
+          class="hidden h-11 items-center rounded-full bg-app-tile px-4 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-warm sm:flex"
           @click="view = 'results'"
         >
           {{ t('bank.session.results') }}

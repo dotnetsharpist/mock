@@ -52,11 +52,11 @@ const optionState = (option) => {
 }
 
 const OPTION_CLASSES = {
-  idle: 'border-app-border bg-app-surface hover:border-app-ink/25 hover:bg-app-sunken',
-  selected: 'border-app-ink bg-app-surface shadow-[0_0_0_1px_var(--color-app-ink)]',
+  idle: 'border-transparent bg-app-tile hover:bg-app-warm',
+  selected: 'border-app-ink bg-app-surface',
   correct: 'border-app-good bg-app-good-bg',
   wrong: 'border-app-bad bg-app-bad-bg',
-  rest: 'border-app-border bg-app-surface',
+  rest: 'border-transparent bg-app-tile',
 }
 
 const LETTER_CLASSES = {
@@ -76,7 +76,7 @@ const verdict = computed(() => {
     case 'wrong':
       return { icon: 'xCircle', label: t('bank.question.verdictWrong'), box: 'border-app-bad/30 bg-app-bad-bg', tone: 'text-app-bad' }
     case 'skipped':
-      return { icon: 'info', label: t('bank.question.verdictSkipped'), box: 'border-app-border bg-app-sunken', tone: 'text-app-ink' }
+      return { icon: 'info', label: t('bank.question.verdictSkipped'), box: 'bg-app-tile', tone: 'text-app-ink' }
     default:
       return null
   }
@@ -100,7 +100,7 @@ watch(
     <!-- Passage -->
     <section
       v-if="question.passage"
-      class="rounded-2xl border border-app-border bg-app-surface p-5 shadow-app-card lg:sticky lg:top-[88px] lg:max-h-[calc(100vh-190px)] lg:overflow-y-auto sm:p-6"
+      class="rounded-[24px] bg-app-surface shadow-app-card p-5 lg:sticky lg:top-[88px] lg:max-h-[calc(100vh-190px)] lg:overflow-y-auto sm:p-6"
       :aria-label="t('bank.question.passage')"
     >
       <button
@@ -177,7 +177,7 @@ watch(
             role="radio"
             :aria-checked="option.id === selectedOptionId"
             :disabled="locked"
-            class="flex min-w-0 flex-1 items-start gap-3.5 rounded-xl border px-4 py-3.5 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:cursor-default"
+            class="flex min-w-0 flex-1 items-start gap-3.5 rounded-[18px] border-2 px-4 py-3.5 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:cursor-default"
             :class="OPTION_CLASSES[optionState(option)]"
             @click="emit('select', option.id)"
           >
@@ -221,7 +221,7 @@ watch(
             :class="
               isCrossed(option)
                 ? 'border-app-ink bg-app-ink text-app-surface'
-                : 'border-app-border bg-app-surface text-app-muted hover:bg-app-tile hover:text-app-ink'
+                : 'border-transparent bg-app-tile text-app-ink hover:bg-app-warm'
             "
             :aria-pressed="isCrossed(option)"
             :aria-label="
@@ -244,7 +244,7 @@ watch(
 
       <!-- Verdict + solution -->
       <div v-if="reveal" class="mt-6 space-y-4">
-        <div v-if="verdict" class="rounded-2xl border p-4 sm:p-5" :class="verdict.box">
+        <div v-if="verdict" class="rounded-[24px] p-4 sm:p-5" :class="verdict.box">
           <p class="flex items-center gap-2 text-[16px] font-bold" :class="verdict.tone">
             <AppIcon :name="verdict.icon" :size="20" />
             {{ verdict.label }}
@@ -268,7 +268,7 @@ watch(
           </template>
         </div>
 
-        <section class="rounded-2xl border border-app-border bg-app-surface p-5 shadow-app-card sm:p-6">
+        <section class="rounded-[24px] bg-app-surface shadow-app-card p-5 sm:p-6">
           <h3 class="text-[15px] font-bold text-app-ink">{{ t('bank.question.solution') }}</h3>
           <BankRichText
             v-if="reveal.explanation"
