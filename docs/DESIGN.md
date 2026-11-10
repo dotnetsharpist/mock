@@ -98,7 +98,7 @@ landing's Playfair — serif is the marketing voice.
 - **Score bars** (Bosh sahifa) — one rounded bar per recent test, `.app-texture-fine`, the best solid `app-ink` with its figure inside.
 - **Exam calendar** (Bosh sahifa) — a Monday-first month, always six rows, opening on the next exam's month. Exam days are filled `app-ink` tiles, today is an `app-ink` outline, days outside the month stay blank, and the "next exam" line below repeats the black tile as the legend. Dates live in `EXAM_DATES` in `DashboardPage.vue`. Names come from the messages: Chrome has no Uzbek calendar data, so never use `Intl` for them.
 - **Recent tests table** (Bosh sahifa) — hairline rules, subject mark, grade as an `app-ink` pill. Subject and date fold under the title below md.
-- **Icons** — Phosphor Duotone (MIT, via Streamline) in `AppIcon.vue`: an ink outline plus a 20% tone fill of the same colour, on a 256 grid, following `currentColor`. The only icon style.
+- **Icons** — Solar Line Duotone (open source, via Streamline) in `AppIcon.vue`: rounded joins and soft corners to match the edgeless UI; main stroke ink, secondary stroke ink at 45%, 1.5 stroke on a 24 grid, following `currentColor`. Check, plus and close are Phosphor glyphs. The only icon style.
 - **Icon tile** — 48px circle, `app-tile`, duotone icon inside.
 - **Nav item** — rounded, icon + label in `app-ink`; active is filled `app-ink` with white semibold text; hover is `app-tile`.
 - **Pill button** — fully rounded; primary is `app-ink` on white text, secondary is `app-surface` with an `app-border` hairline.
@@ -129,7 +129,7 @@ Built from the parts above; no new colours, shadows or icon style.
 ## Rules
 
 - No new colours (beyond the landing palette above), card shapes, shadow depths, fonts, or a second icon style.
-  Subject icons live in `AppIcon.vue` with everything else, all Phosphor Duotone, and are referenced by name from `subjects.js` — never
+  Subject icons live in `AppIcon.vue` with everything else, all Solar Line Duotone, and are referenced by name from `subjects.js` — never
   inlined at a call site, or the set drifts.
 - Colour never decorates, except the landing's pastel light (`.app-iris`), once per screen. A card is not green because it is nice.
 - Every list ships an empty state and a skeleton loading state in the shape of
