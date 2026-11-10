@@ -798,6 +798,7 @@ export const useAuthStore = defineStore('auth', () => {
     errorMessage.value = ''
     userInfo.value = null
     localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem('mm.attemptScores') // utils/attemptResults.js
     forgetRefreshToken()
   }
 

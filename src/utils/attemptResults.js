@@ -22,7 +22,40 @@ export {
   NO_CERTIFICATE_TEXT,
 } from '@/utils/certificateData'
 
+// get-results returns the whole graded attempt (every question), so one call
+// takes seconds and the dashboard makes ten. A finished attempt's grade barely
+// moves, so each score is kept in localStorage for a while and reloads paint at
+// once. ponytail: TTL only; an essay graded later shows its new total after
+// SCORE_TTL_MS. Add a backend score-only endpoint (or a `percent` on
+// get-user-attempts) to drop this.
+const SCORE_CACHE_KEY = 'mm.attemptScores'
+const SCORE_TTL_MS = 10 * 60 * 1000
+
+function readScoreCache() {
+  try {
+    return JSON.parse(localStorage.getItem(SCORE_CACHE_KEY)) || {}
+  } catch {
+    return {}
+  }
+}
+
 export async function fetchAttemptScore(attemptId) {
+  const cache = readScoreCache()
+  const hit = cache[attemptId]
+  if (hit && Date.now() - hit.at < SCORE_TTL_MS) return hit.score
+
+  const score = await fetchAttemptScoreFresh(attemptId)
+  try {
+    const next = readScoreCache()
+    next[attemptId] = { at: Date.now(), score }
+    localStorage.setItem(SCORE_CACHE_KEY, JSON.stringify(next))
+  } catch {
+    /* storage full or blocked: just no cache */
+  }
+  return score
+}
+
+async function fetchAttemptScoreFresh(attemptId) {
   const baseUrl = getTestApiBaseUrl()
   const authStore = useAuthStore()
   if (!baseUrl || !authStore.isAuthenticated) throw new Error('Not authenticated')
