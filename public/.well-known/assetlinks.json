@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.example.milliymock_mobile",
+      "sha256_cert_fingerprints": [
+        "2B:ED:95:F2:B7:D7:C5:3C:18:E9:1A:47:3E:CD:9F:9B:B5:03:7B:18:60:D3:2C:3B:BA:4F:C1:B6:71:37:F6:BC"
+      ]
+    }
+  }
+]

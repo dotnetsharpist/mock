@@ -6,6 +6,12 @@
       "type": 301
     }
   ],
+  "rewrites": [
+    {
+      "source": "/:path([^.].{0,})?",
+      "destination": "/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "index.html",
@@ -33,6 +39,16 @@
           "value": "public, max-age=31536000, immutable"
         }
       ]
+    },
+    {
+      "source": ".well-known/apple-app-site-association",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ]
     }
-  ]
+  ],
+  "directoryListing": false
 }

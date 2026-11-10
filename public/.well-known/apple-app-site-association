@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["<TEAM_ID>.com.example.milliymockMobile"],
+        "components": [
+          { "/": "/payment/result", "comment": "Click/Payme return; the app opens /topup/payment/<paymentId>" }
+        ]
+      }
+    ]
+  }
+}
