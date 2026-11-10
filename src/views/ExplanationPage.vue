@@ -8,6 +8,8 @@ import TestInlineMathText from '@/components/test/TestInlineMathText.vue'
 import EssayAnalysisSection from '@/components/onatili/EssayAnalysisSection.vue'
 import BiologyReviewSection from '@/components/biology/BiologyReviewSection.vue'
 import EssayProcessingOverlay from '@/components/test/EssayProcessingOverlay.vue'
+import NextStepDialog from '@/components/app/NextStepDialog.vue'
+import { subjectKeyFromApi } from '@/components/app/subjects.js'
 import { PLATFORM_HOME } from '@/composables/usePlatformEntry'
 import { useAuthStore } from '@/stores/auth'
 import { useTestStore } from '@/stores/test'
@@ -41,6 +43,21 @@ const reportFileName = ref('')
 const reportSubmitted = ref(false)
 const reportFileInput = ref(null)
 const isCertificateModalOpen = ref(false)
+
+// After a FREE test just finished here: once its certificate is closed, offer
+// the subject's premium tests (NextStepDialog). Once per finish: the flag is
+// read before readyToSubmit is stripped from the URL, and cleared on showing.
+const justFinished = ref(route.query.readyToSubmit === '1')
+const showNextStep = ref(false)
+if (justFinished.value) void catalog.load()
+const nextStepSubject = computed(() => subjectKeyFromApi(testSubject.value) || '')
+const nextStepTests = computed(() => catalog.premiumPicks(nextStepSubject.value, 3))
+watch(isCertificateModalOpen, (open) => {
+  if (open || !justFinished.value || testLoadError.value) return
+  justFinished.value = false
+  const test = catalog.catalogue.find((item) => String(item.id) === requestedTestId.value)
+  if (test && !test.isPremium && nextStepTests.value.length) showNextStep.value = true
+})
 const showResultModal = ref(false)
 
 const isLoadingTest = ref(false)
@@ -2855,6 +2872,14 @@ function answerFeedbackText(question) {
         </div>
       </div>
     </Teleport>
+
+    <NextStepDialog
+      v-if="showNextStep"
+      :percent="scorePercent"
+      :tests="nextStepTests"
+      :subject-key="nextStepSubject"
+      @close="showNextStep = false"
+    />
 
     <Teleport to="body">
       <div

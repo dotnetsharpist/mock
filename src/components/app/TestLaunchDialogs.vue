@@ -23,7 +23,10 @@ const props = defineProps({
 
 const emit = defineEmits(['confirm', 'close', 'topup'])
 
-const { t } = useI18n()
+const { t, tm, rt } = useI18n()
+
+// What a premium test gives, shown on the buy and top-up steps.
+const premiumPoints = computed(() => tm('appShell.banner.points').map((point) => rt(point)))
 
 const isOpen = computed(() => Boolean(props.mode && props.test))
 
@@ -103,9 +106,25 @@ const startDetails = computed(() => {
           </i18n-t>
         </p>
 
+        <template v-if="mode !== 'start'">
+          <p class="mt-1 text-[13px] text-app-ink">{{ startDetails }}</p>
+          <ul class="mx-auto mt-4 max-w-[300px] space-y-1.5 text-left">
+            <li
+              v-for="point in premiumPoints"
+              :key="point"
+              class="flex items-center gap-2 text-[14px] text-app-ink"
+            >
+              <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-app-ink text-white">
+                <AppIcon name="check" :size="12" />
+              </span>
+              {{ point }}
+            </li>
+          </ul>
+        </template>
+
         <p
           v-if="mode !== 'start'"
-          class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#efe2ff] px-3.5 py-1.5 text-[13px] font-medium text-app-ink"
+          class="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[#efe2ff] px-3.5 py-1.5 text-[13px] font-medium text-app-ink"
         >
           {{ t('testLaunch.balance') }}
           <CoinIcon :size="14" class="text-app-ink" />

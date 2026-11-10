@@ -219,7 +219,16 @@ export const useTestCatalogStore = defineStore('testCatalog', () => {
     errorKind.value = ''
   }
 
+  // Premium tests worth offering next: not yet taken, unbought before bought,
+  // newest first. One subject when `key` is given, else all of them.
+  const premiumPicks = (key, limit = 3) =>
+    catalogue.value
+      .filter((test) => test.isPremium && test.state === 'new' && (!key || test.subjectKey === key))
+      .sort((a, b) => Number(a.isPurchased) - Number(b.isPurchased) || b.id - a.id)
+      .slice(0, limit)
+
   return {
+    premiumPicks,
     isLoading,
     errorKind,
     hasLoaded,

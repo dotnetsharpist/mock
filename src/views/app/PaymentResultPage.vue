@@ -25,6 +25,8 @@ import CoinIcon from '@/components/app/CoinIcon.vue'
 import SkeletonBlock from '@/components/app/SkeletonBlock.vue'
 import StatusBadge from '@/components/app/StatusBadge.vue'
 import PricingPaymentModal from '@/components/PricingPaymentModal.vue'
+import PremiumPicks from '@/components/app/PremiumPicks.vue'
+import { useTestCatalogStore } from '@/stores/testCatalog'
 import { usePricingPlans } from '@/composables/usePricingPlans'
 import { useBalanceStore } from '@/stores/balance'
 import { fetchPayment, formatSom, PAYMENT_STATUS, providerLabel } from '@/utils/payment'
@@ -42,6 +44,12 @@ const { t } = useI18n()
 const route = useRoute()
 const balanceStore = useBalanceStore()
 const { plans } = usePricingPlans()
+
+// Once paid, the tests to spend the tanga on, right here: spending soon after
+// buying is what brings a student back to buy again.
+const catalog = useTestCatalogStore()
+void catalog.load({ force: true })
+const picks = computed(() => catalog.premiumPicks('', 3))
 
 // checking   no answer yet
 // pending    the provider has not confirmed yet
@@ -363,6 +371,16 @@ const secondaryPill =
         </template>
       </div>
     </div>
+
+    <section
+      v-if="phase === 'approved' && picks.length"
+      class="mx-auto mt-4 max-w-[560px] rounded-[24px] bg-app-surface p-5 shadow-app-card sm:p-6"
+    >
+      <h3 class="text-[17px] font-medium tracking-[-0.01em] text-app-ink">
+        {{ t('appShell.paid.title') }}
+      </h3>
+      <PremiumPicks class="mt-4" :tests="picks" />
+    </section>
 
     <PricingPaymentModal
       :open="isPaymentOpen"

@@ -52,6 +52,22 @@ export default {
         haveAction: 'Testni tanlash',
         dismiss: 'Keyinroq',
       },
+      // Premium tests to take next (PremiumPicks), and the pop-up after a
+      // free test (NextStepDialog).
+      picks: {
+        open: 'Ochiq',
+        start: 'Boshlash',
+        all: 'Barcha premium testlar',
+      },
+      nextStep: {
+        score: 'Natijangiz: {percent}%',
+        lowBody: 'Bo‘shliqlarni yopish uchun shu fandan premium variantlarni yeching: haqiqiy imtihon formati, har bir savolga tahlil.',
+        highBody: 'Yaxshi natija! Endi haqiqiy imtihonga eng yaqin premium variantda o‘zingizni sinang.',
+        later: 'Keyinroq',
+      },
+      paid: {
+        title: 'Tangani hoziroq ishlating',
+      },
       nav: {
         label: 'Platforma menyusi',
         home: 'Bosh sahifa',
@@ -136,6 +152,20 @@ export default {
         haveBody: 'Решите премиум-вариант и проверьте готовность к экзамену.',
         haveAction: 'Выбрать тест',
         dismiss: 'Позже',
+      },
+      picks: {
+        open: 'Открыт',
+        start: 'Начать',
+        all: 'Все премиум-тесты',
+      },
+      nextStep: {
+        score: 'Ваш результат: {percent}%',
+        lowBody: 'Чтобы закрыть пробелы, решите премиум-варианты по этому предмету: настоящий формат экзамена и разбор каждого вопроса.',
+        highBody: 'Хороший результат! Теперь проверьте себя на премиум-варианте, ближе всего к настоящему экзамену.',
+        later: 'Позже',
+      },
+      paid: {
+        title: 'Используйте токены сразу',
       },
       nav: {
         label: 'Меню платформы',

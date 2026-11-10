@@ -67,6 +67,20 @@ const subject = computed(() => {
 
 const allTests = computed(() => catalog.testsForSubject(subjectKey.value))
 
+// ?open=<id> (from PremiumPicks): open that test's start/buy dialog once the
+// catalogue is in, then drop the flag so a reload does not reopen it.
+watch(
+  [() => route.query.open, () => catalog.hasLoaded],
+  ([id, loaded]) => {
+    if (!id || !loaded) return
+    const test = allTests.value.find((item) => String(item.id) === String(id))
+    const { open: _drop, ...rest } = route.query
+    void router.replace({ query: rest })
+    if (test) void openTest(test)
+  },
+  { immediate: true },
+)
+
 // Drives whether cards keep a badge line, so one premium test cannot make its
 // row taller than the cards beside it.
 const hasPremium = computed(() => allTests.value.some((test) => test.isPremium))
