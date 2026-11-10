@@ -31,12 +31,12 @@ const { t } = useI18n()
         aria-hidden="true"
       >
         <div
-          class="flex flex-col items-center rounded-3xl border-2 border-dashed border-app-ink/25 bg-app-surface px-12 py-10 text-center shadow-app-card"
+          class="app-iris flex flex-col items-center rounded-[28px] px-12 py-10 text-center shadow-app-card"
         >
-          <span class="flex h-14 w-14 items-center justify-center rounded-full bg-app-tile text-app-ink">
+          <span class="flex h-14 w-14 items-center justify-center rounded-full bg-white/70 text-app-ink ring-1 ring-white">
             <AppIcon name="upload" :size="24" />
           </span>
-          <p class="mt-4 text-[16px] font-semibold text-app-ink">{{ title || t('essayPage.drop.defaultTitle') }}</p>
+          <p class="mt-4 text-[18px] font-medium tracking-[-0.02em] text-app-ink">{{ title || t('essayPage.drop.defaultTitle') }}</p>
           <p v-if="hint" class="mt-1 text-[13px] text-app-muted">{{ hint }}</p>
         </div>
       </div>

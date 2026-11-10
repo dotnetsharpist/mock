@@ -1,130 +1,177 @@
 <script setup>
-// Hero, from `MilliyMock Landing.dc.html`.
-//
-// The design exposes two authoring props: `dashboardTilt` (default 0deg) and
-// `showPlayButton` (default true). Both are built at their defaults — a 0deg
-// rotation is a no-op, so no transform wrapper is emitted. The figure's lean is
-// baked into the render itself, not applied here.
-import { computed } from 'vue'
+// Hero: centred headline, then a switcher that shows the product itself. On the
+// landing page the switcher stands in for the navbar's links (see LandingNavbar).
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlatformEntry } from '@/composables/usePlatformEntry'
-import { useLiveTestCount } from '@/composables/useLiveTestCount'
-import dashboardFigure from '@/assets/landing/dashboard-figure.png'
+import dashboardShot from '@/assets/platforma/hero-dashboard.webp'
+import testShot from '@/assets/platforma/hero-test.webp'
+import essayShot from '@/assets/platforma/hero-essay.webp'
 
-const { t, locale } = useI18n()
+defineProps({
+  count: { type: Number, required: true },
+  countLabel: { type: String, required: true },
+  isLive: { type: Boolean, required: true },
+})
+
+const { t } = useI18n()
 const { start } = usePlatformEntry()
 
-// Social proof is the real number of tests taken on MilliyMock, counting up and
-// re-polling — the figure the old hero showed — rather than a claim about how
-// many people trust us.
-const { count, isLive } = useLiveTestCount()
-// Grouped the way each language reads it: "13,543" in Uzbek, as the design
-// has it, but "13 543" in Russian, where a comma is the decimal point.
-const countLabel = computed(() =>
-  count.value.toLocaleString(locale.value === 'ru' ? 'ru-RU' : 'en-US'),
-)
+// `copy` names the tab's alt and blurb in landing.preview. Tests has no public
+// page to link to.
+//
+// The images are 1600x667 layouts at 2x, wider than the /platforma captures so
+// the panel can fill the page width in one screen. Dashboard and essay are the
+// local dev app with staged sample data (the same "Aziz" figures as
+// bosh-sahifa.webp), test is the dev-only /biologiya/test. To retake one, keep
+// that ratio: the hero's panel is sized from it.
+const tabs = [
+  {
+    id: 'platform',
+    copy: 'dashboard',
+    image: dashboardShot,
+    to: '/platforma',
+    icon: 'M4 5h16v14H4zM9 5v14M13 15v-3M17 15V9',
+  },
+  {
+    id: 'tests',
+    copy: 'tests',
+    image: testShot,
+    icon: 'M6 3h12v18H6zM9.5 8H15M9.5 12H15M9.5 16H13',
+  },
+  {
+    id: 'essay',
+    copy: 'essay',
+    image: essayShot,
+    to: '/essay-tekshirish',
+    icon: 'M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17zM14 8l3 3',
+  },
+]
+
+const activeId = ref(tabs[0].id)
+const active = computed(() => tabs.find((tab) => tab.id === activeId.value))
+
 </script>
 
 <template>
-  <header
-    class="mx-auto box-content grid max-w-[1280px] grid-cols-1 items-center gap-y-[24px] px-[20px] pb-[64px] pt-[40px] sm:px-[32px] lg:grid-cols-[0.82fr_1.18fr] lg:gap-x-[56px] lg:gap-y-[36px] lg:px-[48px] lg:pb-[96px] lg:pt-[72px]"
-  >
+  <!-- overflow-x-clip: the glow is wider than the page on small screens.
+       From lg the whole hero fits one screen, like the design: type and gaps
+       scale with the window height, and the panel is as large as the space left
+       allows while showing the whole screenshot, never a crop. 104px is the
+       navbar (72) plus this block's padding (32). -->
+  <header class="overflow-x-clip">
     <div
-      class="flex animate-fade-up flex-col items-start lg:col-start-1 lg:row-start-1"
+      class="mx-auto box-content flex max-w-[1180px] min-[1800px]:max-w-[1420px] flex-col items-center px-[20px] pb-[24px] pt-[24px] text-center sm:px-[32px] lg:h-[calc(100svh-104px)] lg:min-h-[520px] lg:px-[48px] lg:pb-[24px] lg:pt-[8px]"
     >
-      <!-- DM Sans, not the Playfair `font-display`. The rule across the
-           marketing site is now: page titles are sans, section headings inside
-           a page keep the serif. -->
+      <p class="mb-[24px] inline-flex shrink-0 animate-fade-up items-center lg:mb-[clamp(8px,1.4vh,20px)] gap-[10px] text-[14px] text-muted">
+        <span
+          class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border border-hairline bg-white shadow-[0_2px_6px_rgba(17,17,17,0.06)]"
+          aria-hidden="true"
+        >
+          <!-- Pulsing dot only once a real total has landed, so it never claims
+               to be live while the static fallback is on screen. -->
+          <span v-if="isLive" class="relative flex h-[8px] w-[8px]" :title="t('landing.hero.liveTitle')">
+            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75"></span>
+            <span class="relative inline-flex h-[8px] w-[8px] rounded-full bg-emerald-500"></span>
+          </span>
+          <span v-else class="h-[8px] w-[8px] rounded-full bg-ink"></span>
+        </span>
+        <span>
+          <span class="font-semibold tabular-nums text-ink">{{ countLabel }}+</span>
+          {{ t('landing.hero.testsTaken', count) }}
+        </span>
+      </p>
+
       <h1
-        class="mb-[20px] text-[38px] font-bold leading-[1.12] tracking-[-0.025em] sm:mb-[28px] sm:text-[56px] sm:leading-[1.08] lg:text-[72px]"
+        class="mb-[20px] shrink-0 animate-fade-up text-[40px] font-normal leading-[1.08] tracking-[-0.015em] sm:text-[60px] lg:mb-[clamp(8px,1.4vh,20px)] lg:text-[clamp(44px,6.8vh,80px)]"
       >
         {{ t('landing.hero.titleStart') }}
-        <span class="text-accent">{{ t('landing.hero.titleHighlight') }}</span>
+        <span class="block text-accent">{{ t('landing.hero.titleHighlight') }}</span>
       </h1>
 
-      <!-- One line at this measure. The old three-line version listed the
-           product's parts, which the feature columns below already do. -->
-      <p class="mb-[32px] max-w-[400px] text-[17px] leading-[1.6] text-muted sm:mb-[40px] sm:text-[19px] sm:leading-[1.65]">
+      <p class="mb-[28px] max-w-[520px] shrink-0 animate-fade-up text-[17px] leading-[1.6] text-muted sm:text-[19px] lg:mb-[clamp(10px,1.8vh,24px)] lg:text-[clamp(15px,2vh,19px)]">
         <i18n-t keypath="landing.hero.tagline" scope="global">
           <template #brand><span class="text-ink">Milliy Mock</span></template>
         </i18n-t>
       </p>
 
-      <div class="flex flex-wrap items-center gap-[24px]">
-        <RouterLink
-          :to="start"
-          class="inline-flex items-center gap-[10px] whitespace-nowrap rounded-full bg-ink px-[30px] py-[16px] text-[16px] font-medium text-white transition-transform duration-200 hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink motion-reduce:hover:scale-100"
-        >
-          {{ t('landing.startFree') }} <span aria-hidden="true">→</span>
-        </RouterLink>
+      <RouterLink
+        :to="start"
+        class="inline-flex shrink-0 animate-fade-up items-center gap-[10px] whitespace-nowrap rounded-full bg-ink px-[30px] py-[15px] text-[16px] lg:py-[clamp(10px,1.4vh,15px)] font-medium text-white transition-transform duration-200 hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink motion-reduce:hover:scale-100"
+      >
+        {{ t('landing.startFree') }} <span aria-hidden="true">→</span>
+      </RouterLink>
 
-        <!-- HIDDEN FOR NOW (by request) — the "Qanday ishlaydi?" play button.
-             It still works: it points at /platforma, whose screen tour and
-             four-step walkthrough are the real answer. Delete the v-if to
-             bring it back; nothing else about it changed. -->
-        <RouterLink
-          v-if="false"
-          to="/platforma"
-          class="inline-flex items-center gap-[14px] whitespace-nowrap rounded-full text-[16px] font-medium text-ink transition-transform duration-200 hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink motion-reduce:hover:scale-100"
+      <div class="relative mt-[40px] w-full animate-fade-up-late lg:mt-[clamp(12px,2.2vh,32px)] lg:flex lg:max-h-[788px] lg:min-h-0 lg:flex-1 lg:flex-col">
+        <!-- Scrolls sideways on a phone rather than wrapping into two rows. -->
+        <div
+          class="relative z-10 mx-auto mb-[28px] flex w-fit max-w-full shrink-0 gap-[4px] overflow-x-auto rounded-full bg-[#ebebeb] p-[5px] [scrollbar-width:none] lg:mb-[clamp(12px,2vh,28px)]"
+          role="group"
+          :aria-label="t('landingNav.label')"
         >
-          <span
-            class="inline-flex h-[44px] w-[44px] items-center justify-center rounded-full bg-white shadow-[0_4px_14px_rgba(17,17,17,0.08)]"
+          <button
+            v-for="tab in tabs"
+            :key="tab.id"
+            type="button"
+            :aria-pressed="tab.id === activeId"
+            class="inline-flex shrink-0 items-center gap-[9px] whitespace-nowrap rounded-full px-[16px] py-[9px] text-[15px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
+            :class="tab.id === activeId ? 'bg-white text-ink shadow-[0_1px_4px_rgba(17,17,17,0.10)]' : 'text-navlink hover:text-ink'"
+            @click="activeId = tab.id"
           >
-            <svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true">
-              <path d="M3.8 2.4 L11.4 7 L3.8 11.6 Z" fill="#111111" />
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path :d="tab.icon" />
             </svg>
-          </span>
-          {{ t('landing.hero.howItWorks') }}
-        </RouterLink>
+            {{ t(`landingNav.${tab.id}`) }}
+          </button>
+        </div>
+
+        <!-- The size container lets the panel take its width from the height left:
+             the smaller of the full width and that height at the captures' ratio.
+             Every image stays mounted so switching tabs cross-fades instead of
+             flashing while the next one decodes. -->
+        <div class="lg:flex lg:min-h-0 lg:flex-1 lg:justify-center lg:[container-type:size]">
+          <div class="relative w-full lg:w-[min(100cqw,calc(100cqh*1600/667))]">
+            <div class="landing-glow -inset-x-[48px] -bottom-[24px] -top-[72px]" aria-hidden="true"></div>
+            <div
+              class="relative aspect-[1600/667] overflow-hidden rounded-[20px] border border-white/80 bg-white shadow-[0_24px_70px_-30px_rgba(17,15,14,0.28)] sm:rounded-[28px]"
+            >
+              <img
+                v-for="(tab, index) in tabs"
+                :key="tab.id"
+                :src="tab.image"
+                :alt="tab.id === activeId ? t(`landing.preview.${tab.copy}.alt`) : ''"
+                :loading="index === 0 ? 'eager' : 'lazy'"
+                class="absolute inset-0 h-full w-full object-cover transition-opacity duration-300 motion-reduce:transition-none"
+                :class="tab.id === activeId ? 'opacity-100' : 'opacity-0'"
+              />
+            </div>
+          </div>
+        </div>
       </div>
-
     </div>
 
-    <!-- Mobile: the figure bleeds to both screen edges (-mx cancels the page
-         padding). The asset is a tilted render whose left silhouette runs on a
-         diagonal — measured from its alpha channel, the device edge sits at
-         12.4% of the image width across the top but only 1.7% at the bottom —
-         so it can't be aligned to the text margin without clipping one corner.
-         110% wide offset by -10% pulls that straight vertical edge to ~14px
-         from the screen edge while the scale keeps the asset's own right-hand
-         crop on the right edge (110 - 10 = 100). Only the tablet's lower-left
-         corner flare runs off screen — no dashboard content is cut. -->
-    <div
-      class="order-3 -mx-[20px] mt-[16px] overflow-hidden sm:-mx-[32px] lg:mx-0 lg:mt-0 lg:overflow-visible lg:col-start-2 lg:row-span-2 lg:row-start-1"
+    <p
+      class="relative mx-auto max-w-[760px] px-[20px] pb-[32px] pt-[16px] text-center text-[15px] leading-[1.6] text-muted sm:text-[16px] lg:pb-0"
+      aria-live="polite"
     >
-      <img
-        :src="dashboardFigure"
-        :alt="t('landing.hero.figureAlt')"
-        width="1532"
-        height="925"
-        loading="lazy"
-        class="-ml-[10%] block w-[110%] max-w-none drop-shadow-[0_34px_48px_rgba(17,17,17,0.10)] lg:ml-auto lg:w-full lg:max-w-[720px]"
-      />
-    </div>
-
-    <!-- On a phone the proof line follows the buttons and sits above the
-         screenshot (order-2 vs the image's order-3); on lg the explicit
-         row/col placement takes over and it returns beneath the buttons. -->
-    <div class="order-2 animate-fade-up-late lg:col-start-1 lg:row-start-2">
-      <!-- No card, no border, no shadow: the figure sits directly on the page
-           like the rest of the hero copy. -->
-      <p class="inline-flex items-center gap-[8px] text-[14px] text-muted">
-        <!-- Pulsing dot only once a real total has landed, so it never claims
-             to be live while the static fallback is on screen. -->
-        <span
-          v-if="isLive"
-          class="relative flex h-[6px] w-[6px]"
-          :title="t('landing.hero.liveTitle')"
-          aria-hidden="true"
-        >
-          <span
-            class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75"
-          ></span>
-          <span class="relative inline-flex h-[6px] w-[6px] rounded-full bg-emerald-500"></span>
-        </span>
-        <span class="font-semibold tabular-nums text-ink">{{ countLabel }}+</span>
-        {{ t('landing.hero.testsTaken', count) }}
-      </p>
-    </div>
+      {{ t(`landing.preview.${active.copy}.blurb`) }}
+      <RouterLink
+        v-if="active.to"
+        :to="active.to"
+        class="whitespace-nowrap font-medium text-ink underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+      >
+        {{ t('landing.hero.more') }}
+      </RouterLink>
+    </p>
   </header>
 </template>

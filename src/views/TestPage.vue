@@ -1917,15 +1917,29 @@ onBeforeUnmount(() => {
       @back="closeFinishOverlay"
     />
 
-    <!-- Untimed tests (remainingSeconds null) show no timer at all. -->
-    <TestFloatingTools
+    <!-- Untimed tests (remainingSeconds null) show no timer at all.
+         The timer must never sit on the sheet. From 1360px a smaller pill
+         (~190px) fits in the margin just outside the sheet's right edge (the
+         sheet is 920px, centred), level with the sheet's top. Narrower, there
+         is no room beside it, so it lives in a strip above the sheet that stays
+         at the top while the sheet scrolls beneath it. -->
+    <div
       v-if="currentTest && remainingSeconds !== null"
-      :remaining-seconds="remainingSeconds"
-      pausable
-      :pause-disabled="isPauseBusy || isSubmittingTest"
-      :pause-label="t('testPage.pause.button')"
-      @pause="pauseTest"
-    />
+      class="sticky top-0 z-30 -mt-2 bg-[#f5f3ef]/90 px-3 py-2 backdrop-blur-sm sm:-mt-6 sm:px-5 sm:py-3 min-[1360px]:pointer-events-none min-[1360px]:fixed min-[1360px]:left-[calc(50%+476px)] min-[1360px]:top-12 min-[1360px]:mt-0 min-[1360px]:bg-transparent min-[1360px]:p-0 min-[1360px]:backdrop-blur-none"
+    >
+      <div class="mx-auto flex max-w-[920px] justify-end min-[1360px]:max-w-none">
+        <TestFloatingTools
+          inline
+          rail
+          class="pointer-events-auto"
+          :remaining-seconds="remainingSeconds"
+          pausable
+          :pause-disabled="isPauseBusy || isSubmittingTest"
+          :pause-label="t('testPage.pause.button')"
+          @pause="pauseTest"
+        />
+      </div>
+    </div>
 
     <TestPauseOverlay
       v-if="currentTest && isPaused"

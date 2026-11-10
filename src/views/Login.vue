@@ -120,21 +120,21 @@ onMounted(() => {
 <template>
   <AuthLayout>
     <div class="mb-8 text-center">
-      <h1 class="text-3xl font-bold tracking-[-0.02em] text-[#1a1814]">
+      <h1 class="text-[40px] font-medium leading-[1.1] tracking-[-0.015em] text-ink">
         {{ t('login.title') }}
       </h1>
-      <p class="mt-3 text-sm leading-relaxed text-[#6b6760]">
+      <p class="mt-3 text-[16px] leading-[1.5] text-muted">
         {{ t('login.description') }}
       </p>
     </div>
 
-    <div class="rounded-[24px] border border-[#e4e0d8] bg-white p-7 shadow-[0_18px_50px_rgba(26,24,20,0.08)] ring-1 ring-[#f0ece5]">
+    <div>
       <!-- Email/phone + password login (POST /auth/login). -->
       <form novalidate @submit.prevent="submitPasswordLogin">
         <div>
           <label
             for="login-identifier"
-            class="mb-1.5 block text-[13px] font-semibold text-[#1a1814]"
+            class="mb-1.5 block text-[14px] font-semibold text-ink"
           >
             {{ t('login.email') }}
           </label>
@@ -145,7 +145,7 @@ onMounted(() => {
             name="username"
             autocomplete="username"
             :placeholder="t('login.emailPlaceholder')"
-            class="w-full rounded-xl border-[1.5px] border-[#dcd8d0] bg-white px-4 py-3 text-[15px] text-[#1a1814] outline-none transition placeholder:text-[#b5b0a6] focus:border-[#1a1814]"
+            class="w-full rounded-xl border border-hairline-strong bg-white px-4 py-3 text-[15px] text-ink outline-none transition placeholder:text-accent focus:border-ink"
           />
         </div>
 
@@ -153,13 +153,13 @@ onMounted(() => {
           <div class="mb-1.5 flex items-center justify-between">
             <label
               for="login-password"
-              class="text-[13px] font-semibold text-[#1a1814]"
+              class="text-[14px] font-semibold text-ink"
             >
               {{ t('login.password') }}
             </label>
             <router-link
               :to="forgotLocation"
-              class="text-[13px] font-semibold text-[#1a1814] underline decoration-[#1a1814]/30 underline-offset-2 transition hover:decoration-[#1a1814]"
+              class="text-[13px] font-semibold text-ink underline decoration-ink/30 underline-offset-2 transition hover:decoration-ink"
             >
               {{ t('login.forgot') }}
             </router-link>
@@ -172,11 +172,11 @@ onMounted(() => {
               name="password"
               autocomplete="current-password"
               :placeholder="t('login.passwordPlaceholder')"
-              class="w-full rounded-xl border-[1.5px] border-[#dcd8d0] bg-white py-3 pl-4 pr-24 text-[15px] text-[#1a1814] outline-none transition placeholder:text-[#b5b0a6] focus:border-[#1a1814]"
+              class="w-full rounded-xl border border-hairline-strong bg-white py-3 pl-4 pr-24 text-[15px] text-ink outline-none transition placeholder:text-accent focus:border-ink"
             />
             <button
               type="button"
-              class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[#8a857c] transition hover:text-[#1a1814]"
+              class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-muted transition hover:text-ink"
               @click="showPassword = !showPassword"
             >
               {{ showPassword ? t('login.hide') : t('login.show') }}
@@ -205,10 +205,10 @@ onMounted(() => {
             :telegram-label="t('login.telegram')"
             @authenticated="redirectAfterAuth"
           />
-          <p class="mt-3 text-center text-[13px] text-[#6b6760]">
+          <p class="mt-3 text-center text-[13px] text-muted">
             <router-link
               :to="registerLocation"
-              class="font-semibold text-[#1a1814] underline decoration-[#1a1814]/30 underline-offset-2 transition hover:decoration-[#1a1814]"
+              class="font-semibold text-ink underline decoration-ink/30 underline-offset-2 transition hover:decoration-ink"
             >
               {{ t('login.createAccount') }}
             </router-link>
@@ -226,16 +226,16 @@ onMounted(() => {
         <button
           type="submit"
           :disabled="authStore.isLoading"
-          class="mt-5 h-11 w-full rounded-full bg-[#1a1814] text-[15px] font-semibold text-white transition hover:bg-[#2b2b2b] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+          class="mt-5 h-11 w-full rounded-full bg-ink text-[15px] font-medium text-white transition hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
         >
           {{ authStore.isLoading ? t('login.loading') : t('login.submit') }}
         </button>
       </form>
 
       <div class="my-5 flex items-center gap-3">
-        <div class="h-px flex-1 bg-[#e4e0d8]"></div>
-        <span class="text-xs text-[#8a857c]">{{ t('login.or') }}</span>
-        <div class="h-px flex-1 bg-[#e4e0d8]"></div>
+        <div class="h-px flex-1 bg-hairline"></div>
+        <span class="text-xs text-muted">{{ t('login.or') }}</span>
+        <div class="h-px flex-1 bg-hairline"></div>
       </div>
 
       <!-- Telegram + Google. Both register as well as log in; success routes

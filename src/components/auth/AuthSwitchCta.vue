@@ -12,10 +12,10 @@ defineProps({
 
 <template>
   <div class="mt-6">
-    <p class="mb-2.5 text-center text-[13px] font-medium text-[#6b6760]">{{ question }}</p>
+    <p class="mb-2.5 text-center text-[13px] font-medium text-muted">{{ question }}</p>
     <router-link
       :to="to"
-      class="flex h-11 w-full items-center justify-center rounded-full border-[1.5px] border-[#1a1814] text-[15px] font-semibold text-[#1a1814] transition hover:bg-[#1a1814] hover:text-white active:scale-[0.99]"
+      class="flex h-11 w-full items-center justify-center rounded-full border-[1.5px] border-ink text-[15px] font-semibold text-ink transition hover:bg-ink hover:text-white active:scale-[0.99]"
     >
       {{ action }}
     </router-link>

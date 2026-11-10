@@ -282,7 +282,7 @@ const quoteMarkStyle = (error) => {
            size of the figures that qualify it. -->
       <div class="shrink-0">
         <p class="flex items-baseline gap-1">
-          <span class="text-[44px] font-bold leading-none tracking-[-0.04em] tabular-nums text-app-ink">
+          <span class="text-[52px] font-normal leading-none tracking-[-0.045em] tabular-nums text-app-ink">
             {{ bandTotal ?? '—' }}
           </span>
           <span class="text-[20px] font-semibold leading-none tabular-nums text-app-muted">
@@ -299,7 +299,7 @@ const quoteMarkStyle = (error) => {
       <div class="flex flex-wrap items-end gap-x-7 gap-y-4">
         <div>
           <p class="flex items-baseline gap-0.5">
-            <span class="text-[22px] font-bold leading-none tracking-[-0.02em] tabular-nums text-app-ink">
+            <span class="text-[26px] font-normal leading-none tracking-[-0.035em] tabular-nums text-app-ink">
               {{ scaledBandTotal ?? '—' }}
             </span>
             <span class="text-[14px] font-semibold leading-none tabular-nums text-app-muted">
@@ -312,7 +312,7 @@ const quoteMarkStyle = (error) => {
         </div>
 
         <div>
-          <p class="text-[22px] font-bold leading-none tracking-[-0.02em] tabular-nums text-app-ink">
+          <p class="text-[26px] font-normal leading-none tracking-[-0.035em] tabular-nums text-app-ink">
             {{ essayWordCount }}
           </p>
           <p class="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-app-muted">
@@ -321,7 +321,7 @@ const quoteMarkStyle = (error) => {
         </div>
 
         <div>
-          <p class="text-[22px] font-bold leading-none tracking-[-0.02em] tabular-nums text-app-ink">
+          <p class="text-[26px] font-normal leading-none tracking-[-0.035em] tabular-nums text-app-ink">
             {{ flatErrors.length }}
           </p>
           <p class="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-app-muted">
@@ -351,7 +351,7 @@ const quoteMarkStyle = (error) => {
         </span>
         <span
           v-if="sample"
-          class="rounded-full border border-app-border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-app-muted"
+          class="rounded-full bg-[#efe2ff] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-app-ink"
         >
           {{ t('essayAnalysis.sample') }}
         </span>
@@ -372,13 +372,13 @@ const quoteMarkStyle = (error) => {
       <button
         type="button"
         @click="toggleAllCats"
-        class="inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition active:scale-[0.98]"
+        class="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[12px] font-medium transition active:scale-[0.98]"
         :class="allCatsActive
-          ? 'border-app-ink bg-app-ink text-app-surface'
-          : 'border-app-border bg-app-surface text-app-muted hover:border-app-ink hover:text-app-ink'"
+          ? 'bg-app-ink text-white'
+          : 'bg-app-tile text-app-ink hover:bg-app-warm'"
       >
         {{ t('essayAnalysis.all') }}
-        <span class="tabular-nums" :class="allCatsActive ? 'text-app-surface/60' : 'text-app-muted'">{{ flatErrors.length }}</span>
+        <span class="tabular-nums" :class="allCatsActive ? 'text-white' : 'text-app-ink'">{{ flatErrors.length }}</span>
       </button>
       <button
         v-for="cat in errorCatsWithHits"
@@ -386,10 +386,10 @@ const quoteMarkStyle = (error) => {
         type="button"
         @click="toggleCat(cat)"
         :aria-pressed="isCatActive(cat)"
-        class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition active:scale-[0.98]"
+        class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] font-medium transition active:scale-[0.98]"
         :class="isCatActive(cat)
-          ? 'border-app-border bg-app-surface text-app-ink'
-          : 'border-app-border bg-transparent text-app-muted opacity-70'"
+          ? 'bg-app-surface text-app-ink shadow-app-card'
+          : 'bg-app-tile text-app-ink line-through decoration-app-ink/40'"
       >
         <span
           class="inline-block h-2.5 w-2.5 rounded-[3px]"
@@ -422,7 +422,7 @@ const quoteMarkStyle = (error) => {
       <!-- Annotated essay -->
       <article
         ref="essayPane"
-        class="rounded-2xl bg-app-surface p-6 border border-app-border shadow-app-card sm:p-8 lg:max-h-[76vh] lg:overflow-y-auto lg:[scrollbar-width:thin]"
+        class="rounded-[24px] bg-app-surface p-6 shadow-app-card sm:p-8 lg:max-h-[76vh] lg:overflow-y-auto lg:[scrollbar-width:thin]"
       >
         <h4 class="text-[16px] font-bold tracking-[-0.01em] text-app-ink">{{ t('essayAnalysis.essayHeading') }}</h4>
         <p class="mb-5 mt-1 text-[10px] font-normal uppercase tracking-[0.14em] text-app-muted">
@@ -492,7 +492,7 @@ const quoteMarkStyle = (error) => {
             @mouseenter="setActiveError(error.id)"
             @mouseleave="clearActiveError(error.id)"
             @click="jumpToMark(error.id)"
-            class="mb-2.5 block w-full rounded-xl bg-app-surface px-4 py-3.5 text-left border border-app-border shadow-app-card transition duration-150"
+            class="mb-2.5 block w-full rounded-[20px] bg-app-surface px-4 py-3.5 text-left shadow-app-card transition duration-150 hover:-translate-y-0.5"
           >
             <p class="text-[13px] font-semibold leading-[1.5] text-app-ink">
               <span :style="quoteMarkStyle(error)" class="px-0.5">{{ error.quote.length > 90 ? `${error.quote.slice(0, 90)}…` : error.quote }}</span>

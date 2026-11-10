@@ -58,10 +58,13 @@ export function useDashboardData() {
   const resultsByAttempt = ref(new Map())
   const isLoading = ref(true)
   const errorKind = ref('')
+  // 'loading' | 'done' | 'failed'. Failed can still have some scores in it.
+  const scoresState = ref('loading')
 
   async function load() {
     isLoading.value = true
     errorKind.value = ''
+    scoresState.value = 'loading'
 
     essays.value = loadEssayCheckings()
 
@@ -76,18 +79,30 @@ export function useDashboardData() {
 
     isLoading.value = false
 
-    // Scores resolve after the page is already usable: the titles, dates and
-    // counts are on screen from the call above, and each percentage fills in as
-    // it lands. One slow attempt must not hold up the whole dashboard.
+    await resolveScores()
+  }
+
+  // Scores resolve after the page is already usable: the titles, dates and counts
+  // are on screen from the call above, and each percentage fills in as it lands.
+  // One slow attempt must not hold up the whole dashboard. Also the retry: it only
+  // asks for what is still missing.
+  async function resolveScores() {
+    scoresState.value = 'loading'
     const recent = finishedAttempts.value.slice(0, RESULT_WINDOW)
     const settled = await Promise.allSettled(
-      recent.map(async (attempt) => [attempt.id, await fetchAttemptScore(attempt.id)]),
+      recent
+        .filter((attempt) => !resultsByAttempt.value.has(attempt.id))
+        .map(async (attempt) => {
+          const score = await fetchAttemptScore(attempt.id)
+          resultsByAttempt.value = new Map(resultsByAttempt.value).set(attempt.id, score)
+        }),
     )
-    const next = new Map(resultsByAttempt.value)
-    for (const entry of settled) {
-      if (entry.status === 'fulfilled') next.set(entry.value[0], entry.value[1])
-    }
-    resultsByAttempt.value = next
+    const failure = settled.find((entry) => entry.status === 'rejected')
+    if (failure) console.error(failure.reason)
+    // Failed is its own state: without it a score that never arrives reads as
+    // "still calculating" forever, and the chart tells a student with eighteen
+    // tests to go and sit two.
+    scoresState.value = failure ? 'failed' : 'done'
   }
 
   // ——— Derived ————————————————————————————————————————————————————————————
@@ -195,21 +210,12 @@ export function useDashboardData() {
         finishedAt: a.finishedAt,
       }))
 
-  // Change across the drawn window, in percentage points — the "+12% o‘sish"
-  // badge. Needs two points to be a change at all; one score is not a trend.
-  const growthOver = (points) => {
-    if (points.length < 2) return null
-    const change = points[points.length - 1].value - points[0].value
-    return {
-      amount: Math.abs(change),
-      direction: change === 0 ? 'flat' : change > 0 ? 'up' : 'down',
-    }
-  }
-
   return {
     isLoading,
     errorKind,
+    scoresState,
     load,
+    resolveScores,
     attempts,
     essays,
     finishedAttempts,
@@ -221,7 +227,6 @@ export function useDashboardData() {
     todayCount,
     weekComparison,
     scorePoints,
-    growthOver,
     RESULT_WINDOW,
   }
 }

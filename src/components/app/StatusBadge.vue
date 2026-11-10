@@ -20,9 +20,11 @@ const props = defineProps({
 const toneClass = computed(
   () =>
     ({
-      good: 'bg-app-good-bg text-app-good',
-      bad: 'bg-app-bad-bg text-app-bad',
-      info: 'bg-app-info-bg text-app-info',
+      // Soft pastels from the landing palette, ink text: the colour carries
+      // the meaning, the words stay black and readable.
+      good: 'bg-[#e1f5e8] text-app-ink',
+      bad: 'bg-[#ffe2ec] text-app-ink',
+      info: 'bg-[#efe2ff] text-app-ink',
       neutral: 'bg-app-tile text-app-ink',
     })[props.tone],
 )
@@ -30,7 +32,7 @@ const toneClass = computed(
 
 <template>
   <span
-    class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-semibold"
+    class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-medium"
     :class="toneClass"
   >
     <slot />

@@ -24,6 +24,7 @@ import {
   wordEssayMessage,
 } from '@/composables/useEssayCenter'
 import { useWindowFileDrop } from '@/composables/useWindowFileDrop'
+import { subjectTint } from '@/components/app/subjects.js'
 
 defineProps({
   user: { type: Object, required: true },
@@ -105,6 +106,11 @@ const { isDragging } = useWindowFileDrop(
     submitError.value = message
   },
 )
+
+// Topic cards take turns through the landing's pastels, the way subject cards
+// on Testlar each have their own — a wall of white cards read as a form.
+const TOPIC_TINTS = ['math', 'motherTongue', 'physics', 'history', 'biology', 'english']
+const topicTint = (index) => subjectTint(TOPIC_TINTS[index % TOPIC_TINTS.length]).background
 </script>
 
 <template>
@@ -170,16 +176,16 @@ const { isDragging } = useWindowFileDrop(
              that exists yet. -->
         <button
           type="button"
-          class="group flex min-h-[196px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-app-border bg-app-surface p-5 text-center transition-colors hover:border-app-ink/25 hover:bg-app-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+          class="group flex min-h-[196px] flex-col items-center justify-center gap-3 rounded-[24px] border-2 border-dashed border-app-ink/15 bg-app-surface p-5 text-center transition-colors hover:border-app-ink/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
           @click="openAdd"
         >
           <span
-            class="flex h-11 w-11 items-center justify-center rounded-full bg-app-tile text-app-ink transition-colors group-hover:bg-app-surface"
+            class="app-btn-ink flex h-11 w-11 items-center justify-center rounded-full transition-transform group-hover:scale-110"
           >
             <AppIcon name="plus" :size="20" />
           </span>
           <span>
-            <span class="block text-[14px] font-semibold text-app-ink">{{ t('essayPage.addOwn.title') }}</span>
+            <span class="block text-[15px] font-medium text-app-ink">{{ t('essayPage.addOwn.title') }}</span>
             <span class="mt-1 block max-w-[210px] text-[12.5px] leading-[1.5] text-app-muted">
               {{ t('essayPage.addOwn.hint') }}
             </span>
@@ -187,13 +193,14 @@ const { isDragging } = useWindowFileDrop(
         </button>
 
         <article
-          v-for="topic in displayTopics"
+          v-for="(topic, index) in displayTopics"
           :key="topic.id"
-          class="flex min-h-[196px] flex-col rounded-2xl border border-app-border bg-app-surface p-5 shadow-app-card transition-colors hover:border-app-ink/15"
+          class="flex min-h-[196px] flex-col rounded-[24px] p-5 transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-20px_rgba(60,40,120,0.35)] motion-reduce:hover:translate-y-0"
+          :style="{ background: topicTint(index) }"
         >
           <div class="flex items-start justify-between gap-3">
             <span
-              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-app-tile text-app-ink"
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/70 text-app-ink ring-1 ring-white"
               aria-hidden="true"
             >
               <AppIcon name="essay" :size="18" />
@@ -201,7 +208,7 @@ const { isDragging } = useWindowFileDrop(
             <button
               v-if="topic.own"
               type="button"
-              class="flex h-8 w-8 items-center justify-center rounded-full border border-app-border text-app-muted transition-colors hover:border-app-bad/40 hover:bg-app-bad-bg hover:text-app-bad focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:opacity-40"
+              class="flex h-8 w-8 items-center justify-center rounded-full bg-white/60 text-app-ink transition-colors hover:bg-app-bad-bg hover:text-app-bad focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:opacity-40"
               :disabled="deletingTopicId === topic.id"
               :aria-label="t('essayPage.removeTopic', { topic: topic.text })"
               @click="removeTopic(topic)"
@@ -211,7 +218,7 @@ const { isDragging } = useWindowFileDrop(
           </div>
 
           <h3
-            class="mt-3.5 line-clamp-3 text-[14.5px] font-bold leading-[1.4] tracking-[-0.01em] text-app-ink"
+            class="mt-3.5 line-clamp-3 text-[15.5px] font-medium leading-[1.4] tracking-[-0.015em] text-app-ink"
             :title="topic.text"
           >
             {{ topic.text }}
@@ -219,16 +226,16 @@ const { isDragging } = useWindowFileDrop(
 
           <span
             class="mt-2.5 inline-flex w-fit rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em]"
-            :class="topic.own ? 'bg-app-ink text-app-surface' : 'bg-app-tile text-app-muted'"
+            :class="topic.own ? 'bg-app-ink text-white' : 'bg-white/70 text-app-ink'"
           >
             {{ topic.tag }}
           </span>
 
           <div class="mt-auto flex items-center justify-between gap-3 pt-5">
-            <span class="text-[12px] text-app-muted">{{ topic.meta }}</span>
+            <span class="text-[12px] text-app-ink">{{ topic.meta }}</span>
             <button
               type="button"
-              class="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-app-ink px-3.5 py-2 text-[13px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+              class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-app-ink px-4 py-2 text-[13px] font-medium text-white transition-transform hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
               @click="startTopic(topic)"
             >
               {{ t('essayPage.start') }}
@@ -243,22 +250,25 @@ const { isDragging } = useWindowFileDrop(
     <template v-else-if="view === 'writer'">
       <button
         type="button"
-        class="mb-4 inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-app-muted transition-colors hover:text-app-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+        class="mb-4 inline-flex items-center gap-1.5 rounded-full bg-app-surface px-4 py-2 text-[13px] font-medium text-app-ink shadow-app-card transition-colors hover:bg-app-warm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
         @click="backToList"
       >
         <AppIcon name="arrowLeft" :size="15" />
         {{ t('essayPage.backToTopics') }}
       </button>
 
-      <AppCard>
-        <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-app-muted">
-          {{ t('essayPage.topicLabel') }}
-        </p>
-        <h2 class="mt-2 max-w-3xl whitespace-pre-line text-[18px] font-bold leading-[1.4] tracking-[-0.015em] text-app-ink">
-          {{ activeTopic?.text }}
-        </h2>
+      <div class="rounded-[24px] bg-app-surface p-5 shadow-app-card sm:p-6">
+        <!-- The topic is the one thing on this screen worth noticing. -->
+        <div class="app-iris rounded-[20px] p-5">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-app-ink">
+            {{ t('essayPage.topicLabel') }}
+          </p>
+          <h2 class="mt-2 max-w-3xl whitespace-pre-line text-[19px] font-medium leading-[1.4] tracking-[-0.02em] text-app-ink">
+            {{ activeTopic?.text }}
+          </h2>
+        </div>
 
-        <div class="mt-5 inline-flex gap-1 rounded-full bg-app-sunken p-1">
+        <div class="mt-5 inline-flex gap-1 rounded-full bg-app-tile p-1">
           <button
             v-for="option in [
               { id: 'upload', label: t('essayPage.modes.upload') },
@@ -266,8 +276,8 @@ const { isDragging } = useWindowFileDrop(
             ]"
             :key="option.id"
             type="button"
-            class="rounded-full px-4 py-1.5 text-[13px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
-            :class="mode === option.id ? 'bg-app-ink text-app-surface' : 'text-app-muted hover:text-app-ink'"
+            class="rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+            :class="mode === option.id ? 'bg-app-ink text-white' : 'text-app-ink hover:bg-app-warm'"
             :aria-pressed="mode === option.id"
             @click="mode = option.id"
           >
@@ -279,23 +289,23 @@ const { isDragging } = useWindowFileDrop(
           v-if="mode === 'write'"
           v-model="essayText"
           :placeholder="t('essayPage.placeholder')"
-          class="mt-5 min-h-[320px] w-full resize-y rounded-xl border border-app-border bg-app-sunken p-5 text-[15px] leading-[1.75] text-app-ink outline-none transition-colors placeholder:text-app-muted focus:border-app-ink focus:bg-app-surface"
+          class="mt-5 min-h-[320px] w-full resize-y rounded-[20px] border border-app-border bg-app-surface p-5 text-[15px] leading-[1.75] text-app-ink outline-none transition-shadow placeholder:text-app-ink/60 focus:ring-2 focus:ring-[#d9ccff]"
         ></textarea>
 
         <div v-else class="mt-5">
           <div
-            class="flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed px-6 py-10 text-center transition-colors"
-            :class="isDragging ? 'border-app-ink bg-app-surface' : 'border-app-border bg-app-sunken hover:border-app-ink/40'"
+            class="flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-[20px] border-2 border-dashed px-6 py-10 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d9ccff]"
+            :class="isDragging ? 'border-app-ink bg-[#efe2ff]' : 'border-app-ink/15 bg-app-surface hover:border-app-ink/40'"
             role="button"
             tabindex="0"
             @click="fileInput?.click()"
             @keydown.enter.prevent="fileInput?.click()"
             @keydown.space.prevent="fileInput?.click()"
           >
-            <span class="flex h-12 w-12 items-center justify-center rounded-full bg-app-tile text-app-ink">
+            <span class="app-btn-ink flex h-12 w-12 items-center justify-center rounded-full">
               <AppIcon name="upload" :size="22" />
             </span>
-            <p class="mt-3 text-[14px] font-semibold text-app-ink">
+            <p class="mt-3 text-[15px] font-medium text-app-ink">
               {{ t('essayPage.drop.title') }}
             </p>
             <p class="mt-1 text-[12.5px] text-app-muted">
@@ -318,17 +328,17 @@ const { isDragging } = useWindowFileDrop(
             <div
               v-for="(upload, index) in uploads"
               :key="upload.id"
-              class="group relative overflow-hidden rounded-xl border border-app-border bg-app-sunken"
+              class="group relative overflow-hidden rounded-[16px] bg-app-tile"
             >
               <img :src="upload.dataUrl" :alt="upload.name" class="h-32 w-full object-cover" />
               <span
-                class="absolute left-2 top-2 rounded-md bg-app-ink/80 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-app-surface"
+                class="absolute left-2 top-2 rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-app-ink ring-1 ring-white"
               >
                 {{ t('essayPage.pageBadge', { n: index + 1 }) }}
               </span>
               <button
                 type="button"
-                class="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-app-ink/80 text-app-surface opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+                class="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-app-ink text-white opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
                 :aria-label="t('essayPage.removePage', { n: index + 1 })"
                 @click.stop="removeUpload(upload.id)"
               >
@@ -343,7 +353,7 @@ const { isDragging } = useWindowFileDrop(
         <div class="mt-5 flex flex-wrap items-center justify-between gap-4">
           <p class="text-[13px] text-app-muted">
             <template v-if="mode === 'write'">
-              <span class="font-semibold text-app-ink">{{ wordCount }}</span> {{ t('essayPage.wordsSuffix', wordCount) }}
+              <span class="font-medium text-app-ink">{{ wordCount }}</span> {{ t('essayPage.wordsSuffix', wordCount) }}
               <template v-if="essayText.length > MAX_ESSAY_LENGTH * 0.9">
                 ·
                 <span :class="essayText.length > MAX_ESSAY_LENGTH ? 'font-semibold text-app-bad' : ''">
@@ -352,37 +362,37 @@ const { isDragging } = useWindowFileDrop(
               </template>
             </template>
             <template v-else>
-              <span class="font-semibold text-app-ink">{{ uploads.length }}</span> {{ t('essayPage.pagesUploadedSuffix', uploads.length) }}
+              <span class="font-medium text-app-ink">{{ uploads.length }}</span> {{ t('essayPage.pagesUploadedSuffix', uploads.length) }}
             </template>
           </p>
 
           <button
             type="button"
             :disabled="isReviewing"
-            class="inline-flex items-center gap-2 rounded-full bg-app-ink px-6 py-2.5 text-[14px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:cursor-not-allowed disabled:opacity-60"
+            class="inline-flex items-center gap-2 rounded-full bg-app-ink px-6 py-2.5 text-[14px] font-medium text-white transition-transform hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
             @click="submit"
           >
             <AppIcon name="check" :size="15" />
             {{ t('essayPage.submit') }}
           </button>
         </div>
-      </AppCard>
+      </div>
     </template>
 
     <!-- ═══════════ 3. Review ═══════════ -->
     <template v-else>
       <div class="mb-4 flex flex-wrap items-start justify-between gap-4">
         <div class="min-w-0">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-app-muted">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-app-ink">
             {{ t('essayPage.topicLabel') }}
           </p>
-          <h2 class="mt-1 max-w-2xl truncate text-[17px] font-bold tracking-[-0.015em] text-app-ink">
+          <h2 class="mt-1 max-w-2xl truncate text-[18px] font-medium tracking-[-0.02em] text-app-ink">
             {{ activeTopic?.text }}
           </h2>
         </div>
         <button
           type="button"
-          class="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-app-border bg-app-surface px-4 py-2 text-[13px] font-semibold text-app-ink transition-colors hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+          class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-app-ink px-4 py-2 text-[13px] font-medium text-white transition-transform hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
           @click="writeAnother"
         >
           <AppIcon name="plus" :size="14" />
@@ -398,28 +408,28 @@ const { isDragging } = useWindowFileDrop(
       >
         <details
           v-if="submittedUploads.length"
-          class="group mt-6 overflow-hidden rounded-2xl border border-app-border bg-app-surface shadow-app-card"
+          class="group mt-6 overflow-hidden rounded-[24px] bg-app-surface shadow-app-card"
         >
           <summary
-            class="flex cursor-pointer items-center justify-between px-5 py-4 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile"
+            class="flex cursor-pointer items-center justify-between px-5 py-4 text-[15px] font-medium tracking-[-0.02em] text-app-ink transition-colors hover:bg-app-warm"
           >
             <span>{{ t('essayPage.yourPages') }}</span>
             <AppIcon
               name="chevronDown"
               :size="16"
-              class="text-app-muted transition-transform group-open:rotate-180"
+              class="text-app-ink transition-transform group-open:rotate-180"
             />
           </summary>
-          <div class="border-t border-app-border px-5 py-4">
+          <div class="px-5 pb-5 pt-1">
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               <div
                 v-for="(upload, index) in submittedUploads"
                 :key="upload.id"
-                class="relative overflow-hidden rounded-xl border border-app-border bg-app-sunken"
+                class="relative overflow-hidden rounded-[16px] bg-app-tile"
               >
                 <img :src="upload.dataUrl" :alt="upload.name" class="h-32 w-full object-cover" />
                 <span
-                  class="absolute left-2 top-2 rounded-md bg-app-ink/80 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-app-surface"
+                  class="absolute left-2 top-2 rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-app-ink ring-1 ring-white"
                 >
                   {{ t('essayPage.pageBadge', { n: index + 1 }) }}
                 </span>
@@ -477,7 +487,7 @@ const { isDragging } = useWindowFileDrop(
               rows="4"
               :maxlength="MAX_TOPIC_LENGTH"
               :placeholder="t('essayPage.addDialog.placeholder')"
-              class="mt-2 w-full resize-y rounded-xl border border-app-border bg-app-sunken p-4 text-[14px] leading-[1.6] text-app-ink outline-none transition-colors placeholder:text-app-muted focus:border-app-ink focus:bg-app-surface"
+              class="mt-2 w-full resize-y rounded-xl border border-app-border bg-app-sunken p-4 text-[14px] leading-[1.6] text-app-ink outline-none transition-colors placeholder:text-app-ink/60 focus:border-app-ink focus:bg-app-surface"
             ></textarea>
           </label>
           <p class="mt-1 text-right text-[12px] text-app-muted">

@@ -18,7 +18,6 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import AppTopbar from '@/components/app/AppTopbar.vue'
-import AppCard from '@/components/app/AppCard.vue'
 import AppIcon from '@/components/app/AppIcon.vue'
 import AppSelect from '@/components/app/AppSelect.vue'
 import ResultCard from '@/components/app/ResultCard.vue'
@@ -360,16 +359,14 @@ const errorCopy = computed(() => {
 
   <main>
     <!-- Tabs carry their own counts, so the totals need no separate header -->
-    <div class="mb-5 inline-flex gap-1.5 rounded-full bg-app-tile p-1.5">
+    <div class="mb-5 inline-flex gap-1 rounded-full bg-app-tile p-1">
       <button
         v-for="tab in TABS"
         :key="tab.id"
         type="button"
-        class="rounded-full px-5 py-2 text-[13px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+        class="rounded-full px-5 py-2 text-[13px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
         :class="
-          activeView === tab.id
-            ? 'bg-app-ink text-app-surface'
-            : 'text-app-ink hover:bg-app-surface'
+          activeView === tab.id ? 'bg-app-ink text-white' : 'text-app-ink hover:bg-app-surface'
         "
         :aria-pressed="activeView === tab.id"
         @click="selectView(tab.id)"
@@ -377,7 +374,7 @@ const errorCopy = computed(() => {
         {{ t(tab.labelKey) }}
         <span
           class="ml-1.5 tabular-nums"
-          :class="activeView === tab.id ? 'text-app-surface/60' : 'text-app-muted'"
+          :class="activeView === tab.id ? 'text-white' : 'text-app-ink'"
         >
           {{ tab.id === 'essays' ? essayCheckings.length : results.length }}
         </span>
@@ -393,21 +390,21 @@ const errorCopy = computed(() => {
           style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr))"
           aria-hidden="true"
         >
-          <div v-for="n in 6" :key="n" class="rounded-2xl border border-app-border bg-app-surface p-5">
+          <div v-for="n in 6" :key="n" class="rounded-[24px] bg-app-surface p-5 shadow-app-card">
             <SkeletonBlock class="h-10 w-10 !rounded-xl" />
             <SkeletonBlock class="mt-3 h-4 w-4/5" />
             <SkeletonBlock class="mt-2 h-3 w-3/5" />
-            <SkeletonBlock class="mt-4 h-7 w-28" />
-            <SkeletonBlock class="mt-2 h-1.5 w-full !rounded-full" />
-            <SkeletonBlock class="mt-6 h-8 w-full !rounded-lg" />
+            <SkeletonBlock class="mt-4 h-8 w-28" />
+            <SkeletonBlock class="mt-3 h-2 w-full !rounded-full" />
+            <SkeletonBlock class="mt-6 h-8 w-full !rounded-full" />
           </div>
         </div>
         <p class="sr-only" role="status">{{ t('resultsPage.loading') }}</p>
       </template>
 
-      <AppCard v-else-if="errorKind">
+      <div v-else-if="errorKind" class="rounded-[24px] bg-app-surface p-5 shadow-app-card">
         <EmptyState icon="close" :title="errorCopy.title" :description="errorCopy.description" />
-      </AppCard>
+      </div>
 
       <template v-else-if="results.length">
         <div v-if="subjectOptions.length > 2" class="mb-4">
@@ -424,22 +421,24 @@ const errorCopy = computed(() => {
 
           <!-- Chips from sm up, where they fit on one line: every subject is
                visible at once and the active one needs nothing opened. -->
-          <div class="hidden flex-wrap justify-end gap-2 sm:flex">
-            <button
-              v-for="option in subjectOptions"
-              :key="option.value"
-              type="button"
-              class="rounded-full border px-4 py-2 text-[13px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
-              :class="
-                selectedSubject === option.value
-                  ? 'border-app-ink bg-app-ink font-semibold text-app-surface'
-                  : 'border-app-border bg-app-surface font-medium text-app-ink hover:bg-app-tile'
-              "
-              :aria-pressed="selectedSubject === option.value"
-              @click="selectedSubject = option.value"
-            >
-              {{ option.label }}
-            </button>
+          <div class="hidden sm:flex sm:justify-end">
+            <div class="inline-flex flex-wrap gap-1 rounded-full bg-app-tile p-1">
+              <button
+                v-for="option in subjectOptions"
+                :key="option.value"
+                type="button"
+                class="rounded-full px-4 py-2 text-[13px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+                :class="
+                  selectedSubject === option.value
+                    ? 'bg-app-ink text-white'
+                    : 'text-app-ink hover:bg-app-surface'
+                "
+                :aria-pressed="selectedSubject === option.value"
+                @click="selectedSubject = option.value"
+              >
+                {{ option.label }}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -460,25 +459,31 @@ const errorCopy = computed(() => {
           />
         </div>
 
-        <AppCard v-else>
+        <div v-else class="rounded-[24px] bg-app-surface p-5 shadow-app-card">
           <EmptyState
             icon="results"
             :title="t('resultsPage.emptySubject.title')"
             :description="t('resultsPage.emptySubject.description')"
           />
-        </AppCard>
+        </div>
 
         <!-- The total is worth stating even on one page; the pager is not. -->
         <div
           v-if="visibleResults.length"
           class="mt-5 flex flex-wrap items-center justify-between gap-4"
         >
-          <p class="text-[13px] text-app-muted">{{ t('resultsPage.total', visibleResults.length) }}</p>
+          <p class="text-[13px] font-medium text-app-ink">
+            {{ t('resultsPage.total', visibleResults.length) }}
+          </p>
 
-          <nav v-if="pageCount > 1" class="flex items-center gap-1.5" :aria-label="t('resultsPage.pages')">
+          <nav
+            v-if="pageCount > 1"
+            class="flex items-center gap-1.5"
+            :aria-label="t('resultsPage.pages')"
+          >
             <button
               type="button"
-              class="flex h-9 w-9 items-center justify-center rounded-lg border border-app-border bg-app-surface text-app-ink transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40"
+              class="flex h-9 w-9 items-center justify-center rounded-full bg-app-surface text-app-ink shadow-app-card transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40"
               :disabled="page === 1"
               :aria-label="t('resultsPage.prevPage')"
               @click="goToPage(page - 1)"
@@ -487,15 +492,15 @@ const errorCopy = computed(() => {
             </button>
 
             <template v-for="(value, index) in pageNumbers" :key="`${value}-${index}`">
-              <span v-if="value === 'gap'" class="px-1 text-[13px] text-app-muted">…</span>
+              <span v-if="value === 'gap'" class="px-1 text-[13px] text-app-ink">…</span>
               <button
                 v-else
                 type="button"
-                class="h-9 min-w-9 rounded-lg border px-2.5 text-[13px] font-semibold transition-colors"
+                class="h-9 min-w-9 rounded-full px-2.5 text-[13px] font-medium tabular-nums transition-colors"
                 :class="
                   value === page
-                    ? 'border-app-ink bg-app-ink text-app-surface'
-                    : 'border-app-border bg-app-surface text-app-ink hover:bg-app-tile'
+                    ? 'bg-app-ink text-white'
+                    : 'bg-app-surface text-app-ink shadow-app-card hover:bg-app-tile'
                 "
                 :aria-current="value === page ? 'page' : undefined"
                 @click="goToPage(value)"
@@ -506,7 +511,7 @@ const errorCopy = computed(() => {
 
             <button
               type="button"
-              class="flex h-9 w-9 items-center justify-center rounded-lg border border-app-border bg-app-surface text-app-ink transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40"
+              class="flex h-9 w-9 items-center justify-center rounded-full bg-app-surface text-app-ink shadow-app-card transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40"
               :disabled="page === pageCount"
               :aria-label="t('resultsPage.nextPage')"
               @click="goToPage(page + 1)"
@@ -517,7 +522,7 @@ const errorCopy = computed(() => {
         </div>
       </template>
 
-      <AppCard v-else>
+      <div v-else class="rounded-[24px] bg-app-surface p-5 shadow-app-card">
         <EmptyState
           icon="results"
           :title="t('resultsPage.emptyTests.title')"
@@ -525,7 +530,7 @@ const errorCopy = computed(() => {
           :action-label="t('resultsPage.emptyTests.action')"
           action-to="/testlar"
         />
-      </AppCard>
+      </div>
     </template>
 
     <!-- ═══════════ Insholar ═══════════ -->
@@ -543,7 +548,7 @@ const errorCopy = computed(() => {
         />
       </div>
 
-      <AppCard v-else>
+      <div v-else class="rounded-[24px] bg-app-surface p-5 shadow-app-card">
         <EmptyState
           icon="essay"
           :title="t('resultsPage.emptyEssays.title')"
@@ -551,12 +556,12 @@ const errorCopy = computed(() => {
           :action-label="t('resultsPage.emptyEssays.action')"
           action-to="/essay"
         />
-      </AppCard>
+      </div>
 
       <!-- Said plainly rather than hidden: these are on this device only, and a
            student who cleared their browser deserves to know why the list is
            empty. Goes when the checkings move server-side. -->
-      <p v-if="essayCheckings.length" class="mt-4 text-[13px] text-app-muted">
+      <p v-if="essayCheckings.length" class="mt-4 text-[13px] text-app-ink">
         {{ t('resultsPage.deviceNote') }}
       </p>
     </template>

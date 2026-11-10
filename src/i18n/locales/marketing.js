@@ -14,7 +14,7 @@ export default {
         // {brand} is the "Milliy Mock" lead-in, set in ink.
         tagline: '{brand} — testlar va essay tekshirish bitta joyda.',
         howItWorks: 'Qanday ishlaydi?',
-        figureAlt: 'Milliy Mock platformasining boshqaruv paneli',
+        more: 'Batafsil',
         liveTitle: 'Jonli hisob — real vaqtda yangilanadi',
         // Follows the live count, which is rendered on its own. Call as
         // t('landing.hero.testsTaken', count) — Russian agrees it with the number.
@@ -26,23 +26,29 @@ export default {
         { value: '24/7', label: "Doimiy qo'llab-quvvatlash" },
         { value: '10,000+', label: 'Yaratilgan testlar' },
       ],
-      features: {
-        mock: {
-          title: 'Mock testlar',
-          text: 'Haqiqiy imtihonlarga mos testlar bilan bilimingizni sinang.',
+      sections: {
+        subjectsLabel: 'Fanlar',
+        statement: {
+          a: 'Milliy Mock har bir test, insho',
+          b: 'va natijangizni',
+          c: 'bitta platformada jamlaydi —',
+          d: 'istalgan vaqtda, istalgan joyda.',
         },
-        essay: {
-          title: 'Essay tekshirish',
-          text: 'Ingliz tili esselaringizni AI va ekspertlarimiz tekshiradi.',
+        community: {
+          title: 'Milliy Mock hamjamiyatiga qo‘shiling',
+          text: 'Yangiliklarni birinchilardan bo‘lib Telegram’da biling.',
+          action: 'Qo‘shilish',
         },
-        courses: {
-          title: 'Kurslar',
-          text: 'Video darslar va amaliy mashqlar bilan bilimingizni oshiring.',
+        boost: {
+          title: 'Imtihonga tayyorgarlikni yangi bosqichga olib chiqing',
+          text: 'Istalgan vaqtda, haqiqiy imtihon sharoitida.',
         },
-        results: {
-          title: 'Natija va tahlil',
-          text: "Batafsil statistika va tahlillar orqali o'sish yo'lingizni kuzating.",
+        build: {
+          title: 'Yeching, tahlil qiling va o‘sing',
+          text: 'Milliy Mock vaqtingiz, natijalaringiz va xatolaringizni kuzatib boradi.',
+          cardTitle: 'Birinchi insho tekshiruvi bepul',
         },
+        proof: 'Raqamlar o‘zi gapiradi',
       },
       cta: {
         imageAlt: "Yorug'likka olib boruvchi zinapoya",
@@ -69,6 +75,15 @@ export default {
           heading: 'Inshoyingiz qanday tekshiriladi',
           blurb:
             'Sun’iy intellekt har bir xatoni matn ustida belgilaydi, izohlaydi va yakuniy insho ballini chiqaradi.',
+        },
+        tests: {
+          alt: 'MilliyMock’da test ishlash sahifasi',
+          blurb:
+            'Haqiqiy imtihon formati: vaqt hisoblagichi, qismlarga bo‘lingan savollar va qiyin savollarni belgilab qo‘yish.',
+        },
+        courses: {
+          alt: 'Kurslar sahifasining tasviri',
+          blurb: 'Mavzular bo‘yicha video darslar va amaliy mashqlar — tez orada.',
         },
       },
     },
@@ -348,7 +363,7 @@ export default {
         titleHighlight: 'Повысьте результат.',
         tagline: '{brand} — тесты и проверка эссе в одном месте.',
         howItWorks: 'Как это работает?',
-        figureAlt: 'Панель управления платформы Milliy Mock',
+        more: 'Подробнее',
         liveTitle: 'Живой счётчик — обновляется в реальном времени',
         // zero | one | few | many
         testsTaken: 'пройденных тестов | пройденный тест | пройденных теста | пройденных тестов',
@@ -361,23 +376,29 @@ export default {
         { value: '24/7', label: 'Поддержка на связи' },
         { value: '10 000+', label: 'Созданных тестов' },
       ],
-      features: {
-        mock: {
-          title: 'Mock-тесты',
-          text: 'Проверяйте знания на тестах, максимально приближенных к реальному экзамену.',
+      sections: {
+        subjectsLabel: 'Предметы',
+        statement: {
+          a: 'Milliy Mock собирает каждый тест, эссе',
+          b: 'и ваш результат',
+          c: 'в одном месте —',
+          d: 'в любое время и где угодно.',
         },
-        essay: {
-          title: 'Проверка эссе',
-          text: 'Ваши эссе на английском проверяют ИИ и наши эксперты.',
+        community: {
+          title: 'Присоединяйтесь к сообществу Milliy Mock',
+          text: 'Узнавайте новости первыми в Telegram.',
+          action: 'Присоединиться',
         },
-        courses: {
-          title: 'Курсы',
-          text: 'Углубляйте знания с видеоуроками и практическими заданиями.',
+        boost: {
+          title: 'Выведите подготовку к экзамену на новый уровень',
+          text: 'В любое время, в условиях настоящего экзамена.',
         },
-        results: {
-          title: 'Результаты и аналитика',
-          text: 'Следите за своим ростом по подробной статистике и разбору результатов.',
+        build: {
+          title: 'Решайте, разбирайте и растите',
+          text: 'Milliy Mock следит за вашим временем, результатами и ошибками.',
+          cardTitle: 'Первая проверка эссе бесплатно',
         },
+        proof: 'Цифры говорят сами за себя',
       },
       cta: {
         imageAlt: 'Лестница, ведущая к свету',
@@ -403,6 +424,15 @@ export default {
           heading: 'Как проверяется ваше эссе',
           blurb:
             'Искусственный интеллект отмечает каждую ошибку прямо в тексте, объясняет её и выставляет итоговый балл за эссе.',
+        },
+        tests: {
+          alt: 'Страница прохождения теста на MilliyMock',
+          blurb:
+            'Формат настоящего экзамена: таймер, вопросы по частям и закладки на сложных заданиях.',
+        },
+        courses: {
+          alt: 'Иллюстрация страницы курсов',
+          blurb: 'Видеоуроки по темам и практические задания — скоро.',
         },
       },
     },

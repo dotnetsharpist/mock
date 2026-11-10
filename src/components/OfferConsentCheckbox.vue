@@ -23,7 +23,7 @@ const linkClass =
 
 <template>
   <label
-    class="flex items-start gap-3 text-[13px] leading-relaxed text-[#4a463f]"
+    class="flex items-start gap-3 text-[13px] leading-relaxed text-[#1a1814]"
     :class="offerUrl && privacyUrl ? 'cursor-pointer' : 'cursor-default'"
   >
     <input

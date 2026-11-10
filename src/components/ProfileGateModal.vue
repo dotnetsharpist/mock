@@ -99,7 +99,7 @@ const cancel = () => {
 
           <div class="space-y-4 text-left">
             <label class="block">
-              <span class="font-mono-custom text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8a857c]">
+              <span class="font-mono-custom text-[10px] font-semibold uppercase tracking-[0.16em] text-[#1a1814]">
                 {{ t('testPage.lastName') }}
               </span>
               <input
@@ -112,7 +112,7 @@ const cancel = () => {
             </label>
 
             <label class="block">
-              <span class="font-mono-custom text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8a857c]">
+              <span class="font-mono-custom text-[10px] font-semibold uppercase tracking-[0.16em] text-[#1a1814]">
                 {{ t('testPage.firstName') }}
               </span>
               <input
@@ -125,7 +125,7 @@ const cancel = () => {
             </label>
 
             <label class="block">
-              <span class="font-mono-custom text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8a857c]">
+              <span class="font-mono-custom text-[10px] font-semibold uppercase tracking-[0.16em] text-[#1a1814]">
                 {{ t('testPage.fatherName') }}
               </span>
               <input

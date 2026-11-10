@@ -11,7 +11,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppIcon from './AppIcon.vue'
 import StatusBadge from './StatusBadge.vue'
-import { SUBJECTS, unknownSubject } from './subjects.js'
+import { SUBJECTS, subjectTint, unknownSubject } from './subjects.js'
 import { gradeFromPercentage, hasCertificateGrade } from '@/utils/attemptResults'
 
 const props = defineProps({
@@ -27,6 +27,8 @@ const subject = computed(
   () => SUBJECTS[props.result.subjectKey] ?? unknownSubject(props.result.subjectRaw),
 )
 
+const tint = computed(() => subjectTint(props.result.subjectKey))
+
 const isInProgress = computed(() => props.result.state === 'progress')
 const score = computed(() => props.result.score ?? null)
 const hasScore = computed(() => typeof score.value?.percent === 'number')
@@ -36,11 +38,8 @@ const hasScore = computed(() => typeof score.value?.percent === 'number')
 // certificate table is the product's own standard for one.
 const isCertified = computed(() => hasScore.value && hasCertificateGrade(score.value.percent))
 
-const scoreTextClass = computed(() => {
-  if (!hasScore.value) return 'text-app-muted'
-  return isCertified.value ? 'text-app-good' : 'text-app-bad'
-})
-const barClass = computed(() => (isCertified.value ? 'bg-app-good' : 'bg-app-bad'))
+// The score is ink and the bar the landing's light: a low mark is said in
+// words below the bar, not shouted in red across every card.
 
 // "31/99" — the raw mark against the test's own maximum. Rounded: the backend
 // returns fractional part-marks (30.9) that add nothing here.
@@ -78,11 +77,12 @@ const meta = computed(() =>
 
 <template>
   <article
-    class="flex h-full flex-col rounded-2xl border border-app-border bg-app-surface p-5 transition-shadow hover:shadow-app-card"
+    class="flex h-full flex-col rounded-[24px] bg-app-surface p-5 shadow-app-card transition-transform duration-200 hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
   >
     <div class="flex items-start justify-between gap-3">
       <span
-        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-app-tile text-app-ink"
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-app-ink"
+        :style="{ background: tint.background }"
         aria-hidden="true"
       >
         <AppIcon :name="subject.icon" :size="19" />
@@ -93,13 +93,16 @@ const meta = computed(() =>
         <StatusBadge v-if="result.expired" tone="neutral" class="!px-2 !py-0.5 !text-[10px]">
           {{ t('resultUi.expired') }}
         </StatusBadge>
-        <StatusBadge v-if="result.isPremium" tone="neutral" class="!px-2 !py-0.5 !text-[10px]">
+        <span
+          v-if="result.isPremium"
+          class="app-iris rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-app-ink"
+        >
           {{ t('mathCard.premium') }}
-        </StatusBadge>
+        </span>
       </div>
     </div>
 
-    <h3 class="mt-3 text-[14.5px] font-bold leading-[1.35] tracking-[-0.01em] text-app-ink">
+    <h3 class="mt-3 text-[15px] font-medium leading-[1.35] tracking-[-0.01em] text-app-ink">
       {{ result.title }}
     </h3>
     <p class="mt-1 text-[12.5px] text-app-muted">{{ meta }}</p>
@@ -112,20 +115,26 @@ const meta = computed(() =>
       </template>
 
       <template v-else-if="hasScore">
-        <p class="text-[26px] font-bold leading-none tracking-[-0.02em]" :class="scoreTextClass">
-          {{ rawScore }}<template v-if="grade"> · {{ grade }}</template>
+        <p class="flex items-baseline gap-2 text-app-ink">
+          <span class="text-[32px] font-normal leading-none tracking-[-0.04em] tabular-nums">{{ rawScore }}</span>
+          <span
+            v-if="grade"
+            class="rounded-full bg-app-ink px-2 py-0.5 text-[12px] font-semibold text-white"
+          >{{ grade }}</span>
         </p>
-        <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-app-tile">
+        <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-app-tile">
           <div
-            class="h-full rounded-full transition-[width] duration-500 ease-out"
-            :class="barClass"
-            :style="{ width: `${score.percent}%` }"
+            class="h-full rounded-full bg-[linear-gradient(90deg,#f4a9c6_0%,#b9a2f5_55%,#8fb2ff_100%)] transition-[width] duration-500 ease-out"
+            :style="{ width: `${Math.max(score.percent, score.percent > 0 ? 3 : 0)}%` }"
           ></div>
         </div>
         <!-- Says why there is no letter, rather than leaving the student to
              wonder. The full certificate wording is a sentence; this is the
              short form of it. -->
-        <p v-if="!isCertified" class="mt-2 text-[12px] font-medium text-app-bad">
+        <p
+          v-if="!isCertified"
+          class="mt-3 inline-flex rounded-full bg-[#ffe2ec] px-2.5 py-1 text-[11.5px] font-medium text-app-ink"
+        >
           {{ t('resultUi.noCertificate') }}
         </p>
       </template>
@@ -133,8 +142,8 @@ const meta = computed(() =>
       <!-- Score still resolving. Sized like the real thing so the card does not
            change height when it lands. -->
       <template v-else>
-        <p class="text-[26px] font-bold leading-none tracking-[-0.02em] text-app-muted/40">—</p>
-        <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-app-tile"></div>
+        <p class="text-[32px] font-normal leading-none tracking-[-0.04em] text-app-ink">—</p>
+        <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-app-tile"></div>
       </template>
     </div>
 
@@ -142,7 +151,7 @@ const meta = computed(() =>
       <button
         type="button"
         :disabled="busy"
-        class="rounded-lg px-2 py-1.5 text-[12.5px] font-semibold text-app-muted transition-colors hover:bg-app-tile hover:text-app-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:cursor-not-allowed disabled:opacity-60"
+        class="rounded-full px-3 py-1.5 text-[12.5px] font-medium text-app-ink transition-colors hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:cursor-not-allowed disabled:opacity-60"
         @click="$emit('retake', result)"
       >
         {{ isInProgress ? t('resultUi.continue') : t('resultUi.retake') }}
@@ -151,7 +160,7 @@ const meta = computed(() =>
       <button
         v-if="!isInProgress"
         type="button"
-        class="inline-flex items-center gap-1.5 rounded-full border border-app-border px-3.5 py-1.5 text-[12.5px] font-bold text-app-ink transition-colors hover:border-app-ink hover:bg-app-ink hover:text-app-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+        class="app-btn-ink inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[12.5px] font-medium transition-transform hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
         @click="$emit('open', result)"
       >
         {{ t('mathCard.viewResult') }}

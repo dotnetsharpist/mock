@@ -7,7 +7,7 @@
 // asked, and keeps them one thumb-reach away on every screen.
 //
 // Four tabs plus "Ko'proq", which opens the same drawer as before for the rest
-// (Kurslar, Statistika, Narxlar, Community, Sozlamalar). Four, not seven: a tab
+// (Natijalar, Kurslar, Statistika, Community, Sozlamalar). Four, not seven: a tab
 // each would leave ~55px per label on a 390px screen and every one would be
 // truncated.
 import { useRoute } from 'vue-router'
@@ -30,7 +30,9 @@ const tabs = [
   { label: 'appShell.nav.home', icon: 'home', to: '/dashboard' },
   { label: 'appShell.nav.tests', icon: 'tests', to: '/testlar' },
   { label: 'appShell.tabs.essay', icon: 'essay', to: '/essay' },
-  { label: 'appShell.nav.results', icon: 'results', to: '/natijalarim' },
+  // Narxlar, not Natijalar: buying tanga is one tap away on a phone. Natijalar
+  // is still in the drawer behind "Ko'proq".
+  { label: 'appShell.nav.pricing', icon: 'coins', to: '/tanga' },
 ]
 
 const isActive = (to) => route.path === to || route.path.startsWith(`${to}/`)
@@ -44,7 +46,7 @@ const isActive = (to) => route.path === to || route.path.startsWith(`${to}/`)
        mean anything. The bar is `fixed`, so moving it changes no layout. -->
   <Teleport to="body">
     <nav
-      class="fixed inset-x-0 bottom-0 z-[210] border-t border-app-border bg-app-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
+      class="fixed inset-x-0 bottom-0 z-[210] bg-app-surface shadow-[0_-10px_30px_-22px_rgba(17,17,17,0.35)] pb-[env(safe-area-inset-bottom)] lg:hidden"
       :aria-label="t('appShell.tabs.label')"
     >
       <div class="mx-auto flex max-w-[520px] items-stretch">
@@ -52,26 +54,36 @@ const isActive = (to) => route.path === to || route.path.startsWith(`${to}/`)
           v-for="tab in tabs"
           :key="tab.to"
           :to="tab.to"
-          class="flex flex-1 flex-col items-center gap-1 px-1 pb-2 pt-2.5 text-[11px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-ink"
+          class="flex flex-1 flex-col items-center gap-0.5 px-1 pb-2 pt-2 text-[11px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-ink"
           :class="
             isActive(tab.to) && !drawerOpen
               ? 'font-semibold text-app-ink'
-              : 'font-medium text-app-muted'
+              : 'font-normal text-app-ink'
           "
           :aria-current="isActive(tab.to) ? 'page' : undefined"
         >
-          <AppIcon :name="tab.icon" :size="21" />
+          <span
+            class="flex h-8 w-12 items-center justify-center rounded-full transition-colors"
+            :class="isActive(tab.to) && !drawerOpen ? 'app-btn-ink' : ''"
+          >
+            <AppIcon :name="tab.icon" :size="20" />
+          </span>
           <span class="max-w-full truncate">{{ t(tab.label) }}</span>
         </RouterLink>
 
         <button
           type="button"
-          class="flex flex-1 flex-col items-center gap-1 px-1 pb-2 pt-2.5 text-[11px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-ink"
-          :class="drawerOpen ? 'font-semibold text-app-ink' : 'font-medium text-app-muted'"
+          class="flex flex-1 flex-col items-center gap-0.5 px-1 pb-2 pt-2 text-[11px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-app-ink"
+          :class="drawerOpen ? 'font-semibold text-app-ink' : 'font-normal text-app-ink'"
           :aria-expanded="drawerOpen"
           @click="emit('toggleMenu')"
         >
-          <AppIcon name="menu" :size="21" />
+          <span
+            class="flex h-8 w-12 items-center justify-center rounded-full transition-colors"
+            :class="drawerOpen ? 'app-btn-ink' : ''"
+          >
+            <AppIcon name="menu" :size="20" />
+          </span>
           <span>{{ t('appShell.tabs.more') }}</span>
         </button>
       </div>

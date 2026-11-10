@@ -244,7 +244,7 @@ const close = () => emit('close')
             <button
               type="button"
               :aria-label="t('pricing.payment.close')"
-              class="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-full text-[#a39e94] transition hover:bg-[#f5f3ef] hover:text-[#1a1814]"
+              class="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-full text-[#1a1814] transition hover:bg-[#f5f3ef] hover:text-[#1a1814]"
               @click="close"
             >
               <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -253,7 +253,7 @@ const close = () => emit('close')
             </button>
 
             <!-- Eyebrow -->
-            <span class="font-mono-custom text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a857c]">
+            <span class="font-mono-custom text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1a1814]">
               {{ t(copyKey('eyebrow')) }}
             </span>
 
@@ -264,7 +264,7 @@ const close = () => emit('close')
 
             <!-- Description — the Telegram-only dialog's; with tabs, each
                  tab carries its own. -->
-            <p v-if="!showOnline" class="mt-3 text-sm leading-6 text-[#6b6760]">
+            <p v-if="!showOnline" class="mt-3 text-sm leading-6 text-[#1a1814]">
               {{ description }}
             </p>
 
@@ -286,7 +286,7 @@ const close = () => emit('close')
               </span>
               <div class="min-w-0 flex-1">
                 <p class="text-[15px] font-semibold text-[#1a1814]">{{ planName }}</p>
-                <p class="mt-0.5 text-[13px] text-[#6b6760]">
+                <p class="mt-0.5 text-[13px] text-[#1a1814]">
                   {{ t('common.tangaCount', planTokens) }}
                 </p>
               </div>
@@ -315,7 +315,7 @@ const close = () => emit('close')
                   :class="
                     method === item
                       ? 'bg-white text-[#1a1814] shadow-[0_1px_3px_rgba(26,24,20,0.12)] ring-1 ring-[#e8e3da]'
-                      : 'text-[#8a857c] hover:bg-white/60 hover:text-[#1a1814]'
+                      : 'text-[#1a1814] hover:bg-white/60 hover:text-[#1a1814]'
                   "
                   @click="method = item"
                   @keydown="onTabKeydown($event, index)"
@@ -385,7 +385,7 @@ const close = () => emit('close')
                 </template>
 
                 <template v-else-if="isGateway">
-                  <p class="text-[13.5px] leading-relaxed text-[#6b6760]">
+                  <p class="text-[13.5px] leading-relaxed text-[#1a1814]">
                     {{ t('pricing.payment.gateway.lead', { provider: method }) }}
                   </p>
 
@@ -450,7 +450,7 @@ const close = () => emit('close')
                   >
                     {{ generalError }}
                   </p>
-                  <p v-else class="mt-3 text-center text-[12px] leading-relaxed text-[#8a857c]">
+                  <p v-else class="mt-3 text-center text-[12px] leading-relaxed text-[#1a1814]">
                     {{ t('pricing.payment.gateway.hint', { provider: method }) }}
                   </p>
                 </template>
@@ -458,7 +458,7 @@ const close = () => emit('close')
                 <!-- Karta — the bot; the deep link carries the package and the
                      account. -->
                 <template v-else>
-                  <p class="text-[13.5px] leading-relaxed text-[#6b6760]">
+                  <p class="text-[13.5px] leading-relaxed text-[#1a1814]">
                     {{ t('pricing.payment.online.cardLead') }}
                   </p>
                   <TelegramCodeLink
@@ -467,7 +467,7 @@ const close = () => emit('close')
                     :label="t('pricing.payment.online.telegram')"
                     variant="primary"
                   />
-                  <p class="mt-3 text-center text-[12px] leading-relaxed text-[#8a857c]">
+                  <p class="mt-3 text-center text-[12px] leading-relaxed text-[#1a1814]">
                     {{ t('pricing.payment.online.hint') }}
                   </p>
                 </template>
@@ -477,7 +477,7 @@ const close = () => emit('close')
             <!-- Telegram-only — the way to pay while no gateway is offered. -->
             <template v-else>
               <TelegramCodeLink class="mt-6" :href="telegramUrl" :label="t('pricing.payment.telegram')" variant="primary" />
-              <p class="mt-4 text-center text-[12px] leading-relaxed text-[#8a857c]">
+              <p class="mt-4 text-center text-[12px] leading-relaxed text-[#1a1814]">
                 {{ t('pricing.payment.hint') }}
               </p>
             </template>

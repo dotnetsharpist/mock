@@ -119,7 +119,7 @@ const continueTo = computed(() => ({
     >
       <div class="flex min-w-0 flex-1 items-center gap-4">
         <span
-          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-app-tile text-app-ink"
+          class="app-iris flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-app-ink ring-1 ring-white"
           aria-hidden="true"
         >
           <AppIcon :name="isPaused ? 'pause' : 'clock'" :size="22" />
@@ -128,27 +128,27 @@ const continueTo = computed(() => ({
         <div class="min-w-0">
           <!-- In progress either way, so both read as info — "paused" is a
                state of an open attempt, not a warning. -->
-          <StatusBadge tone="info" class="!px-2.5 !py-0.5 !text-[11px]">
+          <StatusBadge tone="info" class="!bg-[#efe2ff] !px-2.5 !py-0.5 !text-[11px] !text-app-ink">
             {{ isPaused ? t('attemptGate.paused') : t('attemptGate.running') }}
           </StatusBadge>
-          <h2 class="mt-1.5 line-clamp-2 text-[15px] font-bold leading-snug tracking-[-0.01em] text-app-ink">
+          <h2 class="mt-1.5 line-clamp-2 text-[16px] font-medium leading-snug tracking-[-0.02em] text-app-ink">
             {{ title }}
           </h2>
-          <p class="mt-0.5 text-[13px] text-app-muted">{{ progressLabel }}</p>
+          <p class="mt-0.5 text-[13px] text-app-ink">{{ progressLabel }}</p>
         </div>
       </div>
 
       <div class="flex items-center gap-5 sm:shrink-0">
         <div v-if="secondsLeft !== null">
-          <p class="text-[12px] text-app-muted">{{ t('testPage.timer') }}</p>
-          <p class="text-[20px] font-bold leading-tight tracking-[-0.01em] text-app-ink tabular-nums">
+          <p class="text-[12px] text-app-ink">{{ t('testPage.timer') }}</p>
+          <p class="text-[20px] font-medium leading-tight tracking-[-0.02em] text-app-ink tabular-nums">
             {{ formatCountdown(secondsLeft) }}
           </p>
         </div>
 
         <RouterLink
           :to="continueTo"
-          class="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full bg-app-ink px-5 py-2.5 text-[14px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+          class="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full bg-app-ink px-5 py-2.5 text-[14px] font-medium text-white transition-transform hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
         >
           {{ t('register.continue') }}
           <AppIcon name="arrowRight" :size="15" />

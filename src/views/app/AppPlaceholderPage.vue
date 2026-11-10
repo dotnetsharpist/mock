@@ -6,7 +6,6 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppTopbar from '@/components/app/AppTopbar.vue'
-import AppCard from '@/components/app/AppCard.vue'
 import AppIcon from '@/components/app/AppIcon.vue'
 
 defineProps({
@@ -37,25 +36,25 @@ const icon = computed(() => route.meta?.appIcon || 'tests')
   <AppTopbar :title="title" :user="user" @open-menu="$emit('openMenu')" />
 
   <main>
-    <AppCard>
+    <div class="rounded-[24px] bg-app-surface p-5 shadow-app-card">
       <div class="flex flex-col items-center py-14 text-center">
-        <span class="flex h-14 w-14 items-center justify-center rounded-full bg-app-tile text-app-ink">
+        <span class="flex h-14 w-14 items-center justify-center app-iris rounded-full text-app-ink ring-1 ring-white">
           <AppIcon :name="icon" :size="26" />
         </span>
-        <h2 class="mt-5 text-[20px] font-bold tracking-[-0.01em] text-app-ink">
+        <h2 class="mt-5 text-[22px] font-medium tracking-[-0.02em] text-app-ink">
           {{ t('appPlaceholder.heading', { title }) }}
         </h2>
-        <p class="mt-2 max-w-[380px] text-[15px] leading-[1.6] text-app-muted">
+        <p class="mt-2 max-w-[380px] text-[15px] leading-[1.6] text-app-ink">
           {{ t('appPlaceholder.text') }}
         </p>
         <RouterLink
           to="/dashboard"
-          class="mt-6 inline-flex items-center gap-2 rounded-full bg-app-ink px-5 py-2.5 text-[15px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+          class="mt-6 inline-flex items-center gap-2 rounded-full bg-app-ink px-5 py-2.5 text-[15px] font-medium text-white transition-transform hover:scale-[1.03] motion-reduce:hover:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
         >
           {{ t('appPlaceholder.backHome') }}
           <AppIcon name="arrowRight" :size="16" />
         </RouterLink>
       </div>
-    </AppCard>
+    </div>
   </main>
 </template>

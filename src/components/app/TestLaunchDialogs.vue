@@ -67,25 +67,25 @@ const startDetails = computed(() => {
 <template>
   <Teleport to="body">
     <div v-if="isOpen" class="fixed inset-0 z-[300] flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/40" @click="emit('close')"></div>
+      <div class="absolute inset-0 bg-black/30 backdrop-blur-[2px]" @click="emit('close')"></div>
 
       <div
-        class="relative w-full max-w-[420px] rounded-2xl border border-app-border bg-app-surface p-6 text-center shadow-app-card"
+        class="relative w-full max-w-[420px] rounded-[28px] bg-app-surface p-6 text-center shadow-app-card"
         role="dialog"
         aria-modal="true"
         :aria-label="copy.title"
       >
         <span
-          class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-app-tile text-app-ink"
+          class="app-iris mx-auto flex h-14 w-14 items-center justify-center rounded-full text-app-ink ring-4 ring-white shadow-app-card"
         >
           <AppIcon :name="copy.icon" :size="22" />
         </span>
 
-        <h2 class="mt-4 text-[18px] font-bold tracking-[-0.015em] text-app-ink">
+        <h2 class="mt-4 text-[20px] font-medium leading-tight tracking-[-0.02em] text-app-ink">
           {{ copy.title }}
         </h2>
 
-        <p class="mt-2 text-[14px] leading-[1.6] text-app-muted">
+        <p class="mt-2 text-[14px] leading-[1.6] text-app-ink">
           <template v-if="mode === 'start'">
             {{ t('testLaunch.summary', { title: test.title, details: startDetails }) }}
             {{ test.state === 'done' ? t('testLaunch.retakeNote') : t('testLaunch.timerNote') }}
@@ -105,10 +105,10 @@ const startDetails = computed(() => {
 
         <p
           v-if="mode !== 'start'"
-          class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-app-sunken px-3 py-1.5 text-[13px] text-app-muted"
+          class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#efe2ff] px-3.5 py-1.5 text-[13px] font-medium text-app-ink"
         >
           {{ t('testLaunch.balance') }}
-          <CoinIcon :size="14" class="text-app-coin" />
+          <CoinIcon :size="14" class="text-app-ink" />
           <span class="font-semibold text-app-ink">{{ t('common.tangaCount', balance) }}</span>
         </p>
 
@@ -118,7 +118,7 @@ const startDetails = computed(() => {
           <button
             type="button"
             :disabled="busy"
-            class="rounded-full border border-app-border bg-app-surface px-5 py-2.5 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:opacity-60"
+            class="rounded-full bg-app-tile px-5 py-2.5 text-[14px] font-medium text-app-ink transition-colors hover:bg-app-warm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:opacity-60"
             @click="emit('close')"
           >
             {{ t('common.cancel') }}
@@ -126,7 +126,7 @@ const startDetails = computed(() => {
           <button
             type="button"
             :disabled="busy"
-            class="rounded-full bg-app-ink px-5 py-2.5 text-[14px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:opacity-60"
+            class="rounded-full bg-app-ink px-5 py-2.5 text-[14px] font-medium text-white transition-transform hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:opacity-60"
             @click="emit(mode === 'topup' ? 'topup' : 'confirm')"
           >
             {{ copy.confirmLabel }}

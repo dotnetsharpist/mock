@@ -1,50 +1,47 @@
 <script setup>
-// Bosh sahifa — the approved reference screen. Every other platform screen is
-// built from the components this one establishes (docs/DESIGN.md).
+// Bosh sahifa. Every other platform screen is built from the components this one
+// establishes (docs/DESIGN.md).
 //
-// Three blocks, in order: the four figures, the score line, the subjects still
-// in progress. Every number on the page is the signed-in student's own, derived
-// in composables/useDashboardData.js from their real attempts and scores. Where
-// a figure cannot be computed from what the backend exposes it is left out
-// rather than invented — see the empty/`—` branches below.
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+// Top to bottom: the four figures, the score bars beside the exam calendar, the recent tests.
+// Every number on the page is the signed-in student's own, derived in
+// composables/useDashboardData.js from their real attempts and scores. Where a figure
+// cannot be computed from what the backend exposes it is left out rather than invented.
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppTopbar from '@/components/app/AppTopbar.vue'
 import AppCard from '@/components/app/AppCard.vue'
 import AppIcon from '@/components/app/AppIcon.vue'
-import CoinIcon from '@/components/app/CoinIcon.vue'
-import LineChart from '@/components/app/LineChart.vue'
 import EmptyState from '@/components/app/EmptyState.vue'
-import AppSelect from '@/components/app/AppSelect.vue'
+import TangaBanner from '@/components/app/TangaBanner.vue'
+import ScoreChart from '@/components/app/ScoreChart.vue'
+import PageHero from '@/components/app/PageHero.vue'
+import StatTile from '@/components/app/StatTile.vue'
 import SkeletonBlock from '@/components/app/SkeletonBlock.vue'
 import { SUBJECTS, unknownSubject } from '@/components/app/subjects.js'
 import { gradeFromPercentage, hasCertificateGrade } from '@/utils/attemptResults'
 import { useDashboardData } from '@/composables/useDashboardData'
 
-const props = defineProps({
+defineProps({
   user: { type: Object, required: true },
 })
 defineEmits(['openMenu'])
 
 const route = useRoute()
-const { t } = useI18n()
+const { t, tm, rt } = useI18n()
 
 const {
   isLoading,
   errorKind,
+  scoresState,
   load,
+  resolveScores,
   essays,
   finishedAttempts,
-  scoredRecent,
   resultsByAttempt,
   solvedTestCount,
   averagePercent,
-  lastActivity,
-  todayCount,
-  weekComparison,
   scorePoints,
-  growthOver,
 } = useDashboardData()
 
 onMounted(() => {
@@ -66,80 +63,30 @@ const formatDate = (time) => {
   return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`
 }
 
-// The card answers "am I keeping up?", so it counts the gap rather than naming
-// a date — "3 kun oldin" needs no arithmetic from the reader. Whole calendar
-// days, not elapsed milliseconds: last night at 23:00 is "Kecha", not "Bugun".
-const relativeDate = (time) => {
-  if (!time) return '—'
-  const days = Math.round((startOfToday() - startOfDay(time)) / DAY)
-  if (days <= 0) return t('dashboard.relative.today')
-  if (days === 1) return t('dashboard.relative.yesterday')
-  if (days < 7) return t('dashboard.relative.daysAgo', days)
-  if (days < 30) return t('dashboard.relative.weeksAgo', Math.floor(days / 7))
-  if (days < 365) return t('dashboard.relative.monthsAgo', Math.floor(days / 30))
-  return t('dashboard.relative.yearsAgo', Math.floor(days / 365))
-}
-
 // ?empty=1 still previews the first-run screen against real plumbing.
 const forceEmpty = computed(() => route.query.empty === '1')
 const hasHistory = computed(
   () => !forceEmpty.value && (finishedAttempts.value.length > 0 || essays.value.length > 0),
 )
 
-// ——— The four figures ——————————————————————————————————————————————————
-const stats = computed(() => [
+const scoresPending = computed(() => isLoading.value || scoresState.value === 'loading')
+const scoresFailed = computed(() => scoresState.value === 'failed')
+
+// Any mood but the bored one: the greeting changes pose on every visit.
+const HERO_POSES = ['wave', 'thumbsUp', 'thinking', 'laptop', 'idea', 'reading', 'celebrate', 'relax', 'coffee', 'presenting', 'surprised', 'headphones', 'meditate', 'ok']
+
+// ——— The two figures beside the greeting ———————————————————————————————
+// Labels come as two short lines ("ta test" / "yechildi") so the number can be big.
+const heroFigures = computed(() => [
   {
     key: 'solved',
-    icon: 'tests',
-    label: t('dashboard.stats.solved'),
     value: hasHistory.value ? String(solvedTestCount.value) : '0',
-    // Only a real previous week earns a trend line; see weekComparison. Gated
-    // on hasHistory too, or the ?empty=1 preview shows "0 solved" under a
-    // triumphant ↑200% and stops being a preview of anything real.
-    trend:
-      hasHistory.value && weekComparison.value.percent !== null
-        ? {
-            amount: `${weekComparison.value.percent}%`,
-            note: t('dashboard.stats.vsLastWeek'),
-            direction: weekComparison.value.direction,
-          }
-        : null,
-    note: hasHistory.value
-      ? t('dashboard.stats.thisWeek', { n: weekComparison.value.thisWeek })
-      : t('dashboard.stats.noTestsYet'),
+    label: tm('dashboard.hero.solved').map((line) => rt(line)),
   },
   {
     key: 'average',
-    icon: 'trend',
-    label: t('dashboard.stats.average'),
     value: !hasHistory.value || averagePercent.value === null ? '—' : `${averagePercent.value}%`,
-    // Deliberately says which tests it covers: resolving a percentage costs a
-    // request per attempt, so this is the recent window, not a lifetime mean.
-    note: !hasHistory.value
-      ? t('dashboard.stats.noResultYet')
-      : averagePercent.value === null
-        ? t('dashboard.stats.calculating')
-        : t('dashboard.stats.overLastTests', scoredRecent.value.length),
-  },
-  {
-    key: 'tanga',
-    coin: true,
-    label: t('dashboard.stats.balance'),
-    value: String(props.user.tanga),
-    link: { to: '/tanga', label: t('appShell.topbar.buy') },
-  },
-  {
-    key: 'activity',
-    icon: 'clock',
-    label: t('dashboard.stats.lastActivity'),
-    value: hasHistory.value ? relativeDate(lastActivity.value) : '—',
-    // The exact date is still one hover away for anyone who wants it.
-    title: hasHistory.value && lastActivity.value ? formatDate(lastActivity.value) : undefined,
-    note: hasHistory.value
-      ? todayCount.value
-        ? t('dashboard.stats.solvedToday', todayCount.value)
-        : t('dashboard.stats.totalAttempts', finishedAttempts.value.length)
-      : t('dashboard.stats.noActivity'),
+    label: tm('dashboard.hero.average').map((line) => rt(line)),
   },
 ])
 
@@ -154,43 +101,6 @@ const windowOptions = computed(() =>
 const chartWindow = ref(10)
 
 const chartPoints = computed(() => (forceEmpty.value ? [] : scorePoints(chartWindow.value)))
-const growth = computed(() => growthOver(chartPoints.value))
-
-// The chart's viewBox has to track its real render width, because its axis type
-// is sized in viewBox units: a 1120-wide box drawn into the 600px the phone
-// layout gives it renders every label at 6px. Below lg the box narrows to match
-// the scroll container instead, so the numbers stay the size they look.
-const CHART_BOX = { wide: 1120, narrow: 620 }
-const isNarrow = ref(false)
-let viewportQuery = null
-const onViewportChange = (event) => {
-  isNarrow.value = event.matches
-}
-
-onMounted(() => {
-  viewportQuery = window.matchMedia('(max-width: 1023px)')
-  isNarrow.value = viewportQuery.matches
-  viewportQuery.addEventListener('change', onViewportChange)
-})
-
-onUnmounted(() => {
-  viewportQuery?.removeEventListener('change', onViewportChange)
-})
-
-const chartWidth = computed(() => (isNarrow.value ? CHART_BOX.narrow : CHART_BOX.wide))
-
-const growthLabel = computed(() => {
-  if (!growth.value) return ''
-  if (growth.value.direction === 'up') return t('dashboard.chart.growthUp')
-  if (growth.value.direction === 'down') return t('dashboard.chart.growthDown')
-  return t('dashboard.chart.growthFlat')
-})
-
-const growthValue = computed(() => {
-  if (!growth.value) return ''
-  const sign = growth.value.direction === 'up' ? '+' : growth.value.direction === 'down' ? '−' : ''
-  return `${sign}${growth.value.amount}%`
-})
 
 // ——— So‘nggi testlar ————————————————————————————————————————————————————
 // The last mocks this student sat, newest first. Each row's button opens
@@ -203,7 +113,7 @@ const growthValue = computed(() => {
 const recentTests = computed(() => {
   if (!hasHistory.value) return []
 
-  return finishedAttempts.value.slice(0, 4).map((attempt) => {
+  return finishedAttempts.value.slice(0, 5).map((attempt) => {
     const score = resultsByAttempt.value.get(attempt.id)
     const subject = SUBJECTS[attempt.subjectKey] ?? unknownSubject(attempt.subjectRaw)
     const percent = typeof score?.percent === 'number' ? score.percent : null
@@ -212,230 +122,320 @@ const recentTests = computed(() => {
       id: attempt.id,
       icon: subject.icon,
       title: attempt.title,
-      subjectLabel: subject.label,
-      // A score that has not resolved says so, rather than rendering as 0%.
-      meta: [
-        subject.label,
-        formatDate(attempt.finishedAt),
-        t('appUi.questionCount', attempt.questionCount),
-        ...(attempt.expired ? [t('appUi.timeUp')] : []),
-        percent === null
-          ? t('dashboard.recent.scoring')
-          : hasCertificateGrade(percent)
-            ? t('dashboard.recent.grade', { grade: gradeFromPercentage(percent) })
-            : t('dashboard.recent.noCertificate'),
-      ].join(' · '),
+      subject: subject.label,
+      date: formatDate(attempt.finishedAt),
+      expired: attempt.expired,
       percent,
+      // The certificate table's: below 46% there is no grade to print.
+      grade: percent !== null && hasCertificateGrade(percent) ? gradeFromPercentage(percent) : '',
     }
   })
+})
+
+// ——— The bars ———————————————————————————————————————————————————————————
+// The best score in the window is solid black with its figure inside, the rest striped.
+const bestPointIndex = computed(() => {
+  const values = chartPoints.value.map((point) => point.value)
+  return values.indexOf(Math.max(...values))
+})
+
+const chartRange = computed(() => {
+  const times = chartPoints.value.map((point) => point.finishedAt).filter(Boolean)
+  if (!times.length) return ''
+  return `${formatDate(Math.min(...times))} – ${formatDate(Math.max(...times))}`
+})
+
+// ——— The exam calendar —————————————————————————————————————————————————————
+// National exam dates as 'YYYY-MM-DD'. Dates that have passed drop off by themselves.
+const EXAM_DATES = []
+
+const upcomingExams = EXAM_DATES.map((date) => new Date(`${date}T00:00`).getTime())
+  .filter((time) => time >= startOfToday())
+  .sort((a, b) => a - b)
+const nextExam = upcomingExams[0] ?? null
+
+// From the messages, not Intl: Chrome ships no Uzbek calendar data, and printed
+// "M11 2026" and English weekdays.
+const weekdays = computed(() => {
+  const names = tm('dashboard.days.weekdays').map((name) => rt(name))
+  return [...names.slice(1), names[0]]
+})
+const months = computed(() => tm('dashboard.days.months').map((name) => rt(name)))
+
+// Opens on the next exam's month, so the mark is on screen without paging to it.
+const openingMonth = new Date(nextExam ?? Date.now())
+const monthPage = ref(0)
+const shownMonth = computed(
+  () => new Date(openingMonth.getFullYear(), openingMonth.getMonth() + monthPage.value, 1),
+)
+const monthTitle = computed(() => `${months.value[shownMonth.value.getMonth()]} ${shownMonth.value.getFullYear()}`)
+
+// Always six rows from the Monday on or before the 1st, so paging never moves the table below.
+const calendarDays = computed(() => {
+  const first = shownMonth.value
+  const leading = (first.getDay() + 6) % 7
+  return Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(first.getFullYear(), first.getMonth(), 1 - leading + index)
+    const time = date.getTime()
+    return {
+      time,
+      number: date.getDate(),
+      inMonth: date.getMonth() === first.getMonth(),
+      isToday: time === startOfToday(),
+      isExam: upcomingExams.includes(time),
+    }
+  })
+})
+
+const nextExamCountdown = computed(() => {
+  if (nextExam === null) return ''
+  const days = Math.round((nextExam - startOfToday()) / DAY)
+  if (days === 0) return t('dashboard.relative.today')
+  if (days === 1) return t('dashboard.days.tomorrow')
+  return t('dashboard.days.examIn', days)
 })
 </script>
 
 <template>
-  <AppTopbar
-    :title="t('dashboard.title', { name: user.name })"
-    :subtitle="t('dashboard.subtitle')"
-    :user="user"
-    @open-menu="$emit('openMenu')"
-  />
+  <AppTopbar :title="t('appShell.nav.home')" :user="user" @open-menu="$emit('openMenu')" />
 
-  <main class="space-y-4">
-    <!-- Stat row -->
-    <!-- Two per row on a phone, not one: four full-width cards filled the whole
-         screen before "Mening natijalarim" — the chart the numbers exist to
-         explain started a scroll below the fold. Paired up, the same four fit
-         above it. -->
-    <section
-      class="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4"
-      :aria-label="t('dashboard.statsLabel')"
+  <!-- A flex column, not space-y, so a block can change place by `order`. -->
+  <main class="flex flex-col gap-4">
+    <!-- Hello first, then two figures — not a wall of statistics. -->
+    <PageHero
+      :title="t('dashboard.hero.hello', { name: user.name })"
+      :lead="t('dashboard.hero.lead')"
+      :poses="HERO_POSES"
     >
-      <AppCard v-for="stat in stats" :key="stat.key" class="max-sm:p-3.5">
-        <!-- Label, figure, note — one column, no icon tile. The 48px chip was
-             the loudest thing on a card whose whole job is one number, and it
-             pushed the figure into the right two-thirds of the width. The icon
-             stays, small and muted, as a marker for the label rather than an
-             ornament of its own. -->
-        <div class="flex items-center gap-2 text-app-muted">
-          <CoinIcon v-if="stat.coin" :size="15" class="shrink-0 text-app-coin" />
-          <AppIcon v-else :name="stat.icon" :size="15" class="shrink-0" />
-          <p class="truncate text-[12.5px]">{{ stat.label }}</p>
-        </div>
-        <!-- A relative age ("2 hafta oldin") runs longer than a count; at full
-             size it would wrap and drag the whole stat row taller, so long
-             figures step down instead. -->
-        <p
-          class="mt-1.5 font-semibold leading-[1.15] tracking-[-0.03em] text-app-ink"
-          :class="
-            stat.value.length > 11
-              ? 'text-[17px] sm:text-[22px]'
-              : 'text-[24px] sm:text-[30px]'
-          "
-          :title="stat.title"
-        >
-          {{ stat.value }}
-        </p>
-
-        <p
-          v-if="stat.trend"
-          class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11.5px] sm:text-[12px]"
-        >
-          <!-- A fall is red and points down. Painting every change green was
-               fine while the number was invented; against real data it would
-               congratulate a student for solving fewer tests. -->
-          <span
-            class="inline-flex items-center gap-1 font-semibold"
-            :class="{
-              'text-app-good': stat.trend.direction === 'up',
-              'text-app-bad': stat.trend.direction === 'down',
-              'text-app-muted': stat.trend.direction === 'flat',
-            }"
-          >
-            <AppIcon
-              v-if="stat.trend.direction !== 'flat'"
-              name="arrowUp"
-              :size="13"
-              :class="stat.trend.direction === 'up' ? '' : 'rotate-180'"
-            />
-            {{ stat.trend.direction === 'flat' ? t('dashboard.stats.unchanged') : stat.trend.amount }}
-          </span>
-          <span class="text-app-muted">{{ stat.trend.note }}</span>
-        </p>
-
+      <template #action>
         <RouterLink
-          v-else-if="stat.link"
-          :to="stat.link.to"
-          class="mt-2 inline-flex items-center gap-1.5 rounded-md text-[11.5px] font-semibold text-app-ink hover:underline sm:text-[12px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+          to="/testlar"
+          class="inline-flex items-center gap-2 rounded-full bg-app-ink px-5 py-2.5 text-[14px] font-medium text-white transition-transform hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink motion-reduce:hover:scale-100"
         >
-          {{ stat.link.label }}
-          <AppIcon name="arrowRight" :size="14" />
+          {{ t('appUi.startTest') }}
+          <AppIcon name="arrowRight" :size="15" />
         </RouterLink>
+      </template>
+      <template #aside>
+        <StatTile v-for="figure in heroFigures" :key="figure.key" :value="figure.value" :label="figure.label" />
+      </template>
+    </PageHero>
 
-        <p v-else class="mt-2 text-[11.5px] text-app-muted sm:text-[12px]">{{ stat.note }}</p>
-      </AppCard>
-    </section>
+    <!-- Phone and tablet: the short strip right under the figures, where it is seen. -->
+    <TangaBanner compact class="lg:hidden" />
 
-    <!-- The score line, full width -->
-    <section aria-labelledby="results-chart-heading">
-      <AppCard>
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <h2
-            id="results-chart-heading"
-            class="text-[20px] font-bold tracking-[-0.015em] text-app-ink"
-          >
-            {{ t('dashboard.chart.heading') }}
-          </h2>
-
-          <!-- A real control, not the mockup's decorative pill: it re-draws the
-               line. AppSelect rather than a native one, so the open list is the
-               platform's own menu instead of the OS palette. -->
-          <AppSelect
-            v-model="chartWindow"
-            :options="windowOptions"
-            :aria-label="t('dashboard.chart.windowLabel')"
-            class="w-[190px] shrink-0"
-          />
-        </div>
-
-        <div v-if="isLoading" class="mt-5" aria-hidden="true">
-          <SkeletonBlock class="h-[300px] w-full !rounded-2xl" />
-        </div>
-
-        <EmptyState
-          v-else-if="errorKind"
-          icon="close"
-          :title="
-            errorKind === 'network' ? t('appUi.loadErrors.offline') : t('dashboard.chart.loadFailed')
-          "
-          :description="t('appUi.loadErrors.waitAndReload')"
-        />
-
-        <!-- One point is a score, not a line. Below two the chart would draw a
-             single dot and the growth badge would compare a number to itself. -->
-        <EmptyState
-          v-else-if="chartPoints.length < 2"
-          icon="trend"
-          :title="t('dashboard.chart.emptyTitle')"
-          :description="t('dashboard.chart.emptyDescription')"
-          :action-label="t('appUi.startTest')"
-          action-to="/testlar"
-        />
-
-        <div v-else class="mt-5 flex flex-col gap-4 lg:flex-row lg:items-center">
-          <!-- Scrolls rather than shrinks below ~600px: the axis type is sized
-               in viewBox units, so squeezing the whole plot onto a phone screen
-               would take the labels down to about four pixels. -->
-          <div class="min-w-0 flex-1 overflow-x-auto">
-            <div class="min-w-[600px]">
-              <LineChart
-                :points="chartPoints"
-                :width="chartWidth"
-                :height="290"
-                accent-class="text-app-chart"
-                column-grid
-              />
+    <!-- Below xl the pair dissolves into the column (contents) so the calendar
+         can drop to the end: on a phone, So'nggi testlar comes before it. -->
+    <div class="contents xl:grid xl:grid-cols-[minmax(0,1.42fr)_minmax(0,1fr)] xl:gap-4">
+      <!-- The score bars -->
+      <section aria-labelledby="results-chart-heading" class="min-w-0">
+        <AppCard class="h-full">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <h2 id="results-chart-heading" class="text-[17px] font-normal tracking-[-0.01em] text-app-ink sm:text-[18px]">
+                {{ t('dashboard.chart.heading') }}
+              </h2>
+              <p v-if="chartPoints.length >= 2" class="mt-2 flex items-baseline gap-2 text-app-ink">
+                <span class="text-[32px] font-normal leading-none tracking-[-0.04em] tabular-nums">
+                  {{ chartPoints[bestPointIndex]?.value }}%
+                </span>
+                <span class="text-[13px]">{{ t('dashboard.chart.best') }}</span>
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+            <!-- How many recent tests the line covers: the landing's segmented
+                 switch, the chosen one black. -->
+            <div
+              class="flex items-center gap-0.5 rounded-full bg-app-tile p-1"
+              role="group"
+              :aria-label="t('dashboard.chart.windowLabel')"
+            >
+              <button
+                v-for="option in windowOptions"
+                :key="option.value"
+                type="button"
+                class="rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink sm:px-3.5 sm:text-[13px]"
+                :class="chartWindow === option.value ? 'bg-app-ink text-white' : 'text-app-ink hover:bg-app-surface'"
+                :aria-pressed="chartWindow === option.value"
+                @click="chartWindow = option.value"
+              >
+                {{ option.label }}
+              </button>
+            </div>
+            <RouterLink
+              to="/natijalarim"
+              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-app-tile text-app-ink transition-colors hover:bg-app-warm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+              :aria-label="t('dashboard.recent.allResults')"
+            >
+              <AppIcon name="arrowRight" :size="16" class="-rotate-45" />
+            </RouterLink>
             </div>
           </div>
+
+          <!-- Scores land after the attempts, so "no bars yet" is only true once they
+               have. Saying it earlier told a student with eighteen tests to sit two. -->
+          <div v-if="chartPoints.length < 2 && scoresPending" class="mt-5" aria-hidden="true">
+            <SkeletonBlock class="h-[265px] w-full !rounded-2xl" />
+          </div>
+
+          <EmptyState
+            v-else-if="errorKind"
+            compact
+            icon="close"
+            :title="
+              errorKind === 'network' ? t('appUi.loadErrors.offline') : t('dashboard.chart.loadFailed')
+            "
+            :description="t('appUi.loadErrors.waitAndReload')"
+          />
+
+          <div v-else-if="chartPoints.length < 2 && scoresFailed && hasHistory" class="pb-6 text-center">
+            <EmptyState
+              compact
+              icon="close"
+              :title="t('dashboard.chart.scoresFailedTitle')"
+              :description="t('dashboard.chart.scoresFailedDescription')"
+              class="mx-auto !pb-4"
+            />
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.5 rounded-full bg-app-tile px-4 py-2 text-[13px] font-medium text-app-ink transition-colors hover:bg-app-warm"
+              @click="resolveScores"
+            >
+              <AppIcon name="refresh" :size="14" />
+              {{ t('dashboard.stats.retry') }}
+            </button>
+          </div>
+
+          <!-- One point is a score, not a trend. -->
+          <EmptyState
+            v-else-if="chartPoints.length < 2"
+            compact
+            icon="trend"
+            :title="t('dashboard.chart.emptyTitle')"
+            :description="t('dashboard.chart.emptyDescription')"
+            :action-label="t('appUi.startTest')"
+            action-to="/testlar"
+          />
 
           <div
-            class="flex shrink-0 flex-col items-center justify-center rounded-2xl bg-app-sunken px-6 py-5 lg:w-[136px]"
+            v-else
+            class="mt-6"
+            role="img"
+            :aria-label="t('appUi.chartLabel', { points: chartPoints.map((point) => `${point.label} ${point.value}%`).join(', ') })"
           >
-            <p class="text-[28px] font-bold leading-none tracking-[-0.03em] text-app-ink">
-              {{ growthValue }}
-            </p>
-            <!-- The direction carries the colour, not the figure: a drop has to
-                 be visible, but the mock's black number is the right weight. -->
-            <p
-              class="mt-2 inline-flex items-center gap-1 text-[13px]"
-              :class="growth.direction === 'down' ? 'text-app-bad' : 'text-app-muted'"
-            >
-              <AppIcon
-                v-if="growth.direction !== 'flat'"
-                name="trend"
-                :size="14"
-                :class="growth.direction === 'down' ? 'scale-y-[-1]' : ''"
-              />
-              {{ growthLabel }}
+            <ScoreChart :points="chartPoints" :best-index="bestPointIndex" />
+            <p v-if="chartRange" class="mt-4 flex items-center gap-1.5 text-[12px] tabular-nums text-app-ink sm:text-[13px]">
+              <AppIcon name="calendar" :size="14" />
+              {{ chartRange }}
             </p>
           </div>
+        </AppCard>
+      </section>
+
+      <!-- The exam calendar, and how far off the next one is -->
+      <section class="flex min-w-0 flex-col justify-between rounded-2xl border border-app-border bg-app-surface p-3 max-xl:order-last" :aria-label="t('dashboard.days.label')">
+        <div class="flex items-center justify-center gap-5 pt-1.5">
+          <button
+            type="button"
+            class="flex h-8 w-8 items-center justify-center rounded-full text-app-muted transition-colors hover:bg-app-tile hover:text-app-ink"
+            :aria-label="t('dashboard.days.previous')"
+            @click="monthPage -= 1"
+          >
+            <AppIcon name="chevronRight" :size="17" class="rotate-180" />
+          </button>
+          <p class="w-[150px] text-center text-[17px] tracking-[-0.01em] text-app-ink">{{ monthTitle }}</p>
+          <button
+            type="button"
+            class="flex h-8 w-8 items-center justify-center rounded-full text-app-muted transition-colors hover:bg-app-tile hover:text-app-ink"
+            :aria-label="t('dashboard.days.next')"
+            @click="monthPage += 1"
+          >
+            <AppIcon name="chevronRight" :size="17" />
+          </button>
         </div>
 
-        <p v-if="chartPoints.length >= 2" class="mt-3 text-[12px] text-app-muted">
-          {{ t('dashboard.chart.caption') }}
-        </p>
-      </AppCard>
-    </section>
+        <div class="my-3 px-1 sm:px-3">
+          <div class="grid grid-cols-7 text-center text-[12.5px] text-app-muted" aria-hidden="true">
+            <span v-for="name in weekdays" :key="name" class="pb-1.5">{{ name }}</span>
+          </div>
+          <ul class="grid grid-cols-7 gap-y-0.5">
+            <li v-for="day in calendarDays" :key="day.time" class="flex h-8 justify-center">
+              <span
+                v-if="day.inMonth"
+                class="flex h-8 w-full max-w-[44px] items-center justify-center rounded-[10px] text-[13.5px] font-medium tabular-nums"
+                :class="
+                  day.isExam
+                    ? 'bg-app-ink font-semibold text-white shadow-[0_8px_16px_-8px_rgba(20,20,25,0.6)]'
+                    : day.isToday
+                      ? 'text-app-ink ring-1 ring-inset ring-app-ink'
+                      : 'text-app-ink'
+                "
+                :aria-current="day.isToday ? 'date' : undefined"
+                :title="day.isExam ? t('dashboard.days.examDay') : undefined"
+              >
+                {{ day.number }}
+                <span v-if="day.isExam" class="sr-only">{{ t('dashboard.days.examDay') }}</span>
+              </span>
+            </li>
+          </ul>
+        </div>
 
-    <!-- The last mocks sat — each row opens that attempt's analysis -->
-    <section aria-labelledby="recent-tests-heading">
-      <AppCard>
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <h2
-            id="recent-tests-heading"
-            class="text-[20px] font-bold tracking-[-0.015em] text-app-ink"
+        <!-- The black tile doubles as the calendar's legend. -->
+        <div class="flex items-center gap-3 rounded-[16px] border border-app-border px-3.5 py-3">
+          <span
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] text-[16px] font-semibold tabular-nums"
+            :class="nextExam === null ? 'bg-app-tile text-app-ink' : 'bg-app-ink text-white'"
+            aria-hidden="true"
           >
+            <template v-if="nextExam !== null">{{ new Date(nextExam).getDate() }}</template>
+            <AppIcon v-else name="calendar" :size="18" />
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-[15px] text-app-ink">{{ t('dashboard.days.nextExam') }}</p>
+            <p class="mt-0.5 truncate text-[12.5px] tabular-nums text-app-muted">
+              {{ nextExam === null ? t('dashboard.days.noDate') : formatDate(nextExam) }}
+            </p>
+          </div>
+          <span v-if="nextExam !== null" class="shrink-0 text-[14px] font-medium text-app-ink">{{ nextExamCountdown }}</span>
+        </div>
+      </section>
+    </div>
+
+    <TangaBanner class="max-lg:hidden" />
+
+    <!-- The last mocks sat -->
+    <section aria-labelledby="recent-tests-heading">
+      <AppCard :padded="false" class="overflow-hidden">
+        <div class="flex items-center justify-between gap-3 px-5 py-4">
+          <h2 id="recent-tests-heading" class="text-[17px] font-normal tracking-[-0.01em] text-app-ink sm:text-[18px]">
             {{ t('dashboard.recent.heading') }}
           </h2>
-          <RouterLink
-            to="/natijalarim"
-            class="inline-flex shrink-0 items-center gap-1.5 rounded-md text-[13px] font-medium text-app-muted transition-colors hover:text-app-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
-          >
-            <span class="hidden sm:inline">{{ t('dashboard.recent.allResults') }}</span>
-            <AppIcon name="arrowRight" :size="15" />
-          </RouterLink>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="flex h-9 w-9 items-center justify-center rounded-full bg-app-tile text-app-ink transition-colors hover:bg-app-warm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+              :aria-label="t('dashboard.recent.refresh')"
+              @click="load"
+            >
+              <AppIcon name="refresh" :size="15" />
+            </button>
+            <RouterLink
+              to="/natijalarim"
+              class="flex h-9 w-9 items-center justify-center rounded-full bg-app-tile text-app-ink transition-colors hover:bg-app-warm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+              :aria-label="t('dashboard.recent.allResults')"
+            >
+              <AppIcon name="arrowRight" :size="16" class="-rotate-45" />
+            </RouterLink>
+          </div>
         </div>
 
-        <div v-if="isLoading" class="mt-4 space-y-3" aria-hidden="true">
-          <div v-for="n in 3" :key="n" class="flex items-center gap-4 px-2 py-3">
-            <SkeletonBlock class="h-12 w-12 shrink-0 !rounded-[14px]" />
-            <div class="flex-1">
-              <SkeletonBlock class="h-4 w-[min(240px,50%)]" />
-              <SkeletonBlock class="mt-3 h-2 w-full !rounded-full" />
-            </div>
-          </div>
+        <div v-if="isLoading" class="space-y-3 border-t border-app-border px-5 py-4" aria-hidden="true">
+          <SkeletonBlock v-for="n in 4" :key="n" class="h-10 w-full" />
         </div>
 
         <EmptyState
           v-else-if="!recentTests.length"
+          compact
           icon="tests"
           :title="t('dashboard.recent.emptyTitle')"
           :description="t('dashboard.recent.emptyDescription')"
@@ -443,70 +443,48 @@ const recentTests = computed(() => {
           action-to="/testlar"
         />
 
-        <!-- The row is not a link: the analysis is one destination among the
-             several a row could plausibly lead to, so it gets a named button
-             rather than a whole-row click that gives no clue where it goes. -->
-        <ul v-else class="mt-2 space-y-1">
-          <!-- Below sm the score and button wrap to their own line: kept inline
-               they left the title about 90px and it truncated to "25.05.2…". -->
-          <li
-            v-for="test in recentTests"
-            :key="test.id"
-            class="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl px-2 py-3"
-          >
-            <span
-              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-app-tile text-app-ink"
-              aria-hidden="true"
-            >
-              <AppIcon :name="test.icon" :size="22" />
-            </span>
-
-            <div class="min-w-0 flex-1">
-              <p class="truncate text-[16px] font-bold tracking-[-0.01em] text-app-ink">
-                {{ test.title }}
-              </p>
-              <p class="mt-0.5 truncate text-[13px] text-app-muted">{{ test.meta }}</p>
-
-              <!-- An unresolved score leaves the track empty rather than
-                   drawing a zero-width bar that reads as a nil result. -->
-              <div
-                class="mt-2.5 h-2 overflow-hidden rounded-full bg-app-tile"
-                role="progressbar"
-                :aria-valuenow="test.percent ?? undefined"
-                aria-valuemin="0"
-                aria-valuemax="100"
-                :aria-label="t('dashboard.recent.progressLabel', { title: test.title })"
-              >
-                <div
-                  v-if="test.percent !== null"
-                  class="h-full rounded-full bg-app-chart transition-[width] duration-500"
-                  :style="{ width: `${test.percent}%` }"
-                ></div>
-              </div>
-            </div>
-
-            <div class="flex w-full shrink-0 items-center justify-end gap-3 sm:w-auto">
-              <!-- Its own column rather than the end of the bar: sitting at the
-                   bar's right it landed directly under the button and read as
-                   part of it. -->
-              <span class="text-right text-[15px] font-bold tracking-[-0.01em] text-app-ink sm:w-12">
-                {{ test.percent === null ? '—' : `${test.percent}%` }}
-              </span>
-
-              <!-- Goes to Natijalar, not this attempt's own /explanation page:
-                   that screen is reached from the card there, so Bosh sahifa
-                   hands the student to the one place every result lives. -->
-              <RouterLink
-                to="/natijalarim"
-                class="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-app-ink px-3.5 py-2 text-[13px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
-                :aria-label="t('dashboard.recent.analysisLabel', { title: test.title })"
-              >
-                {{ t('dashboard.recent.analysis') }}
-                <AppIcon name="arrowRight" :size="14" />
-              </RouterLink>
-            </div>
-          </li>
-        </ul>
+        <table v-else class="w-full table-fixed text-left">
+          <thead>
+            <tr class="border-y border-app-border text-[13px] text-app-muted sm:text-[14px]">
+              <th scope="col" class="px-5 py-2.5 font-normal">{{ t('dashboard.recent.columns.test') }}</th>
+              <th scope="col" class="hidden w-[16%] px-3 py-2.5 font-normal md:table-cell">{{ t('dashboard.recent.columns.subject') }}</th>
+              <th scope="col" class="hidden w-[15%] px-3 py-2.5 font-normal md:table-cell">{{ t('dashboard.recent.columns.date') }}</th>
+              <th scope="col" class="w-[68px] px-2 py-2.5 font-normal sm:w-[12%] sm:px-3">{{ t('dashboard.recent.columns.score') }}</th>
+              <th scope="col" class="w-[84px] py-2.5 pl-2 pr-4 font-normal sm:w-[14%] sm:pl-3 sm:pr-5">{{ t('dashboard.recent.columns.grade') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="test in recentTests" :key="test.id" class="border-b border-app-border transition-colors last:border-0 hover:bg-app-sunken">
+              <td class="px-5 py-3">
+                <RouterLink
+                  to="/natijalarim"
+                  class="flex min-w-0 items-center gap-3 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+                  :aria-label="t('dashboard.recent.analysisLabel', { title: test.title })"
+                >
+                  <span class="hidden h-10 w-[54px] shrink-0 items-center justify-center rounded-xl bg-app-tile text-app-ink sm:flex" aria-hidden="true">
+                    <AppIcon :name="test.icon" :size="19" />
+                  </span>
+                  <span class="min-w-0">
+                    <span class="block truncate text-[14px] font-medium text-app-ink">{{ test.title }}</span>
+                    <span class="mt-0.5 block truncate text-[12px] text-app-muted md:hidden">{{ test.subject }} · {{ test.date }}</span>
+                  </span>
+                </RouterLink>
+              </td>
+              <td class="hidden truncate px-3 py-3 text-[14px] text-app-ink md:table-cell">{{ test.subject }}</td>
+              <td class="hidden px-3 py-3 text-[14px] tabular-nums text-app-ink md:table-cell">{{ test.date }}</td>
+              <td class="px-2 py-3 text-[14px] font-medium tabular-nums text-app-ink sm:px-3">
+                <SkeletonBlock v-if="test.percent === null && scoresPending" class="h-4 w-9" />
+                <template v-else>{{ test.percent === null ? '—' : `${test.percent}%` }}</template>
+              </td>
+              <td class="py-3 pl-2 pr-4 sm:pl-3 sm:pr-5">
+                <span v-if="test.grade" class="inline-flex min-w-[52px] justify-center rounded-full bg-app-ink px-3 py-1 text-[12.5px] font-medium text-white">
+                  {{ test.grade }}
+                </span>
+                <span v-else-if="test.percent !== null" class="text-[12px] text-app-muted">{{ t('dashboard.recent.noCertificate') }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </AppCard>
     </section>
   </main>

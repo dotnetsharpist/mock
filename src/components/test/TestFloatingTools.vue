@@ -22,6 +22,18 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  // The page places the pill itself (TestPage keeps it clear of the sheet);
+  // without this it pins to the screen corner, as the demo pages want.
+  inline: {
+    type: Boolean,
+    default: false,
+  },
+  // From 1360px the same pill, a size smaller, so it fits in the margin just
+  // beside the test sheet.
+  rail: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 defineEmits(['pause'])
@@ -30,13 +42,17 @@ const formattedTime = computed(() => formatCountdown(props.remainingSeconds))
 </script>
 
 <template>
-  <div class="fixed right-3 top-3 z-30 sm:right-6 sm:top-6">
+  <div :class="inline ? '' : 'fixed right-3 top-3 z-30 sm:right-6 sm:top-6'">
     <div
       class="floating-timer flex items-center gap-2 rounded-full border border-white/10 bg-black/92 px-3 py-2 text-white shadow-[0_14px_32px_rgba(0,0,0,0.22)] backdrop-blur-md sm:gap-3 sm:px-4 sm:py-3"
-      :class="pausable ? '!pr-2 sm:!pr-3' : ''"
+      :class="[
+        pausable ? '!pr-2 sm:!pr-3' : '',
+        rail ? 'is-rail min-[1360px]:gap-2 min-[1360px]:!px-2 min-[1360px]:!py-2' : '',
+      ]"
     >
       <div
         class="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 sm:h-11 sm:w-11"
+        :class="rail ? 'min-[1360px]:h-8 min-[1360px]:w-8' : ''"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -66,6 +82,7 @@ const formattedTime = computed(() => formatCountdown(props.remainingSeconds))
         :aria-label="pauseLabel"
         :title="pauseLabel"
         class="flex h-8 w-8 items-center justify-center rounded-full bg-white text-black transition hover:bg-white/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:w-11"
+        :class="rail ? 'min-[1360px]:h-8 min-[1360px]:w-8' : ''"
         @click="$emit('pause')"
       >
         <svg viewBox="0 0 24 24" fill="currentColor" class="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true">
@@ -91,6 +108,7 @@ const formattedTime = computed(() => formatCountdown(props.remainingSeconds))
   min-width: 118px;
 }
 
+
 @media (min-width: 640px) {
   .countdown-text {
     font-size: 26px;
@@ -99,6 +117,18 @@ const formattedTime = computed(() => formatCountdown(props.remainingSeconds))
 
   .floating-timer {
     min-width: 170px;
+  }
+}
+
+/* The smaller pill that fits beside the test sheet (TestPage, from 1360px). */
+@media (min-width: 1360px) {
+  .is-rail .countdown-text {
+    font-size: 19px;
+    letter-spacing: 0.03em;
+  }
+
+  .floating-timer.is-rail {
+    min-width: 0;
   }
 }
 </style>

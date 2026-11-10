@@ -165,3 +165,23 @@ export const ACTION_BY_STATE = {
     return t('appUi.startTest')
   },
 }
+
+// Each subject's pastel, from the landing's light (pink, lilac, blue, peach).
+// One tint per subject everywhere it appears — the Testlar card, a result card's
+// mark — so colour says "which subject", never "how well".
+const TINTS = {
+  math: ['#efe2ff', '#e2dcff'],
+  motherTongue: ['#ffe2ec', '#f7dcf6'],
+  physics: ['#dce8ff', '#e6e0ff'],
+  history: ['#ffebd0', '#ffe0e8'],
+  biology: ['#f5dffb', '#dde6ff'],
+  chemistry: ['#e6e0ff', '#ffe0ee'],
+  geography: ['#dfeeff', '#efe2ff'],
+  english: ['#ffe4f0', '#e3e4ff'],
+  informatics: ['#e4e2ff', '#dcecff'],
+}
+
+export function subjectTint(key) {
+  const [from, to] = TINTS[key] || TINTS.math
+  return { from, to, background: `linear-gradient(135deg, ${from} 0%, ${to} 100%)` }
+}

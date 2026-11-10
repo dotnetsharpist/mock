@@ -1,21 +1,79 @@
 <script setup>
+import { computed } from 'vue'
 import gerbSvg from '@/assets/gerb.svg?raw'
+// The paper itself: the guilloché sheet with its border and corner lattice.
+import paperUrl from '@/assets/certificate-bg.webp'
+import { urlFor } from '@/composables/useMascot'
+import { guessGender } from '@/utils/mascot'
 
-defineProps({
+const props = defineProps({
   data: {
     type: Object,
     required: true,
   },
 })
 
-const gerbMarkup = gerbSvg.replace(/<\?xml[^>]*>\s*/i, '').trim()
+// The photo box shows the student's mascot (girl or boy, read from the names
+// printed on the certificate) in the OK pose, instead of an empty silhouette.
+const mascot = computed(() =>
+  urlFor(guessGender({ lastName: props.data.lastName, fatherName: props.data.fatherName }) === 'female' ? 'girl' : 'boy', 'ok'),
+)
+
+// A round rubber stamp, the way a real one is struck: double ring, wording
+// around the rim, a band across the middle, slightly worn ink. Built as an SVG data URI and shown through <img> so html2canvas
+// (the PDF export) draws it exactly as the screen does.
+// The emblem file is 1080×1080 with no viewBox, so shrunk to the 140px logo
+// box it showed only its empty top-left corner. The viewBox frames just the
+// emblem (the canvas has wide empty margins) so it fills the box.
+const gerbMarkup = gerbSvg
+  .replace(/<\?xml[^>]*>\s*/i, '')
+  .replace(/<svg\b(?![^>]*viewBox)/, '<svg viewBox="130 120 820 820"')
+  .trim()
+
+// "Amal qilish muddati": the real certificate is valid three years less a day
+// from issue (09.12.2025 → 08.12.2028). issuedDate arrives as dd.mm.yyyy.
+const validUntil = computed(() => {
+  const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(props.data.issuedDate || ''))
+  if (!match) return ''
+  const date = new Date(Number(match[3]) + 3, Number(match[2]) - 1, Number(match[1]) - 1)
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}`
+})
+
+const STAMP_INK = '#b3372a'
+const stampSvg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <filter id="worn" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="noise"/>
+      <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.1 1.3" result="holes"/>
+      <feComposite in="SourceGraphic" in2="holes" operator="in"/>
+    </filter>
+    <path id="rim-top" d="M 28 100 A 72 72 0 0 1 172 100"/>
+    <path id="rim-bottom" d="M 22 100 A 78 78 0 0 0 178 100"/>
+  </defs>
+  <g filter="url(#worn)" fill="none" stroke="${STAMP_INK}" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900">
+    <circle cx="100" cy="100" r="95" stroke-width="5"/>
+    <circle cx="100" cy="100" r="86" stroke-width="1.6"/>
+    <circle cx="100" cy="100" r="54" stroke-width="1.6"/>
+    <text fill="${STAMP_INK}" stroke="none" font-size="17" letter-spacing="3">
+      <textPath href="#rim-top" startOffset="50%" text-anchor="middle">MILLIY MOCK</textPath>
+    </text>
+    <text fill="${STAMP_INK}" stroke="none" font-size="13" letter-spacing="2.5">
+      <textPath href="#rim-bottom" startOffset="50%" text-anchor="middle">SINOV SERTIFIKATI</textPath>
+    </text>
+    <rect x="10" y="83" width="180" height="34" rx="3" fill="#f3e6c5" stroke-width="3"/>
+    <text x="100" y="107" text-anchor="middle" fill="${STAMP_INK}" stroke="none" font-size="15" letter-spacing="0.6">ORIGINAL EMAS</text>
+    <text x="100" y="72" text-anchor="middle" fill="${STAMP_INK}" stroke="none" font-size="12" letter-spacing="2">★ UZ ★</text>
+    <text x="100" y="139" text-anchor="middle" fill="${STAMP_INK}" stroke="none" font-size="11" letter-spacing="2">${new Date().getFullYear()}</text>
+  </g>
+</svg>`
+const stampSrc = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(stampSvg)}`
+
 </script>
 
 <template>
-  <div class="certificate-page">
-    <div class="frame"></div>
-    <div class="ornament-top-right"></div>
-    <div class="ornament-bottom-left"></div>
+  <div class="certificate-page" :style="{ backgroundImage: `url(${paperUrl})` }">
 
     <div class="content">
       <div
@@ -37,9 +95,9 @@ const gerbMarkup = gerbSvg.replace(/<\?xml[^>]*>\s*/i, '').trim()
         TO‘G‘RISIDA SERTIFIKAT
       </h2>
 
-      <div class="row-between certificate-number">
-        <div><span class="label">Sertifikat raqami:</span></div>
-        <div class="value">{{ data.certificateNumber }}</div>
+      <div class="certificate-number">
+        <span class="label">Sertifikat raqami:</span>
+        <span class="value">{{ data.certificateNumber }}</span>
       </div>
 
       <hr class="divider-soft" />
@@ -59,38 +117,20 @@ const gerbMarkup = gerbSvg.replace(/<\?xml[^>]*>\s*/i, '').trim()
           <div class="value">{{ data.fatherName }}</div>
         </div>
 
+        <!-- Where the photo goes on the real one: the student's mascot. -->
         <div class="photo">
-          <svg class="photo-icon" viewBox="0 0 64 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <defs>
-              <linearGradient id="photoBg" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#f7ecd0" />
-                <stop offset="100%" stop-color="#e3ce9c" />
-              </linearGradient>
-            </defs>
-            <rect x="0.5" y="0.5" width="63" height="79" fill="url(#photoBg)" stroke="#c19c5c" stroke-width="1" />
-            <circle cx="32" cy="30" r="11" fill="none" stroke="#8a6a2e" stroke-width="2" />
-            <path
-              d="M12 70 C14 55, 22 49, 32 49 C42 49, 50 55, 52 70 Z"
-              fill="none"
-              stroke="#8a6a2e"
-              stroke-width="2"
-              stroke-linejoin="round"
-            />
-          </svg>
+          <img :src="mascot" alt="" class="photo-mascot" />
         </div>
       </div>
 
       <hr class="divider-soft" />
 
       <div class="subject-grid">
-        <div class="label">Umumta'lim fani:</div>
+        <div class="label">Umumta’lim fani:</div>
         <div class="value">{{ data.subjectLine }}</div>
 
         <div class="label">Umumiy to‘plagan bali:</div>
         <div class="value">{{ data.totalScore }}</div>
-
-        <div class="label">Maksimal ball:</div>
-        <div class="value">{{ data.maxScore }}</div>
 
         <div class="label">Umumiy ballga nisbatan foiz ko‘rsatkichi:</div>
         <div class="value">{{ data.percentage }}</div>
@@ -99,101 +139,66 @@ const gerbMarkup = gerbSvg.replace(/<\?xml[^>]*>\s*/i, '').trim()
         <div class="value">{{ data.grade }}</div>
       </div>
 
-      <div class="results-title">Test natijalari:</div>
+      <div class="results-title">Bo‘limlar bo‘yicha test sinovi natijalari:</div>
 
       <div class="results">
         <template v-for="row in data.resultRows" :key="row.name">
-          <div class="name muted">{{ row.name }}</div>
+          <div class="name">{{ row.name }}</div>
           <div class="score">{{ row.score }}</div>
         </template>
       </div>
 
-      <div class="bottom-area">
-        <div class="bottom-meta">
-          <div>
-            <span class="label">Berilgan sanasi:</span>
-            <span class="value">{{ data.issuedDate }}</span>
-          </div>
+      <hr class="divider-soft divider-foot" />
+
+      <div class="bottom-meta">
+        <div>
+          <span class="label">Berilgan sanasi:</span>
+          <span class="value">{{ data.issuedDate }}</span>
+        </div>
+        <div v-if="validUntil">
+          <span class="label">Amal qilish muddati:</span>
+          <span class="value">{{ validUntil }}</span>
         </div>
       </div>
-    </div>
 
-    <div class="fake-stamp" aria-hidden="true">
-      <div class="stamp-inner">
-        <span class="stamp-main">Sertifikat</span>
-        <div class="stamp-divider"></div>
-        <span class="stamp-sub">Original emas</span>
+      <!-- Where the real one has the director's QR code: the "not original"
+           stamp, so this can never pass for the real document. -->
+      <div class="stamp-row">
+        <img :src="stampSrc" alt="" class="fake-stamp" aria-hidden="true" />
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* Laid out after the real BMBA certificate. The paper, border band and
+   corner lattice all come from the background image (bound in the template so
+   html2canvas sees a plain background-image); the text sits on top. */
 .certificate-page {
   position: relative;
   width: 794px;
   min-height: 1123px;
-  color: #2d2518;
-  background: linear-gradient(135deg, #eee1bf 0%, #e3ce9c 100%);
-  border: 8px solid #c19c5c;
+  color: #1c1a16;
+  background-color: #e4d6a4;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
   overflow: hidden;
   z-index: 1;
-  font-family: 'Times New Roman', Georgia, serif;
-}
-
-.certificate-page::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg stroke='%23c19c5c' stroke-width='1' fill='none' opacity='0.18'%3E%3Cpath d='M30 0 L60 30 L30 60 L0 30 Z' /%3E%3Cpath d='M15 15 L45 15 L45 45 L15 45 Z' /%3E%3Cpath d='M0 0 L60 60 M60 0 L0 60' /%3E%3C/g%3E%3C/svg%3E");
-  z-index: -1;
-  pointer-events: none;
-}
-
-.frame {
-  position: absolute;
-  inset: 6px;
-  border: 1px solid #c19c5c;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.ornament-top-right,
-.ornament-bottom-left {
-  position: absolute;
-  width: 360px;
-  height: 360px;
-  pointer-events: none;
-  z-index: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg stroke='%23c19c5c' stroke-width='2' fill='none' opacity='0.75'%3E%3Cpath d='M30 0 L60 30 L30 60 L0 30 Z' /%3E%3Cpath d='M15 15 L45 15 L45 45 L15 45 Z' /%3E%3Cpath d='M0 0 L60 60 M60 0 L0 60' /%3E%3C/g%3E%3C/svg%3E");
-}
-
-.ornament-top-right {
-  top: 0;
-  right: 0;
-  -webkit-mask-image: radial-gradient(circle at 100% 0%, black 15%, transparent 70%);
-  mask-image: radial-gradient(circle at 100% 0%, black 15%, transparent 70%);
-}
-
-.ornament-bottom-left {
-  left: 0;
-  bottom: 0;
-  -webkit-mask-image: radial-gradient(circle at 0% 100%, black 15%, transparent 70%);
-  mask-image: radial-gradient(circle at 0% 100%, black 15%, transparent 70%);
+  font-family: 'DejaVu Serif', 'Noto Serif', Georgia, 'Times New Roman', serif;
 }
 
 .content {
   position: relative;
   z-index: 3;
-  padding: 54px 58px 44px;
+  /* Bottom padding keeps the stamp inside the frame's bottom rule. */
+  padding: 56px 76px 60px;
 }
 
 .logo {
-  width: 140px;
-  height: 140px;
+  width: 132px;
+  height: 132px;
   margin: 0 auto 14px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -208,196 +213,142 @@ const gerbMarkup = gerbSvg.replace(/<\?xml[^>]*>\s*/i, '').trim()
 
 .top-title {
   text-align: center;
-  font-size: 16px;
+  font-size: 14.5px;
   font-weight: 700;
-  line-height: 1.35;
+  line-height: 1.45;
   text-transform: uppercase;
-  letter-spacing: 0.2px;
   margin: 0;
 }
 
 .divider-strong {
   border: none;
-  border-top: 4px solid #2d2518;
-  margin: 20px 0 16px;
+  border-top: 3px solid #1c1a16;
+  margin: 22px 0 18px;
 }
 
 .main-title {
   text-align: center;
-  font-size: 25px;
-  line-height: 1.45;
+  font-size: 17px;
+  line-height: 1.5;
   font-weight: 700;
   text-transform: uppercase;
-  margin: 0 0 24px;
-  padding: 0 36px;
+  margin: 0 0 18px;
 }
 
-.row-between {
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  align-items: baseline;
+.label {
+  font-weight: 400;
+  color: #3b382f;
+}
+
+.value {
+  font-weight: 700;
+  color: #141210;
 }
 
 .certificate-number {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-
-.certificate-number .label,
-.info-grid .label,
-.subject-grid .label,
-.results .name,
-.bottom-meta .label {
-  font-weight: 600;
-  color: #333;
-}
-
-.certificate-number .value,
-.info-grid .value,
-.subject-grid .value,
-.results .score,
-.bottom-meta .value {
-  font-weight: 700;
-  color: #111;
+  display: grid;
+  grid-template-columns: 58% 1fr;
+  font-size: 15px;
+  margin-bottom: 4px;
 }
 
 .divider-soft {
   border: none;
-  border-top: 1px solid rgba(45, 37, 24, 0.4);
-  margin: 12px 0 20px;
+  border-top: 1px solid rgba(60, 55, 40, 0.25);
+  margin: 10px 0 14px;
 }
 
 .info-section {
   display: grid;
-  grid-template-columns: 1fr 132px;
-  gap: 26px;
+  grid-template-columns: 1fr 116px;
+  gap: 24px;
   align-items: start;
-  margin-bottom: 12px;
 }
 
 .info-grid {
   display: grid;
-  grid-template-columns: 240px 1fr;
-  row-gap: 16px;
-  column-gap: 20px;
-  font-size: 18px;
+  grid-template-columns: 250px 1fr;
+  row-gap: 10px;
+  font-size: 15px;
+  padding-top: 4px;
 }
 
 .photo {
-  width: 132px;
-  height: 164px;
-  border: 1px solid rgba(45, 37, 24, 0.4);
-  background: rgba(255, 255, 255, 0.5);
+  width: 116px;
+  height: 148px;
+  border: 1px solid rgba(60, 55, 40, 0.35);
+  background: linear-gradient(180deg, #f6f1dd 0%, #e6dcb4 100%);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   overflow: hidden;
-  margin-top: 4px;
 }
 
-.photo-icon {
-  width: 100%;
-  height: 100%;
+/* The mascot stands on the frame's floor like a passport photo. */
+.photo-mascot {
+  width: 94%;
+  height: 94%;
+  object-fit: contain;
+  object-position: bottom center;
   display: block;
 }
 
 .subject-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px 30px;
-  font-size: 18px;
-  margin: 8px 0 10px;
+  grid-template-columns: 58% 1fr;
+  row-gap: 10px;
+  font-size: 16px;
+  margin: 4px 0 0;
 }
 
 .results-title {
   margin: 28px 0 10px;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
 }
 
 .results {
   display: grid;
-  grid-template-columns: 1fr 140px;
-  row-gap: 10px;
+  grid-template-columns: 1fr auto;
+  row-gap: 6px;
   column-gap: 24px;
-  font-size: 16px;
-  padding-left: 2px;
-  min-height: 80px;
+  font-size: 14px;
+  min-height: 60px;
 }
 
-.bottom-area {
-  margin-top: 40px;
+.results .name {
+  color: #3b382f;
+}
+
+.results .score {
+  text-align: right;
+  color: #3b382f;
+  font-variant-numeric: tabular-nums;
+}
+
+.divider-foot {
+  margin: 18px 0 14px;
 }
 
 .bottom-meta {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  font-size: 16px;
-  margin-bottom: 24px;
+  align-items: baseline;
+  font-size: 15px;
 }
 
-.muted {
-  opacity: 0.9;
-}
-
-/* Scaled down version of the rectangular stamp */
-.fake-stamp {
-  position: absolute;
-  right: 50px;
-  bottom: 4px;
-  padding: 8px 20px; 
-  border-radius: 8px; 
-  border: 2px solid #b23b2b;
-  color: #b23b2b;
+.stamp-row {
   display: flex;
-  align-items: center;
   justify-content: center;
-  /* transform: rotate(-10deg); */
-  opacity: 0.85;
-  z-index: 5;
-  box-shadow: inset 0 0 0 1px #b23b2b;
+  margin-top: 8px;
+}
+
+/* Round rubber stamp (SVG in script), set straight. */
+.fake-stamp {
+  width: 116px;
+  height: 116px;
+  opacity: 0.9;
+  mix-blend-mode: multiply;
   pointer-events: none;
-  font-family: 'Arial Black', Arial, sans-serif;
-  background-color: transparent;
-}
-
-.fake-stamp::before {
-  content: '';
-  position: absolute;
-  inset: 3px;
-  border: 1px dashed #b23b2b;
-  border-radius: 5px; 
-  opacity: 0.7;
-}
-
-.fake-stamp .stamp-inner {
-  text-align: center;
-  line-height: 1.1;
-}
-
-.fake-stamp .stamp-main {
-  font-size: 16px;
-  font-weight: 900;
-  letter-spacing: 1px;
-  display: block;
-}
-
-.fake-stamp .stamp-sub {
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  display: block;
-  margin-top: 2px;
-  text-transform: uppercase;
-}
-
-.fake-stamp .stamp-divider {
-  width: 85%;
-  height: 1px;
-  background: #b23b2b;
-  margin: 3px auto;
-  opacity: 0.8;
 }
 </style>

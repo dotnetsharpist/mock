@@ -37,7 +37,7 @@ const choose = (value) => {
   <div class="relative" @keydown.esc="open = false">
     <button
       type="button"
-      class="flex w-full items-center gap-2 rounded-full border border-app-border bg-app-surface px-4 py-2.5 text-[14px] font-medium text-app-ink transition-colors hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+      class="flex w-full items-center gap-2 rounded-full bg-app-surface px-4 py-3 text-[14px] font-medium text-app-ink shadow-app-card transition-colors hover:bg-app-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
       :aria-label="ariaLabel || undefined"
       :aria-expanded="open"
       aria-haspopup="listbox"
@@ -58,7 +58,7 @@ const choose = (value) => {
 
     <div
       v-if="open"
-      class="absolute left-0 right-0 z-50 mt-2 max-h-[280px] overflow-y-auto rounded-2xl border border-app-border bg-app-surface p-1.5 shadow-app-card"
+      class="absolute left-0 right-0 z-50 mt-2 max-h-[280px] overflow-y-auto rounded-[20px] bg-app-surface p-1.5 shadow-[0_24px_50px_-20px_rgba(17,17,17,0.25)]"
       role="listbox"
     >
       <button
@@ -67,7 +67,7 @@ const choose = (value) => {
         type="button"
         role="option"
         :aria-selected="option.value === modelValue"
-        class="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[14px] text-app-ink transition-colors hover:bg-app-tile"
+        class="flex w-full items-center gap-2 rounded-full px-3.5 py-2.5 text-left text-[14px] text-app-ink transition-colors hover:bg-app-tile"
         :class="option.value === modelValue ? 'bg-app-tile font-semibold' : 'font-medium'"
         @click="choose(option.value)"
       >

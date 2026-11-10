@@ -95,7 +95,7 @@ async function send() {
         rows="4"
         :maxlength="MAX_LENGTH"
         :placeholder="t('bank.report.placeholder')"
-        class="mt-2 w-full resize-none rounded-xl border border-app-border bg-app-surface px-3.5 py-3 text-[14px] leading-[1.6] text-app-ink outline-none placeholder:text-app-muted focus:border-app-ink"
+        class="mt-2 w-full resize-none rounded-xl border border-app-border bg-app-surface px-3.5 py-3 text-[14px] leading-[1.6] text-app-ink outline-none placeholder:text-app-ink/60 focus:border-app-ink"
       ></textarea>
       <span class="mt-1 block text-right text-[12px] text-app-muted">{{ message.length }}/{{ MAX_LENGTH }}</span>
     </label>

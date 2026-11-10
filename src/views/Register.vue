@@ -405,10 +405,10 @@ onBeforeUnmount(() => {
 <template>
   <AuthLayout>
     <div v-if="step === 'form'" class="mb-8 text-center">
-      <h1 class="text-3xl font-bold tracking-[-0.02em] text-[#1a1814]">
+      <h1 class="text-[40px] font-medium leading-[1.1] tracking-[-0.015em] text-ink">
         {{ t('register.title') }}
       </h1>
-      <p class="mt-3 text-sm leading-relaxed text-[#6b6760]">
+      <p class="mt-3 text-[16px] leading-[1.5] text-muted">
         {{ t('register.description') }}
       </p>
     </div>
@@ -416,7 +416,6 @@ onBeforeUnmount(() => {
     <!-- ── Step 1: name + password (no phone — the bot supplies it) ─── -->
     <div
       v-if="step === 'form'"
-      class="rounded-[24px] border border-[#e4e0d8] bg-white p-7 shadow-[0_18px_50px_rgba(26,24,20,0.08)] ring-1 ring-[#f0ece5]"
     >
       <!-- 409 from the verify step: the number already belongs to an account.
            Say so and offer that account's own way in — Google's "Continue with
@@ -438,17 +437,17 @@ onBeforeUnmount(() => {
           :telegram-label="t('login.telegram')"
           @authenticated="redirectAfterAuth"
         />
-        <p class="mt-3 flex items-center justify-center gap-5 text-[13px] text-[#6b6760]">
+        <p class="mt-3 flex items-center justify-center gap-5 text-[13px] text-muted">
           <router-link
             :to="{ path: '/login', query: redirectQuery }"
-            class="font-semibold text-[#1a1814] underline decoration-[#1a1814]/30 underline-offset-2 transition hover:decoration-[#1a1814]"
+            class="font-semibold text-ink underline decoration-ink/30 underline-offset-2 transition hover:decoration-ink"
           >
             {{ t('register.signIn') }}
           </router-link>
           <router-link
             v-if="alreadyAttached.provider === 'password'"
             :to="forgotLocation"
-            class="font-semibold text-[#1a1814] underline decoration-[#1a1814]/30 underline-offset-2 transition hover:decoration-[#1a1814]"
+            class="font-semibold text-ink underline decoration-ink/30 underline-offset-2 transition hover:decoration-ink"
           >
             {{ t('register.forgotPassword') }}
           </router-link>
@@ -459,7 +458,7 @@ onBeforeUnmount(() => {
         <div class="flex flex-col gap-4">
           <div class="flex gap-3">
             <label class="flex-1">
-              <span class="mb-1.5 block text-[12px] font-semibold text-[#1a1814]">
+              <span class="mb-1.5 block text-[14px] font-semibold text-ink">
                 {{ t('register.firstName') }}
               </span>
               <input
@@ -468,11 +467,11 @@ onBeforeUnmount(() => {
                 name="given-name"
                 autocomplete="given-name"
                 :placeholder="t('register.firstNamePlaceholder')"
-                class="w-full rounded-xl border-[1.5px] border-[#e0ddd7] bg-white px-4 py-3 text-sm text-[#1a1814] outline-none transition placeholder:text-[#b8b3a9] focus:border-[#1a1814]"
+                class="w-full rounded-xl border border-hairline-strong bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-accent focus:border-ink"
               />
             </label>
             <label class="flex-1">
-              <span class="mb-1.5 block text-[12px] font-semibold text-[#1a1814]">
+              <span class="mb-1.5 block text-[14px] font-semibold text-ink">
                 {{ t('register.lastName') }}
               </span>
               <input
@@ -481,13 +480,13 @@ onBeforeUnmount(() => {
                 name="family-name"
                 autocomplete="family-name"
                 :placeholder="t('register.lastNamePlaceholder')"
-                class="w-full rounded-xl border-[1.5px] border-[#e0ddd7] bg-white px-4 py-3 text-sm text-[#1a1814] outline-none transition placeholder:text-[#b8b3a9] focus:border-[#1a1814]"
+                class="w-full rounded-xl border border-hairline-strong bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-accent focus:border-ink"
               />
             </label>
           </div>
 
           <label class="block">
-            <span class="mb-1.5 block text-[12px] font-semibold text-[#1a1814]">
+            <span class="mb-1.5 block text-[14px] font-semibold text-ink">
               {{ t('register.fatherName') }}
             </span>
             <input
@@ -496,16 +495,16 @@ onBeforeUnmount(() => {
               name="additional-name"
               autocomplete="additional-name"
               :placeholder="t('register.fatherNamePlaceholder')"
-              class="w-full rounded-xl border-[1.5px] border-[#e0ddd7] bg-white px-4 py-3 text-sm text-[#1a1814] outline-none transition placeholder:text-[#b8b3a9] focus:border-[#1a1814]"
+              class="w-full rounded-xl border border-hairline-strong bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-accent focus:border-ink"
             />
           </label>
 
           <label class="block">
-            <span class="mb-1.5 flex items-center justify-between text-[12px] font-semibold text-[#1a1814]">
+            <span class="mb-1.5 flex items-center justify-between text-[14px] font-semibold text-ink">
               {{ t('register.password') }}
               <button
                 type="button"
-                class="font-medium text-[#8a857c] transition hover:text-[#1a1814]"
+                class="font-medium text-muted transition hover:text-ink"
                 @click="showPassword = !showPassword"
               >
                 {{ showPassword ? t('login.hide') : t('login.show') }}
@@ -517,12 +516,12 @@ onBeforeUnmount(() => {
               name="new-password"
               autocomplete="new-password"
               :placeholder="t('register.passwordPlaceholder')"
-              class="w-full rounded-xl border-[1.5px] border-[#e0ddd7] bg-white px-4 py-3 text-sm text-[#1a1814] outline-none transition placeholder:text-[#b8b3a9] focus:border-[#1a1814]"
+              class="w-full rounded-xl border border-hairline-strong bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-accent focus:border-ink"
             />
           </label>
 
           <label class="block">
-            <span class="mb-1.5 block text-[12px] font-semibold text-[#1a1814]">
+            <span class="mb-1.5 block text-[14px] font-semibold text-ink">
               {{ t('register.passwordConfirm') }}
             </span>
             <input
@@ -531,8 +530,8 @@ onBeforeUnmount(() => {
               name="confirm-password"
               autocomplete="new-password"
               :placeholder="t('register.passwordConfirmPlaceholder')"
-              class="w-full rounded-xl border-[1.5px] bg-white px-4 py-3 text-sm text-[#1a1814] outline-none transition placeholder:text-[#b8b3a9] focus:border-[#1a1814]"
-              :class="passwordConfirm && passwordConfirm !== password ? 'border-red-300' : 'border-[#e0ddd7]'"
+              class="w-full rounded-xl border bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-accent focus:border-ink"
+              :class="passwordConfirm && passwordConfirm !== password ? 'border-red-500' : 'border-hairline-strong'"
             />
           </label>
         </div>
@@ -549,8 +548,8 @@ onBeforeUnmount(() => {
         <button
           type="submit"
           :disabled="authStore.isLoading || !acceptedOffer"
-          class="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#1a1814] text-sm font-semibold text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:active:scale-100"
-          :class="authStore.isLoading ? 'disabled:opacity-70' : 'disabled:opacity-40 disabled:hover:bg-[#1a1814]'"
+          class="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-ink text-[15px] font-medium text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:active:scale-100"
+          :class="authStore.isLoading ? 'disabled:opacity-70' : 'disabled:opacity-60 disabled:hover:bg-ink'"
         >
           {{ authStore.isLoading ? t('register.submitting') : t('register.continue') }}
         </button>
@@ -566,7 +565,7 @@ onBeforeUnmount(() => {
     <!-- ── Step 2: the code from the bot ────────────────────────────── -->
     <div
       v-else
-      class="rounded-[24px] border border-[#e4e0d8] bg-white p-7 text-center shadow-[0_18px_50px_rgba(26,24,20,0.08)] ring-1 ring-[#f0ece5]"
+      class="text-center"
     >
       <div class="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[#29a9eb] text-white">
         <svg class="h-6 w-6" viewBox="0 0 448 512" fill="currentColor" aria-hidden="true">
@@ -577,18 +576,18 @@ onBeforeUnmount(() => {
       <!-- 2a: how to get the code. No code boxes yet — with them on screen
            people assume a code is on its way by SMS and wait for it. -->
       <template v-if="!botOpened">
-        <h1 class="text-2xl font-bold tracking-[-0.02em] text-[#1a1814]">
+        <h1 class="text-[30px] font-medium leading-[1.15] tracking-[-0.015em] text-ink">
           {{ t('register.botTitle') }}
         </h1>
 
         <ol class="mt-5 flex flex-col gap-3 text-left">
           <li class="flex items-start gap-3">
-            <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1a1814] text-[12px] font-bold text-white">1</span>
-            <span class="pt-0.5 text-sm leading-relaxed text-[#1a1814]">{{ t('register.botStep1') }}</span>
+            <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink text-[12px] font-bold text-white">1</span>
+            <span class="pt-0.5 text-sm leading-relaxed text-ink">{{ t('register.botStep1') }}</span>
           </li>
           <li class="flex items-start gap-3">
-            <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1a1814] text-[12px] font-bold text-white">2</span>
-            <span class="pt-0.5 text-sm leading-relaxed text-[#1a1814]">
+            <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink text-[12px] font-bold text-white">2</span>
+            <span class="pt-0.5 text-sm leading-relaxed text-ink">
               {{ t('register.botStep2') }}
               <!-- A look-alike of the bot's own keyboard button, so they
                    recognise it once they're in Telegram. -->
@@ -598,8 +597,8 @@ onBeforeUnmount(() => {
             </span>
           </li>
           <li class="flex items-start gap-3">
-            <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1a1814] text-[12px] font-bold text-white">3</span>
-            <span class="pt-0.5 text-sm leading-relaxed text-[#1a1814]">{{ t('register.botStep3') }}</span>
+            <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink text-[12px] font-bold text-white">3</span>
+            <span class="pt-0.5 text-sm leading-relaxed text-ink">{{ t('register.botStep3') }}</span>
           </li>
         </ol>
 
@@ -630,9 +629,9 @@ onBeforeUnmount(() => {
             :alt="t('register.openBot')"
             width="176"
             height="176"
-            class="rounded-xl border border-[#e4e0d8] p-1"
+            class="rounded-xl border border-hairline p-1"
           />
-          <span class="mt-2 text-[12px] text-[#8a857c]">{{ t('register.qrHint') }}</span>
+          <span class="mt-2 text-[12px] text-muted">{{ t('register.qrHint') }}</span>
         </div>
 
         <!-- Scanned the QR, or came back from the bot into a fresh tab. A real
@@ -640,7 +639,7 @@ onBeforeUnmount(() => {
              to this audience. -->
         <button
           type="button"
-          class="mt-3 inline-flex h-12 w-full items-center justify-center rounded-full border-[1.5px] border-[#1a1814] bg-white text-sm font-semibold text-[#1a1814] transition duration-200 hover:bg-[#1a1814] hover:text-white active:scale-[0.99]"
+          class="mt-3 inline-flex h-12 w-full items-center justify-center rounded-full border-[1.5px] border-ink bg-white text-sm font-semibold text-ink transition duration-200 hover:bg-ink hover:text-white active:scale-[0.99]"
           @click="markBotOpened"
         >
           {{ t('register.haveCode') }}
@@ -649,10 +648,10 @@ onBeforeUnmount(() => {
 
       <!-- 2b: the code from the bot. -->
       <template v-else>
-        <h1 class="text-2xl font-bold tracking-[-0.02em] text-[#1a1814]">
+        <h1 class="text-[30px] font-medium leading-[1.15] tracking-[-0.015em] text-ink">
           {{ t('register.otpTitle') }}
         </h1>
-        <p class="mt-2 text-sm leading-relaxed text-[#6b6760]">
+        <p class="mt-2 text-sm leading-relaxed text-muted">
           {{ t('register.otpFromBot') }}
         </p>
 
@@ -674,7 +673,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           :disabled="isVerifying"
-          class="mt-6 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#1a1814] text-sm font-semibold text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+          class="mt-6 inline-flex h-12 w-full items-center justify-center rounded-full bg-ink text-[15px] font-medium text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
           @click="submitOtp"
         >
           {{ isVerifying ? t('register.otpSubmitting') : t('register.otpSubmit') }}
@@ -682,7 +681,7 @@ onBeforeUnmount(() => {
 
         <!-- No resend endpoint: the bot re-shows the code while it's valid
              (5 min) or hands out a new one, on the same 📱 tap. -->
-        <p class="mt-5 text-sm text-[#6b6760]">
+        <p class="mt-5 text-sm text-muted">
           {{ t('register.botNotReceived') }}
         </p>
         <TelegramCodeLink
@@ -692,13 +691,13 @@ onBeforeUnmount(() => {
         />
       </template>
 
-      <p class="mt-3 text-[12px] text-[#8a857c]">
+      <p class="mt-3 text-[12px] text-muted">
         {{ t('register.ticketExpiresIn', { time: remainingLabel }) }}
       </p>
 
       <button
         type="button"
-        class="mt-2 text-[12.5px] font-medium text-[#8a857c] underline underline-offset-2 transition hover:text-[#1a1814]"
+        class="mt-2 text-[12.5px] font-medium text-muted underline underline-offset-2 transition hover:text-ink"
         @click="backToForm"
       >
         {{ t('register.startOver') }}

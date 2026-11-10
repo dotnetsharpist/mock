@@ -137,7 +137,7 @@ const toggle = (active) =>
           <span
             v-if="sourceCount(item.value) !== null"
             class="tabular-nums"
-            :class="setup.source === item.value ? 'text-app-surface/70' : 'text-app-muted'"
+            :class="setup.source === item.value ? 'text-app-surface' : 'text-app-muted'"
           >
             {{ sourceCount(item.value) }}
           </span>

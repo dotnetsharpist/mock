@@ -15,12 +15,14 @@
 // error handling here mirror it deliberately; if the two ever disagree, that
 // component is the authority.
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { apiFetch, getTestApiBaseUrl, isNetworkError } from '@/utils/api'
 import { ESSAY_BAND_MAX } from '@/utils/essayAnalysis'
 import { saveEssayChecking } from '@/utils/essayCheckingStorage'
 import { t } from '@/i18n'
+import { useTangaOffer } from '@/composables/useTangaOffer'
+import { useBalanceStore } from '@/stores/balance'
+import { TEST_TOKEN_COST } from '@/utils/premium'
 
 // Mirror the backend limits so obvious input problems never reach the API —
 // its remaining 400 is then the insufficient-balance refusal.
@@ -53,7 +55,8 @@ function messageRef() {
 }
 
 export function useEssayCenter() {
-  const router = useRouter()
+  const balanceStore = useBalanceStore()
+  const { openOffer } = useTangaOffer()
   const authStore = useAuthStore()
   const apiBaseUrl = getTestApiBaseUrl()
 
@@ -376,10 +379,10 @@ export function useEssayCenter() {
     view.value = 'list'
   }
 
-  const goToTopUp = async () => {
+  // Sell the tanga in place, so the essay the student wrote stays on screen.
+  const goToTopUp = () => {
     needsTopUp.value = false
-    // Signed-in flow, so straight to the platform's own pricing screen.
-    await router.push('/tanga')
+    openOffer(TEST_TOKEN_COST - balanceStore.available)
   }
 
   const wordCount = computed(() =>

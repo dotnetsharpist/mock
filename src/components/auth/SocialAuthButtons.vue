@@ -239,8 +239,8 @@ defineExpose({ focusTelegram })
       ref="telegramButton"
       type="button"
       :disabled="!telegramReady || telegramSubmitting"
-      class="tg-button mx-auto flex h-11 w-[320px] max-w-full items-center justify-center gap-2.5 rounded-full bg-[#29a9eb] text-[15px] font-semibold text-white shadow-[0_6px_16px_rgba(41,169,235,0.28)] transition hover:bg-[#1e97d6] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
-      :class="highlightTelegram ? 'tg-pulse ring-2 ring-[#1a1814] ring-offset-4 ring-offset-white' : ''"
+      class="tg-button mx-auto flex h-11 w-[320px] max-w-full items-center justify-center gap-2.5 rounded-full bg-[#29a9eb] text-[15px] font-medium text-white shadow-[0_6px_16px_rgba(41,169,235,0.28)] transition hover:bg-[#1e97d6] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+      :class="highlightTelegram ? 'tg-pulse ring-2 ring-ink ring-offset-4 ring-offset-white' : ''"
       @click="loginWithTelegram"
     >
       <svg class="h-[18px] w-[18px]" viewBox="0 0 448 512" fill="currentColor" aria-hidden="true">

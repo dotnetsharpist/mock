@@ -15,7 +15,8 @@ export function useAppUser() {
     const info = authStore.userInfo
     return {
       name: info?.firstName || info?.fullName || t('appUi.studentFallback'),
-      email: info?.email || 'student@mail.com',
+      // Telegram sign-ups have no email. Their number, never an invented address.
+      email: info?.email || info?.phoneNumber || '',
       tanga: balanceStore.available ?? 0,
     }
   })

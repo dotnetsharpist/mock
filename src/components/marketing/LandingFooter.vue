@@ -17,6 +17,7 @@ const { t } = useI18n()
     <!-- Not in the design: the payment providers need the offer reachable
          from every public page. -->
     <nav class="flex gap-5 text-[13px] text-footer-text" :aria-label="t('landing.footer.legalLabel')">
+      <RouterLink to="/fikrlar" class="transition-colors hover:text-ink">{{ t('landingNav.reviews') }}</RouterLink>
       <RouterLink to="/oferta" class="transition-colors hover:text-ink">{{ t('landing.footer.offer') }}</RouterLink>
       <RouterLink to="/maxfiylik" class="transition-colors hover:text-ink">{{ t('landing.footer.privacy') }}</RouterLink>
     </nav>

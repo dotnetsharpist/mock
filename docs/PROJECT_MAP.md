@@ -33,9 +33,10 @@ lazy chunk fails after a deploy) + `<RouterView>`. The old `layoutlessRoutes` /
 
 ### Why two public groups
 
-The subject pages stay public and indexed, but `SubjectPage.vue` /
-`OnaTiliPage.vue` / `PricingPage.vue` are auth-*aware* (free vs premium state,
-`AuthRequiredModal`, `PricingPaymentModal`) and keep the chrome they have today.
+`PricingPage.vue` is auth-*aware* (`AuthRequiredModal`, `PricingPaymentModal`)
+and keeps the chrome it has today. The old public subject pages
+(`SubjectPage.vue`, `OnaTiliPage.vue`, `MathPage.vue`) were deleted on
+2026-11-10; their URLs redirect into the platform's subject tests.
 Only newly designed marketing pages get the new marketing shell. Moving them
 into `MarketingLayout` would silently redesign them.
 
@@ -44,7 +45,7 @@ into `MarketingLayout` would silently redesign them.
 ### marketing — `MarketingLayout`
 | Path | Component | Notes |
 |---|---|---|
-| `/` | `views/marketing/LandingPage.vue` | built from `MilliyMock Landing.dc.html` |
+| `/` | `views/marketing/LandingPage.vue` | hero + `LandingSections.vue` (statement, then `LandingAnswerSheet.vue`, a scroll-driven answer sheet holding the subject links); neutral palette and Inter Tight via `.landing-neutral` (`/` only) |
 | `/natijalar` | `views/marketing/NatijalarPage.vue` | **placeholder.** Public success stories — *not* `/result-exam` |
 | `/platforma` | `views/marketing/PlatformaPage.vue` | placeholder |
 | `/ai-tekshiruv` | `views/marketing/AiTekshiruvPage.vue` | placeholder |
@@ -56,12 +57,12 @@ into `MarketingLayout` would silently redesign them.
 |---|---|---|
 | `/narxlar` | `views/PricingPage.vue` | was `/pricing` |
 | `/pricing` | → `/narxlar` | client redirect; real 301 in `public/serve.json` |
-| `/math` | `views/SubjectPage.vue` | `subjectKey: 'math'` |
-| `/tarix` | `views/SubjectPage.vue` | `subjectKey: 'history'` |
-| `/fizika` | `views/SubjectPage.vue` | `subjectKey: 'physics'` |
-| `/biologiya` | `views/SubjectPage.vue` | `subjectKey: 'biology'` |
+| `/math` | → `/testlar/math` | old public subject page, retired |
+| `/tarix` | → `/testlar/history` | old public subject page, retired |
+| `/fizika` | → `/testlar/physics` | old public subject page, retired |
+| `/biologiya` | → `/testlar/biology` | old public subject page, retired |
 | `/biologiya/test` | `views/BiologyDemoPage.vue` | **DEV only** (offline reference for the AI-question UI); prod → `/biologiya`. `chrome: false`, `support: false`, noindex |
-| `/ona-tili` | `views/OnaTiliPage.vue` | |
+| `/ona-tili` | → `/testlar/motherTongue` | old public subject page, retired |
 | `/ona-tili-demo` | → `/ona-tili` | |
 | `/ona-tili-demo-natija` | `views/OnaTiliDemoResultPage.vue` | **DEV only**; prod → `/ona-tili` |
 | `/mashq` | `views/MashqPage.vue` | **DEV only**; prod → `/` |
@@ -253,6 +254,8 @@ builds always use the live API.
 
 ### auth — `BareLayout`
 `/login`, `/register`, `/verify-phone`, `/complete-profile` — all noindex.
+All four share `components/auth/AuthLayout.vue`, in the landing look: `.landing-neutral`
+tokens, Inter Tight, a black brand panel and no card around the form.
 
 Telegram and Google sign-in are one component, `components/auth/SocialAuthButtons.vue`
 (both providers create the account on first sign-in, so they are a registration

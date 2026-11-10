@@ -2,8 +2,44 @@
 /* Landing page typefaces. The platform stays on DM Sans (set on html/body
    below); Inter and Playfair Display are opted into per-element by the
    marketing components via `font-inter` / `font-display`. */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+
+/* The landing page (`/`) and the auth screens: neutral black and grey, sampled from the approved
+   reference, instead of the warm tokens below. Re-pointing the tokens here means
+   the navbar, every section and the footer follow without per-component edits.
+   Inter Tight because it is the nearest match that also has Cyrillic. */
+.landing-glow {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 64px;
+  background: linear-gradient(90deg, #ffc4d2 0%, #f3d0ff 38%, #c6dbff 72%, #ffd0dc 100%);
+  opacity: 0.7;
+  filter: blur(56px);
+}
+.landing-neutral {
+  --font-inter: 'Inter Tight', 'Inter', -apple-system, sans-serif;
+  --color-ink: #000000;
+  --color-muted: #666666;
+  --color-accent: #858585;
+  --color-navlink: #000000;
+  --color-panel: #f5f5f5;
+  --color-panel-alt: #ebebeb;
+  --color-tile: #f2f2f2;
+  --color-hairline: #ebebeb;
+  --color-hairline-strong: #e0e0e0;
+  --color-footer-text: #8f8f8f;
+}
+
+/* The auth form panel sits beside a solid black brand panel, and the landing greys read as
+   washed out next to it. Same neutral palette, one step darker: field borders and placeholders
+   clear WCAG contrast on white (3:1 and 4.5:1). */
+.auth-panel {
+  --color-muted: #4d4d4d;
+  --color-accent: #6b6b6b;
+  --color-hairline: #b8b8b8;
+  --color-hairline-strong: #8f8f8f;
+}
 
 /* Design tokens from `MilliyMock Landing.dc.html`. Hex values are taken
    verbatim from the design file — do not hardcode them in components. */
@@ -24,17 +60,19 @@
   --color-avatar: #e4dfd5;       /* social-proof avatar backing */
   --color-footer-text: #9c968b;
 
-  /* Platform (logged-in) design system — see docs/DESIGN.md. Measured from
-     design-ref/dashboard-approved.png. Deliberately a different world from the
-     landing tokens above; the two sets never mix on one screen. */
-  --color-app-bg: #fcfbfa;
+  /* Platform (logged-in) design system — see docs/DESIGN.md. The landing's neutral
+     world: white sheets on a soft grey page, pure black type and buttons, and the
+     landing's pastel light (.app-iris / .app-glow) for the things worth noticing.
+     Nothing is faded: secondary text differs by size, not by colour, so app-muted
+     equals app-ink. Green and red appear only on trends. */
+  --color-app-bg: #f3f3f3;
   --color-app-surface: #ffffff;
-  --color-app-sunken: #f8f6f3;
-  --color-app-tile: #f7f4f1;
-  --color-app-warm: #f4efeb;
-  --color-app-ink: #0a0a0a;
-  --color-app-muted: #8a857f;
-  --color-app-border: #efebe6;
+  --color-app-sunken: #f7f7f7;
+  --color-app-tile: #f0f0f0;
+  --color-app-warm: #e8e8e8;
+  --color-app-ink: #0b0b0b;
+  --color-app-muted: #0b0b0b;
+  --color-app-border: #ebebeb;
 
   /* Semantic only — colour never decorates in the platform. */
   --color-app-good: #15803d;
@@ -43,20 +81,21 @@
   --color-app-bad-bg: #fee3e2;
   --color-app-info: #5b4bd6;
   --color-app-info-bg: #efeafc;
-  --color-app-coin: #f5c23b;
+  --color-app-coin: #0b0b0b; /* the coin is ink like every other icon: no gold */
 
-  /* The progress line on Bosh sahifa. Warm taupe rather than ink: the chart is
-     the largest object on the screen, and drawn in black it out-shouted the
-     figures it exists to explain. */
-  --color-app-chart: #b3a695;
-
-  /* Cards sit calmly on the background — a hairline plus a whisper of lift,
-     not a raised slab. */
-  --shadow-app-card: 0 1px 2px rgba(16, 15, 14, 0.03), 0 4px 14px -10px rgba(16, 15, 14, 0.07);
+  /* The landing's lift: a hairline of contact plus a wide, soft fall-off. */
+  --shadow-app-card: 0 1px 2px rgba(17, 17, 17, 0.04), 0 18px 40px -26px rgba(17, 17, 17, 0.16);
 }
 
 html {
   scroll-behavior: smooth;
+}
+
+/* Nothing on a phone may drag the page sideways: overflow-x is clipped (clip,
+   not hidden, so sticky elements keep working). */
+html,
+body {
+  overflow-x: clip;
 }
 
 html,
@@ -66,6 +105,83 @@ input,
 textarea,
 select {
   font-family: 'DM Sans', sans-serif;
+}
+
+/* The platform's shape, set once. Rounder corners by re-pointing the radius tokens
+   for everything inside the shell, the same way .landing-neutral re-points colour. */
+.app-shell {
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+}
+
+/* The landing's typeface on every platform screen, dialogs teleported to body
+   included. Inter Tight because it has Cyrillic. */
+body:has(.app-shell),
+body:has(.app-shell) :is(button, input, textarea, select) {
+  font-family: 'Inter Tight', 'Inter', -apple-system, sans-serif;
+}
+
+/* Every black button and selected pill gets the landing button's gloss, so the
+   whole platform presses the same way without touching each screen. */
+body:has(.app-shell) :is(a, button).bg-app-ink {
+  background-image: linear-gradient(180deg, #2b2b2b 0%, #000 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 8px 18px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Headings speak in the landing's voice: medium weight, tight tracking, not bold.
+   Unlayered on purpose so it outranks the `font-bold` utilities screens use. */
+body:has(.app-shell) :is(h1, h2, h3, h4).font-bold {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+/* Everything else marked bold steps down to semibold: the landing never shouts. */
+body:has(.app-shell) :not(h1, h2, h3, h4).font-bold {
+  font-weight: 600;
+}
+
+/* In a layer, so a component's own shadow or hover utility still wins. Teleported
+   dialogs follow because this keys off body. */
+@layer components {
+  body:has(.app-shell) .border-app-border.bg-app-surface {
+    box-shadow: var(--shadow-app-card);
+  }
+
+  /* Flat platform black, no bands: the promoted card, KPI and bars. */
+  .app-texture,
+  .app-texture-fine {
+    background-color: var(--color-app-ink);
+  }
+
+  /* The landing's pastel light — pink, lilac, blue — as a surface. For the one
+     card on a screen that sells or celebrates something; black text on it. */
+  .app-iris {
+    background:
+      radial-gradient(120% 140% at 0% 0%, #ffe7b8 0%, transparent 42%),
+      radial-gradient(90% 120% at 100% 100%, #c9dcff 0%, transparent 55%),
+      linear-gradient(100deg, #ffdfe8 0%, #f3defc 46%, #d6e5ff 100%);
+  }
+
+  /* The same light, blurred, behind a card so it seems to glow. */
+  .app-glow {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 48px;
+    background: linear-gradient(90deg, #ffc4d2 0%, #f3d0ff 38%, #c6dbff 72%, #ffd0dc 100%);
+    opacity: 0.6;
+    filter: blur(44px);
+  }
+
+  /* The landing's primary button, with a little gloss so it reads as pressable. */
+  .app-btn-ink {
+    background: linear-gradient(180deg, #2b2b2b 0%, #000 100%);
+    color: #fff;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      0 8px 18px -10px rgba(0, 0, 0, 0.55);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

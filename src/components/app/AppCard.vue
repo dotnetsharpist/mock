@@ -9,7 +9,7 @@ defineProps({
 
 <template>
   <div
-    class="rounded-2xl border border-app-border bg-app-surface shadow-app-card"
+    class="rounded-[24px] bg-app-surface shadow-app-card"
     :class="padded ? 'p-5' : ''"
   >
     <slot />

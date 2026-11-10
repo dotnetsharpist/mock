@@ -14,7 +14,6 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import AppTopbar from '@/components/app/AppTopbar.vue'
-import AppCard from '@/components/app/AppCard.vue'
 import AppIcon from '@/components/app/AppIcon.vue'
 import EmptyState from '@/components/app/EmptyState.vue'
 import EssayAnalysisSection from '@/components/onatili/EssayAnalysisSection.vue'
@@ -95,7 +94,7 @@ const BACK_TO = '/natijalar?view=essays'
   />
 
   <main>
-    <AppCard v-if="!hasEntry">
+    <div v-if="!hasEntry" class="rounded-[24px] bg-app-surface p-5 shadow-app-card">
       <EmptyState
         icon="essay"
         :title="t('essayAnalysis.page.notFound.title')"
@@ -103,14 +102,15 @@ const BACK_TO = '/natijalar?view=essays'
         :action-label="t('essayAnalysis.page.notFound.action')"
         :action-to="BACK_TO"
       />
-    </AppCard>
+    </div>
 
     <template v-else>
-      <AppCard v-if="entry.uploadsDropped" class="mb-4">
-        <p class="text-[13px] leading-[1.6] text-app-muted">
-          {{ t('essayAnalysis.page.uploadsDropped') }}
-        </p>
-      </AppCard>
+      <p
+        v-if="entry.uploadsDropped"
+        class="mb-4 rounded-[20px] bg-[#ffebd0] px-5 py-4 text-[13px] leading-[1.6] text-app-ink"
+      >
+        {{ t('essayAnalysis.page.uploadsDropped') }}
+      </p>
 
       <EssayAnalysisSection
         :analysis="entry.analysis"
@@ -120,18 +120,18 @@ const BACK_TO = '/natijalar?view=essays'
         :sample="Boolean(entry.sample)"
       >
         <!-- The student's own submission, echoed for reference. -->
-        <details v-if="hasUserEssay" class="group mt-8 overflow-hidden rounded-2xl border border-app-border bg-app-surface shadow-app-card">
+        <details v-if="hasUserEssay" class="group mt-8 overflow-hidden rounded-[24px] bg-app-surface shadow-app-card">
           <summary
-            class="flex cursor-pointer items-center justify-between px-5 py-4 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile"
+            class="flex cursor-pointer items-center justify-between px-5 py-4 text-[15px] font-medium tracking-[-0.02em] text-app-ink transition-colors hover:bg-app-warm"
           >
             <span>{{ t('essayAnalysis.page.yourEssay') }}</span>
             <AppIcon
               name="chevronDown"
               :size="16"
-              class="text-app-muted transition-transform duration-200 group-open:rotate-180"
+              class="text-app-ink transition-transform duration-200 group-open:rotate-180"
             />
           </summary>
-          <div class="border-t border-app-border px-5 py-4">
+          <div class="px-5 pb-5 pt-1">
             <p
               v-if="entry.essayText"
               class="whitespace-pre-line text-[14px] leading-[1.8] text-app-ink"
@@ -142,11 +142,11 @@ const BACK_TO = '/natijalar?view=essays'
               <div
                 v-for="(upload, index) in entry.uploads"
                 :key="upload.id"
-                class="relative overflow-hidden rounded-xl border border-app-border bg-app-sunken"
+                class="relative overflow-hidden rounded-[16px] bg-app-tile"
               >
                 <img :src="upload.dataUrl" :alt="upload.name" class="h-36 w-full object-cover" />
                 <span
-                  class="absolute left-2 top-2 rounded-md bg-app-ink/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-app-surface"
+                  class="absolute left-2 top-2 rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-app-ink ring-1 ring-white"
                 >
                   {{ t('essayPage.pageBadge', { n: index + 1 }) }}
                 </span>

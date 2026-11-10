@@ -54,7 +54,7 @@ const goLogin = () => {
             <button
               type="button"
               :aria-label="t('pricing.authModal.close')"
-              class="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-full text-[#a39e94] transition hover:bg-[#f5f3ef] hover:text-[#1a1814]"
+              class="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-full text-[#1a1814] transition hover:bg-[#f5f3ef] hover:text-[#1a1814]"
               @click="close"
             >
               <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -77,7 +77,7 @@ const goLogin = () => {
             </h2>
 
             <!-- Description -->
-            <p class="mx-auto mt-3 max-w-[340px] text-sm leading-6 text-[#6b6760]">
+            <p class="mx-auto mt-3 max-w-[340px] text-sm leading-6 text-[#1a1814]">
               {{ t('pricing.authModal.description') }}
             </p>
 

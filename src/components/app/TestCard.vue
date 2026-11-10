@@ -5,7 +5,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppIcon from './AppIcon.vue'
-import { ACTION_BY_STATE, SUBJECTS, subjectTitleNames, unknownSubject } from './subjects.js'
+import { ACTION_BY_STATE, SUBJECTS, subjectTint, subjectTitleNames, unknownSubject } from './subjects.js'
 
 const props = defineProps({
   test: { type: Object, required: true },
@@ -24,6 +24,7 @@ const { t } = useI18n()
 const subject = computed(
   () => SUBJECTS[props.test.subjectKey] ?? unknownSubject(props.test.subjectRaw),
 )
+const tint = computed(() => subjectTint(props.test.subjectKey))
 const action = computed(() => ACTION_BY_STATE[props.test.state] ?? ACTION_BY_STATE.new)
 
 // This card only ever appears inside one subject, whose name is already the
@@ -61,11 +62,12 @@ const takers = computed(() =>
 
 <template>
   <article
-    class="flex h-full flex-col rounded-2xl border border-app-border bg-app-surface p-4 shadow-app-card transition-colors hover:border-app-ink/15"
+    class="flex h-full flex-col rounded-[24px] bg-app-surface p-4 shadow-app-card transition-transform duration-200 hover:-translate-y-0.5 sm:p-5 motion-reduce:hover:translate-y-0"
   >
     <div class="flex items-start gap-3">
       <span
-        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-app-tile text-app-ink"
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-app-ink"
+        :style="{ background: tint.background }"
         aria-hidden="true"
       >
         <AppIcon :name="subject.icon" :size="17" />
@@ -77,7 +79,7 @@ const takers = computed(() =>
            three so a long one is not cut. Clamping at two hid the "5-variant"
            that is the only thing telling two Tarix mocks apart. -->
       <h3
-        class="line-clamp-3 min-h-[41px] min-w-0 flex-1 text-[15px] font-bold leading-[1.35] tracking-[-0.01em] text-app-ink"
+        class="line-clamp-3 min-h-[41px] min-w-0 flex-1 text-[15.5px] font-medium leading-[1.35] tracking-[-0.015em] text-app-ink"
         :title="test.title"
       >
         {{ title }}
@@ -98,7 +100,7 @@ const takers = computed(() =>
       </span>
       <span
         v-else-if="test.state === 'done'"
-        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-app-good-bg text-app-good"
+        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#e1f5e8] text-app-ink"
         role="img"
         :aria-label="t('appUi.testCard.done')"
         :title="t('appUi.testCard.done')"
@@ -107,7 +109,7 @@ const takers = computed(() =>
       </span>
       <span
         v-else-if="test.state === 'progress'"
-        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-app-info-bg text-app-info"
+        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#efe2ff] text-app-ink"
         role="img"
         :aria-label="t('appUi.testCard.inProgress')"
         :title="t('appUi.testCard.inProgress')"
@@ -119,7 +121,7 @@ const takers = computed(() =>
     <div v-if="reserveBadge" class="mt-2.5 flex h-[19px] items-center">
       <span
         v-if="test.isPremium"
-        class="inline-flex rounded-full bg-app-tile px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-app-ink"
+        class="app-iris inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-app-ink"
       >
         {{ t('appUi.testCard.premium') }}
       </span>
@@ -127,13 +129,13 @@ const takers = computed(() =>
 
     <!-- mb here, not mt on the button: the button uses mt-auto to sit on the
          card's baseline, and mt-auto would collapse this gap to nothing. -->
-    <dl class="mb-4 mt-4 grid grid-cols-2 gap-3">
+    <dl class="mb-4 mt-4 grid grid-cols-2 gap-3 rounded-2xl bg-app-sunken px-3.5 py-3">
       <div class="min-w-0">
         <dt class="flex items-center gap-1.5 text-[11px] text-app-muted">
           <AppIcon name="tests" :size="12" class="shrink-0" />
           <span class="truncate">{{ t('appUi.testCard.questions') }}</span>
         </dt>
-        <dd class="mt-1 text-[17px] font-bold leading-none text-app-ink">
+        <dd class="mt-1.5 text-[22px] font-normal leading-none tracking-[-0.03em] tabular-nums text-app-ink">
           {{ test.questionCount }}
         </dd>
       </div>
@@ -142,7 +144,7 @@ const takers = computed(() =>
           <AppIcon name="community" :size="12" class="shrink-0" />
           <span class="truncate">{{ t('appUi.testCard.takers') }}</span>
         </dt>
-        <dd class="mt-1 text-[17px] font-bold leading-none text-app-ink">{{ takers }}</dd>
+        <dd class="mt-1.5 text-[22px] font-normal leading-none tracking-[-0.03em] tabular-nums text-app-ink">{{ takers }}</dd>
       </div>
     </dl>
 
@@ -151,7 +153,7 @@ const takers = computed(() =>
     <button
       type="button"
       :disabled="busy"
-      class="mt-auto flex w-full items-center justify-center gap-1.5 rounded-lg bg-app-ink px-4 py-2.5 text-[13px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:cursor-not-allowed disabled:opacity-60"
+      class="mt-auto flex w-full items-center justify-center gap-1.5 rounded-full bg-app-ink px-4 py-3 text-[13.5px] font-medium text-white transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:cursor-not-allowed disabled:opacity-60"
       @click="$emit('action', test)"
     >
       {{ busy ? t('appUi.opening') : action }}

@@ -239,9 +239,9 @@ const sortOptions = computed(() => asOptions(SORTS))
         class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
         aria-hidden="true"
       >
-        <div v-for="n in 10" :key="n" class="rounded-2xl border border-app-border bg-app-surface p-4">
+        <div v-for="n in 10" :key="n" class="rounded-[24px] bg-app-surface p-4 shadow-app-card sm:p-5">
           <div class="flex items-start gap-3">
-            <SkeletonBlock class="h-9 w-9 shrink-0 !rounded-lg" />
+            <SkeletonBlock class="h-10 w-10 shrink-0 !rounded-xl" />
             <div class="flex-1">
               <SkeletonBlock class="h-4 w-4/5" />
               <SkeletonBlock class="mt-2 h-4 w-1/2" />
@@ -257,7 +257,7 @@ const sortOptions = computed(() => asOptions(SORTS))
               <SkeletonBlock class="mt-2 h-4 w-12" />
             </div>
           </div>
-          <SkeletonBlock class="mt-5 h-10 w-full !rounded-lg" />
+          <SkeletonBlock class="mt-5 h-11 w-full !rounded-full" />
         </div>
       </div>
       <p class="sr-only" role="status">{{ t('testsPage.subject.loading') }}</p>
@@ -292,7 +292,7 @@ const sortOptions = computed(() => asOptions(SORTS))
               v-model="search"
               type="search"
               :placeholder="t('testsPage.subject.searchPlaceholder')"
-              class="w-full rounded-full border border-app-border bg-app-surface py-2.5 pl-10 pr-4 text-[14px] text-app-ink placeholder:text-app-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+              class="w-full rounded-full bg-app-surface py-3 pl-10 pr-4 text-[14px] text-app-ink shadow-app-card placeholder:text-app-ink/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d9ccff]"
             />
           </label>
 
@@ -311,16 +311,16 @@ const sortOptions = computed(() => asOptions(SORTS))
         </div>
 
         <div class="hidden flex-wrap items-center justify-between gap-3 sm:flex">
-          <div class="flex flex-wrap gap-2">
+          <div class="flex flex-wrap gap-1 rounded-full bg-app-tile p-1">
             <button
               v-for="filter in STATE_FILTERS"
               :key="filter.key"
               type="button"
-              class="rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+              class="rounded-full px-4 py-2 text-[13px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
               :class="
                 stateFilter === filter.key
-                  ? 'border-app-ink bg-app-ink text-app-surface'
-                  : 'border-app-border bg-app-surface text-app-ink hover:bg-app-tile'
+                  ? 'bg-app-ink text-white'
+                  : 'text-app-ink hover:bg-app-surface'
               "
               :aria-pressed="stateFilter === filter.key"
               @click="stateFilter = filter.key"
@@ -373,7 +373,7 @@ const sortOptions = computed(() => asOptions(SORTS))
         >
           <button
             type="button"
-            class="flex h-9 w-9 items-center justify-center rounded-lg border border-app-border bg-app-surface text-app-ink transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40"
+            class="flex h-10 w-10 items-center justify-center rounded-full bg-app-surface text-app-ink shadow-app-card transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40"
             :disabled="page === 1"
             :aria-label="t('testsPage.subject.previousPage')"
             @click="goToPage(page - 1)"
@@ -386,11 +386,11 @@ const sortOptions = computed(() => asOptions(SORTS))
             <button
               v-else
               type="button"
-              class="h-9 min-w-9 rounded-lg border px-2.5 text-[13px] font-semibold transition-colors"
+              class="h-10 min-w-10 rounded-full px-3 text-[13px] font-medium transition-colors"
               :class="
                 value === page
-                  ? 'border-app-ink bg-app-ink text-app-surface'
-                  : 'border-app-border bg-app-surface text-app-ink hover:bg-app-tile'
+                  ? 'bg-app-ink text-white'
+                  : 'bg-app-surface text-app-ink shadow-app-card hover:bg-app-tile'
               "
               :aria-current="value === page ? 'page' : undefined"
               @click="goToPage(value)"
@@ -401,7 +401,7 @@ const sortOptions = computed(() => asOptions(SORTS))
 
           <button
             type="button"
-            class="flex h-9 w-9 items-center justify-center rounded-lg border border-app-border bg-app-surface text-app-ink transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40"
+            class="flex h-10 w-10 items-center justify-center rounded-full bg-app-surface text-app-ink shadow-app-card transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-40"
             :disabled="page === pageCount"
             :aria-label="t('testsPage.subject.nextPage')"
             @click="goToPage(page + 1)"

@@ -234,10 +234,10 @@ onMounted(async () => {
 <template>
   <AuthLayout>
     <div v-if="step === 'profile'" class="mb-8 text-center">
-      <h1 class="text-3xl font-bold tracking-[-0.02em] text-[#1a1814]">
+      <h1 class="text-[40px] font-medium leading-[1.1] tracking-[-0.015em] text-ink">
         {{ t('completeProfile.title') }}
       </h1>
-      <p class="mt-3 text-sm leading-relaxed text-[#6b6760]">
+      <p class="mt-3 text-[16px] leading-[1.5] text-muted">
         {{ t('completeProfile.description') }}
       </p>
     </div>
@@ -245,12 +245,11 @@ onMounted(async () => {
     <!-- ── Step 1: name + phone ─────────────────────────────────────── -->
     <form
       v-if="step === 'profile'"
-      class="rounded-[24px] border border-[#e4e0d8] bg-white p-7 shadow-[0_18px_50px_rgba(26,24,20,0.08)] ring-1 ring-[#f0ece5]"
       @submit.prevent="submitProfile"
     >
       <div class="flex flex-col gap-4">
         <label class="block">
-          <span class="mb-1.5 block text-[12px] font-semibold text-[#1a1814]">
+          <span class="mb-1.5 block text-[14px] font-semibold text-ink">
             {{ t('completeProfile.lastName') }}
           </span>
           <input
@@ -259,12 +258,12 @@ onMounted(async () => {
             name="family-name"
             autocomplete="family-name"
             :placeholder="t('completeProfile.lastNamePlaceholder')"
-            class="w-full rounded-xl border-[1.5px] border-[#e0ddd7] bg-white px-4 py-3 text-sm text-[#1a1814] outline-none transition placeholder:text-[#b8b3a9] focus:border-[#1a1814]"
+            class="w-full rounded-xl border border-hairline-strong bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-accent focus:border-ink"
           />
         </label>
 
         <label class="block">
-          <span class="mb-1.5 block text-[12px] font-semibold text-[#1a1814]">
+          <span class="mb-1.5 block text-[14px] font-semibold text-ink">
             {{ t('completeProfile.firstName') }}
           </span>
           <input
@@ -273,28 +272,28 @@ onMounted(async () => {
             name="given-name"
             autocomplete="given-name"
             :placeholder="t('completeProfile.firstNamePlaceholder')"
-            class="w-full rounded-xl border-[1.5px] border-[#e0ddd7] bg-white px-4 py-3 text-sm text-[#1a1814] outline-none transition placeholder:text-[#b8b3a9] focus:border-[#1a1814]"
+            class="w-full rounded-xl border border-hairline-strong bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-accent focus:border-ink"
           />
         </label>
 
         <label class="block">
-          <span class="mb-1.5 block text-[12px] font-semibold text-[#1a1814]">
+          <span class="mb-1.5 block text-[14px] font-semibold text-ink">
             {{ t('completeProfile.fatherName') }}
           </span>
           <input
             v-model="fatherName"
             type="text"
             :placeholder="t('completeProfile.fatherNamePlaceholder')"
-            class="w-full rounded-xl border-[1.5px] border-[#e0ddd7] bg-white px-4 py-3 text-sm text-[#1a1814] outline-none transition placeholder:text-[#b8b3a9] focus:border-[#1a1814]"
+            class="w-full rounded-xl border border-hairline-strong bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-accent focus:border-ink"
           />
         </label>
 
         <label class="block">
-          <span class="mb-1.5 block text-[12px] font-semibold text-[#1a1814]">
+          <span class="mb-1.5 block text-[14px] font-semibold text-ink">
             {{ t('register.phone') }}
           </span>
-          <div class="flex items-stretch overflow-hidden rounded-xl border-[1.5px] border-[#e0ddd7] bg-white transition focus-within:border-[#1a1814]">
-            <span class="flex items-center border-r border-[#e0ddd7] bg-[#f5f3ef] px-3.5 text-sm font-medium text-[#1a1814]">
+          <div class="flex items-stretch overflow-hidden rounded-xl border border-hairline-strong bg-white transition focus-within:border-ink">
+            <span class="flex items-center border-r border-hairline-strong bg-panel px-3.5 text-sm font-medium text-ink">
               +998
             </span>
             <input
@@ -304,11 +303,11 @@ onMounted(async () => {
               inputmode="numeric"
               autocomplete="tel-national"
               :placeholder="t('register.phonePlaceholder')"
-              class="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm text-[#1a1814] outline-none placeholder:text-[#b8b3a9]"
+              class="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm text-ink outline-none placeholder:text-accent"
               @input="onPhoneInput"
             />
           </div>
-          <span class="mt-1.5 block text-[12px] leading-relaxed text-[#8a857c]">
+          <span class="mt-1.5 block text-[12px] leading-relaxed text-muted">
             {{ t('completeProfile.phoneHint') }}
           </span>
         </label>
@@ -324,7 +323,7 @@ onMounted(async () => {
       <button
         type="submit"
         :disabled="isSaving"
-        class="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#1a1814] text-sm font-semibold text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+        class="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-ink text-[15px] font-medium text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
       >
         {{ isSaving ? t('completeProfile.submitting') : t('completeProfile.submit') }}
       </button>
@@ -333,24 +332,24 @@ onMounted(async () => {
     <!-- ── Step 2: OTP confirmation ─────────────────────────────────── -->
     <div
       v-else
-      class="rounded-[24px] border border-[#e4e0d8] bg-white p-7 text-center shadow-[0_18px_50px_rgba(26,24,20,0.08)] ring-1 ring-[#f0ece5]"
+      class="text-center"
     >
-      <div class="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[#1a1814] text-white">
+      <div class="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white">
         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <rect x="5" y="2" width="14" height="20" rx="3" />
           <path d="M9 18h6" />
         </svg>
       </div>
 
-      <h1 class="text-2xl font-bold tracking-[-0.02em] text-[#1a1814]">
+      <h1 class="text-[30px] font-medium leading-[1.15] tracking-[-0.015em] text-ink">
         {{ t('register.otpTitle') }}
       </h1>
-      <p v-if="codeChannel === 'telegram'" class="mt-2 text-sm leading-relaxed text-[#6b6760]">
+      <p v-if="codeChannel === 'telegram'" class="mt-2 text-sm leading-relaxed text-muted">
         {{ t('register.otpSentTelegram') }}
       </p>
-      <p v-else class="mt-2 text-sm leading-relaxed text-[#6b6760]">
+      <p v-else class="mt-2 text-sm leading-relaxed text-muted">
         {{ t('register.otpSentPrefix') }}
-        <b class="text-[#1a1814]">{{ fullPhoneDisplay }}</b>
+        <b class="text-ink">{{ fullPhoneDisplay }}</b>
         {{ t('register.otpSentSuffix') }}
       </p>
 
@@ -372,17 +371,17 @@ onMounted(async () => {
       <button
         type="button"
         :disabled="isVerifying"
-        class="mt-6 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#1a1814] text-sm font-semibold text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+        class="mt-6 inline-flex h-12 w-full items-center justify-center rounded-full bg-ink text-[15px] font-medium text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
         @click="submitOtp"
       >
         {{ isVerifying ? t('register.otpSubmitting') : t('register.otpSubmit') }}
       </button>
 
-      <p class="mt-5 text-sm text-[#6b6760]">
+      <p class="mt-5 text-sm text-muted">
         {{ t('register.otpNotReceived') }}
         <span
           v-if="resendRemaining > 0"
-          class="font-mono-custom font-semibold text-[#1a1814]"
+          class="font-mono-custom font-semibold text-ink"
         >
           {{ resendCountdownLabel }}
         </span>
@@ -390,7 +389,7 @@ onMounted(async () => {
           v-else
           type="button"
           :disabled="isResending"
-          class="font-semibold text-[#1a1814] underline underline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          class="font-semibold text-ink underline underline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           @click="resendCode"
         >
           {{ t('register.otpResend') }}
@@ -401,26 +400,26 @@ onMounted(async () => {
            it — covers users it doesn't know yet, and SMS outages. -->
       <div class="mt-4">
         <TelegramCodeLink :label="t('register.getCodeViaTelegram')" />
-        <p class="mt-2 text-[12px] leading-relaxed text-[#8a857c]">
+        <p class="mt-2 text-[12px] leading-relaxed text-muted">
           {{ t('register.getCodeViaTelegramHint') }}
         </p>
       </div>
 
       <button
         type="button"
-        class="mt-2 text-[12.5px] font-medium text-[#8a857c] underline underline-offset-2 transition hover:text-[#1a1814]"
+        class="mt-2 text-[12.5px] font-medium text-muted underline underline-offset-2 transition hover:text-ink"
         @click="backToProfile"
       >
         {{ t('register.changeNumber') }}
       </button>
     </div>
 
-    <p class="mt-6 text-center text-sm text-[#6b6760]">
+    <p class="mt-6 text-center text-sm text-muted">
       <!-- Browsing stays open: only start-test is gated on this. A signed-in
            user's "later" is the platform, not the marketing landing page. -->
       <router-link
         :to="PLATFORM_HOME"
-        class="font-semibold text-[#1a1814] underline-offset-2 hover:underline"
+        class="font-semibold text-ink underline-offset-2 hover:underline"
       >
         {{ t('completeProfile.later') }}
       </router-link>

@@ -156,16 +156,12 @@ const routes = [
         redirect: { name: 'narxlar' },
       },
       {
+        // Retired public subject page (old design): every link and bookmark now
+        // opens the platform's subject tests; a signed-out visitor is sent to
+        // sign in by the platform's guard and comes back here.
         path: 'math',
         name: 'math',
-        component: () => import('@/views/SubjectPage.vue'),
-        meta: {
-          subjectKey: 'math',
-          seo: {
-            titleKey: 'seo.math.title',
-            descriptionKey: 'seo.math.description',
-          },
-        },
+        redirect: '/testlar/math',
       },
       {
         path: 'mashq',
@@ -176,40 +172,28 @@ const routes = [
           : { redirect: '/' }),
       },
       {
+        // Retired public subject page (old design): every link and bookmark now
+        // opens the platform's subject tests; a signed-out visitor is sent to
+        // sign in by the platform's guard and comes back here.
         path: 'tarix',
         name: 'tarix',
-        component: () => import('@/views/SubjectPage.vue'),
-        meta: {
-          subjectKey: 'history',
-          seo: {
-            titleKey: 'seo.tarix.title',
-            descriptionKey: 'seo.tarix.description',
-          },
-        },
+        redirect: '/testlar/history',
       },
       {
+        // Retired public subject page (old design): every link and bookmark now
+        // opens the platform's subject tests; a signed-out visitor is sent to
+        // sign in by the platform's guard and comes back here.
         path: 'fizika',
         name: 'fizika',
-        component: () => import('@/views/SubjectPage.vue'),
-        meta: {
-          subjectKey: 'physics',
-          seo: {
-            titleKey: 'seo.fizika.title',
-            descriptionKey: 'seo.fizika.description',
-          },
-        },
+        redirect: '/testlar/physics',
       },
       {
+        // Retired public subject page (old design): every link and bookmark now
+        // opens the platform's subject tests; a signed-out visitor is sent to
+        // sign in by the platform's guard and comes back here.
         path: 'biologiya',
         name: 'biologiya',
-        component: () => import('@/views/SubjectPage.vue'),
-        meta: {
-          subjectKey: 'biology',
-          seo: {
-            titleKey: 'seo.biologiya.title',
-            descriptionKey: 'seo.biologiya.description',
-          },
-        },
+        redirect: '/testlar/biology',
       },
       {
         // The Biology sample graduated into the real /test flow (backend test +
@@ -229,16 +213,10 @@ const routes = [
           : { redirect: '/biologiya' }),
       },
       {
+        // Retired public subject page (old design) — see /math.
         path: 'ona-tili',
         name: 'ona-tili',
-        component: () => import('@/views/OnaTiliPage.vue'),
-        meta: {
-          subjectKey: 'motherTongue',
-          seo: {
-            titleKey: 'seo.onaTili.title',
-            descriptionKey: 'seo.onaTili.description',
-          },
-        },
+        redirect: '/testlar/motherTongue',
       },
       {
         // The Ona tili exam preview graduated into the real /test flow (essay UI

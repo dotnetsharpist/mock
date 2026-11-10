@@ -61,18 +61,18 @@ const metaLine = computed(() => {
 
 <template>
   <article
-    class="group relative flex h-full flex-col rounded-2xl border border-app-border bg-app-surface p-5 shadow-app-card transition-colors hover:border-app-ink/15"
+    class="group relative flex h-full flex-col rounded-[24px] bg-app-surface p-5 shadow-app-card transition-transform duration-200 hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
   >
     <div class="flex items-start gap-3">
       <span
-        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-app-tile text-app-ink"
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#efe2ff] text-app-ink"
         aria-hidden="true"
       >
         <AppIcon name="essay" :size="17" />
       </span>
 
       <h3
-        class="line-clamp-3 min-h-[41px] min-w-0 flex-1 text-[15px] font-bold leading-[1.35] tracking-[-0.01em] text-app-ink"
+        class="line-clamp-3 min-h-[41px] min-w-0 flex-1 text-[15px] font-medium leading-[1.35] tracking-[-0.02em] text-app-ink"
         :title="entry.topic"
       >
         {{ entry.topic }}
@@ -82,7 +82,7 @@ const metaLine = computed(() => {
            but focus reveals it too, or it would be keyboard-unreachable. -->
       <button
         type="button"
-        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-app-muted opacity-0 transition hover:bg-app-tile hover:text-app-bad focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink group-hover:opacity-100"
+        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-app-ink opacity-0 transition hover:bg-[#ffe2ec] focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink group-hover:opacity-100"
         :aria-label="t('resultUi.essay.remove', { topic: entry.topic })"
         @click.stop="emit('remove', entry.id)"
       >
@@ -93,24 +93,28 @@ const metaLine = computed(() => {
     <p class="mt-3 text-[12px] text-app-muted">{{ metaLine }}</p>
 
     <div class="mt-4 flex items-center gap-2">
-      <StatusBadge :tone="tone">
+      <!-- Pastel, never red: a low band is a soft pink pill, a good one blue. -->
+      <span
+        class="inline-flex items-center whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-medium text-app-ink"
+        :class="{ good: 'bg-[#dce8ff]', bad: 'bg-[#ffe2ec]', neutral: 'bg-app-tile' }[tone]"
+      >
         {{ t('resultUi.essay.score', { total: bandTotal ?? '—', max: bandMax }, bandMax) }}
-      </StatusBadge>
+      </span>
       <StatusBadge v-if="entry.sample" tone="neutral" class="!px-2 !py-0.5 !text-[11px]">
         {{ t('resultUi.essay.sample') }}
       </StatusBadge>
     </div>
 
-    <div class="mt-3 h-1 w-full overflow-hidden rounded-full bg-app-tile">
+    <div class="mb-5 mt-3 h-2 w-full overflow-hidden rounded-full bg-app-tile">
       <div
-        class="h-full rounded-full bg-app-ink transition-[width] duration-500 ease-out"
+        class="h-full rounded-full bg-[linear-gradient(90deg,#f4a9c6_0%,#b9a2f5_55%,#8fb2ff_100%)] transition-[width] duration-500 ease-out"
         :style="{ width: scorePercent + '%' }"
       ></div>
     </div>
 
     <button
       type="button"
-      class="mt-5 flex w-full items-center justify-center gap-1.5 rounded-lg bg-app-ink px-4 py-2.5 text-[13px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+      class="mt-auto flex w-full items-center justify-center gap-1.5 rounded-full bg-app-ink px-4 py-2.5 text-[13px] font-medium text-white transition-transform hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
       @click="emit('open', entry.id)"
     >
       {{ t('resultUi.essay.open') }}

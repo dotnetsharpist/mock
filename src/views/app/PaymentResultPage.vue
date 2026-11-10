@@ -20,7 +20,6 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import AppTopbar from '@/components/app/AppTopbar.vue'
-import AppCard from '@/components/app/AppCard.vue'
 import AppIcon from '@/components/app/AppIcon.vue'
 import CoinIcon from '@/components/app/CoinIcon.vue'
 import SkeletonBlock from '@/components/app/SkeletonBlock.vue'
@@ -234,9 +233,9 @@ const retry = () => {
 }
 
 const primaryPill =
-  'inline-flex items-center gap-2 rounded-full bg-app-ink px-5 py-2.5 text-[14px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:cursor-wait disabled:opacity-60'
+  'inline-flex items-center gap-2 rounded-full bg-app-ink px-5 py-2.5 text-[14px] font-medium text-white transition-transform hover:scale-[1.03] motion-reduce:hover:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink disabled:cursor-wait disabled:opacity-60'
 const secondaryPill =
-  'inline-flex items-center gap-2 rounded-full border border-app-border bg-app-surface px-5 py-2.5 text-[14px] font-semibold text-app-ink transition-colors hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink'
+  'inline-flex items-center gap-2 rounded-full bg-app-tile px-5 py-2.5 text-[14px] font-medium text-app-ink transition-colors hover:bg-app-warm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink'
 </script>
 
 <template>
@@ -252,11 +251,17 @@ const secondaryPill =
   />
 
   <main>
-    <AppCard class="mx-auto max-w-[560px]">
+    <!-- The approved payment is the one moment worth celebrating: it gets the
+         landing's pastel light; every other state stays on the white sheet. -->
+    <div
+      class="mx-auto max-w-[560px] rounded-[24px] p-5 shadow-app-card sm:p-6"
+      :class="phase === 'approved' ? 'app-iris' : 'bg-app-surface'"
+    >
       <!-- Announced as it changes: the status moves on its own, without a click. -->
       <div class="flex items-start gap-4" aria-live="polite">
         <span
-          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-app-tile text-app-ink"
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-app-ink"
+          :class="phase === 'approved' ? 'bg-white/70 ring-1 ring-white' : 'bg-app-tile'"
           aria-hidden="true"
         >
           <AppIcon :name="view.icon" :size="22" />
@@ -270,10 +275,10 @@ const secondaryPill =
             ></span>
             {{ view.badge }}
           </StatusBadge>
-          <h2 class="mt-3 text-[20px] font-bold leading-snug tracking-[-0.015em] text-app-ink">
+          <h2 class="mt-3 text-[22px] font-medium leading-snug tracking-[-0.02em] text-app-ink">
             {{ view.title }}
           </h2>
-          <p class="mt-1.5 text-[14px] leading-[1.6] text-app-muted">
+          <p class="mt-1.5 text-[14px] leading-[1.6] text-app-ink">
             {{ view.description }}
           </p>
         </div>
@@ -282,17 +287,18 @@ const secondaryPill =
       <!-- What was paid for -->
       <dl
         v-if="showDetails"
-        class="mt-5 divide-y divide-app-border rounded-2xl border border-app-border bg-app-sunken px-4 text-[14px]"
+        class="mt-5 divide-y divide-app-ink/10 rounded-[20px] px-4 text-[14px]"
+        :class="phase === 'approved' ? 'bg-white/70 ring-1 ring-white' : 'bg-app-tile'"
       >
         <div class="flex items-center justify-between gap-4 py-3">
-          <dt class="text-app-muted">{{ t('paymentApp.result.details.pack') }}</dt>
+          <dt class="text-app-ink">{{ t('paymentApp.result.details.pack') }}</dt>
           <dd class="min-w-0 truncate text-right font-semibold text-app-ink">
             <SkeletonBlock v-if="!payment" class="h-4 w-28" />
             <template v-else>{{ payment.tariffName || '—' }}</template>
           </dd>
         </div>
         <div class="flex items-center justify-between gap-4 py-3">
-          <dt class="text-app-muted">{{ t('paymentApp.result.details.coins') }}</dt>
+          <dt class="text-app-ink">{{ t('paymentApp.result.details.coins') }}</dt>
           <dd class="font-semibold text-app-ink">
             <SkeletonBlock v-if="!payment" class="h-4 w-14" />
             <span v-else class="inline-flex items-center gap-1.5">
@@ -302,15 +308,15 @@ const secondaryPill =
           </dd>
         </div>
         <div class="flex items-center justify-between gap-4 py-3">
-          <dt class="text-app-muted">{{ t('paymentApp.result.details.amount') }}</dt>
+          <dt class="text-app-ink">{{ t('paymentApp.result.details.amount') }}</dt>
           <dd class="font-semibold text-app-ink">
             <SkeletonBlock v-if="!payment" class="h-4 w-24" />
             <template v-else>{{ formatSom(payment.amount) }}</template>
           </dd>
         </div>
         <div class="flex items-center justify-between gap-4 py-3">
-          <dt class="text-app-muted">{{ t('paymentApp.result.details.number') }}</dt>
-          <dd class="font-mono text-[13px] text-app-muted">
+          <dt class="text-app-ink">{{ t('paymentApp.result.details.number') }}</dt>
+          <dd class="font-mono text-[13px] text-app-ink">
             <SkeletonBlock v-if="!payment" class="h-4 w-12" />
             <template v-else>#{{ payment.id }}</template>
           </dd>
@@ -323,7 +329,10 @@ const secondaryPill =
             {{ t('paymentApp.result.actions.tests') }}
             <AppIcon name="arrowRight" :size="15" />
           </RouterLink>
-          <RouterLink to="/essay" :class="secondaryPill">{{ t('paymentApp.result.actions.essay') }}</RouterLink>
+          <RouterLink
+            to="/essay"
+            class="inline-flex items-center gap-2 rounded-full bg-white/70 px-5 py-2.5 text-[14px] font-medium text-app-ink ring-1 ring-white transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+          >{{ t('paymentApp.result.actions.essay') }}</RouterLink>
         </template>
 
         <template v-else-if="phase === 'cancelled'">
@@ -353,7 +362,7 @@ const secondaryPill =
           </a>
         </template>
       </div>
-    </AppCard>
+    </div>
 
     <PricingPaymentModal
       :open="isPaymentOpen"

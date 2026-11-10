@@ -56,7 +56,7 @@ const OPTION_CLASSES = {
   selected: 'border-app-ink bg-app-surface shadow-[0_0_0_1px_var(--color-app-ink)]',
   correct: 'border-app-good bg-app-good-bg',
   wrong: 'border-app-bad bg-app-bad-bg',
-  rest: 'border-app-border bg-app-surface opacity-70',
+  rest: 'border-app-border bg-app-surface',
 }
 
 const LETTER_CLASSES = {
@@ -153,7 +153,7 @@ watch(
           spellcheck="false"
           :disabled="locked"
           :placeholder="t('bank.question.answerPlaceholder')"
-          class="mt-2 w-full rounded-xl border bg-app-surface px-4 py-3 text-[16px] text-app-ink outline-none transition-colors placeholder:text-app-muted focus:border-app-ink disabled:bg-app-sunken"
+          class="mt-2 w-full rounded-xl border bg-app-surface px-4 py-3 text-[16px] text-app-ink outline-none transition-colors placeholder:text-app-ink/60 focus:border-app-ink disabled:bg-app-sunken"
           :class="
             reveal?.status === 'correct'
               ? 'border-app-good'
@@ -196,7 +196,7 @@ watch(
               :text="option.text"
               inline
               class="min-w-0 flex-1 pt-[3px] text-[15.5px] leading-[1.6] text-app-ink"
-              :class="isCrossed(option) ? 'line-through decoration-app-ink/60 opacity-45' : ''"
+              :class="isCrossed(option) ? 'line-through decoration-app-ink' : ''"
             />
             <AppIcon
               v-if="optionState(option) === 'correct'"

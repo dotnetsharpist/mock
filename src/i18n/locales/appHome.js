@@ -9,8 +9,14 @@
 export default {
   uz: {
     dashboard: {
-      title: 'Xush kelibsiz, {name}! 👋',
+      title: 'Xush kelibsiz, {name}',
       subtitle: 'Bugun o‘qish uchun ajoyib kun!',
+      hero: {
+        hello: 'Salom, {name}!',
+        lead: 'Bugun ham bitta test — imtihonga bir qadam yaqinroq.',
+        solved: ['ta test', 'yechildi'],
+        average: ['o‘rtacha', 'natija'],
+      },
       statsLabel: 'Umumiy ko‘rsatkichlar',
       // "3 kun oldin" on the last-activity card. Whole calendar days.
       relative: {
@@ -21,7 +27,23 @@ export default {
         monthsAgo: '{n} oy oldin',
         yearsAgo: '{n} yil oldin',
       },
+      // The exam calendar beside the score bars.
+      days: {
+        label: 'Imtihonlar taqvimi',
+        previous: 'Oldingi oy',
+        next: 'Keyingi oy',
+        nextExam: 'Keyingi imtihon',
+        examDay: 'Imtihon kuni',
+        noDate: 'Sana tez orada e’lon qilinadi',
+        tomorrow: 'Ertaga',
+        examIn: '{n} kun qoldi',
+        // Sunday first, as Date.getDay() counts.
+        weekdays: ['Yak', 'Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan'],
+        months: ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'],
+      },
       stats: {
+        scoresFailed: 'Natijalarni yuklab bo‘lmadi',
+        retry: 'Qayta urinish',
         solved: 'Testlar yechildi',
         vsLastWeek: "o'tgan haftaga nisbatan",
         thisWeek: 'Bu hafta {n} ta',
@@ -38,20 +60,22 @@ export default {
         unchanged: 'O‘zgarishsiz',
       },
       chart: {
+        scoresFailedTitle: 'Natijalarni yuklab bo‘lmadi',
+        scoresFailedDescription: 'Testlaringiz saqlangan, faqat ballar yuklanmadi. Qayta urinib ko‘ring.',
         heading: 'Mening natijalarim',
+        best: 'eng yaxshi natija',
         windowLabel: 'Grafik oralig‘i',
         lastTests: 'Oxirgi {n} ta test',
         loadFailed: 'Ma’lumotlarni yuklab bo‘lmadi',
         emptyTitle: 'Grafik hali chizilmagan',
         emptyDescription: 'Kamida ikkita test yechilgach, natijalaringiz shu yerda chiziq bo‘lib ko‘rinadi.',
-        growthUp: 'o‘sish',
-        growthDown: 'pasayish',
-        growthFlat: 'o‘zgarishsiz',
         caption: 'Har bir nuqta — bitta yechilgan test, eskisidan yangisiga qarab.',
       },
       recent: {
         heading: 'So‘nggi testlar',
         allResults: 'Barcha natijalar',
+                refresh: 'Yangilash',
+        columns: { test: 'Test', subject: 'Fan', date: 'Sana', score: 'Natija', grade: 'Daraja' },
         emptyTitle: 'Siz hali test yechmagansiz',
         emptyDescription: 'Yechgan testlaringiz va ularning tahlili shu yerda to‘planib boradi.',
         scoring: 'Natija hisoblanmoqda',
@@ -242,8 +266,14 @@ export default {
   },
   ru: {
     dashboard: {
-      title: 'Добро пожаловать, {name}! 👋',
+      title: 'Добро пожаловать, {name}',
       subtitle: 'Сегодня отличный день для учёбы!',
+      hero: {
+        hello: 'Привет, {name}!',
+        lead: 'Ещё один тест сегодня — ещё шаг к экзамену.',
+        solved: ['тестов', 'решено'],
+        average: ['средний', 'результат'],
+      },
       statsLabel: 'Общие показатели',
       relative: {
         today: 'Сегодня',
@@ -254,7 +284,24 @@ export default {
         monthsAgo: '{n} месяцев назад | {n} месяц назад | {n} месяца назад | {n} месяцев назад',
         yearsAgo: '{n} лет назад | {n} год назад | {n} года назад | {n} лет назад',
       },
+      // The exam calendar beside the score bars.
+      days: {
+        label: 'Календарь экзаменов',
+        previous: 'Предыдущий месяц',
+        next: 'Следующий месяц',
+        nextExam: 'Следующий экзамен',
+        examDay: 'День экзамена',
+        noDate: 'Дата скоро будет объявлена',
+        tomorrow: 'Завтра',
+        // zero | one | few | many
+        examIn: 'через {n} дней | через {n} день | через {n} дня | через {n} дней',
+        // Sunday first, as Date.getDay() counts.
+        weekdays: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+        months: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+      },
       stats: {
+        scoresFailed: 'Не удалось загрузить результаты',
+        retry: 'Повторить',
         solved: 'Решено тестов',
         vsLastWeek: 'по сравнению с прошлой неделей',
         thisWeek: 'На этой неделе: {n}',
@@ -273,18 +320,20 @@ export default {
         unchanged: 'Без изменений',
       },
       chart: {
+        scoresFailedTitle: 'Не удалось загрузить результаты',
+        scoresFailedDescription: 'Ваши тесты сохранены, но баллы не загрузились. Попробуйте ещё раз.',
         heading: 'Мои результаты',
+        best: 'лучший результат',
         windowLabel: 'Период графика',
         lastTests: 'Последние {n} тестов | Последний {n} тест | Последние {n} теста | Последние {n} тестов',
         loadFailed: 'Не удалось загрузить данные',
         emptyTitle: 'График пока не построен',
         emptyDescription: 'Решите хотя бы два теста — и здесь появится линия ваших результатов.',
-        growthUp: 'рост',
-        growthDown: 'снижение',
-        growthFlat: 'без изменений',
         caption: 'Каждая точка — один решённый тест, от старых к новым.',
       },
       recent: {
+        refresh: 'Обновить',
+        columns: { test: 'Тест', subject: 'Предмет', date: 'Дата', score: 'Результат', grade: 'Уровень' },
         heading: 'Последние тесты',
         allResults: 'Все результаты',
         emptyTitle: 'Вы ещё не решали тесты',

@@ -20,9 +20,6 @@ const navItems = [
   // The essay analysis screen has its own page — better than an anchor to a
   // four-word feature column, and it keeps /platforma about the platform.
   { label: 'essay', to: '/essay-tekshirish' },
-  // Courses do not exist yet, so this leads to the page that says so — an
-  // anchor to a four-word feature column implied they were already there.
-  { label: 'courses', to: '/kurslar' },
 ]
 
 const { t } = useI18n()
@@ -41,7 +38,8 @@ watch(() => route.fullPath, () => {
 <template>
   <div class="relative">
     <nav
-      class="mx-auto box-content flex max-w-[1280px] items-center justify-between px-[20px] py-[18px] sm:px-[32px] lg:h-[92px] lg:px-[48px] lg:py-0"
+      class="mx-auto box-content flex max-w-[1280px] items-center justify-between px-[20px] py-[18px] sm:px-[32px] lg:px-[48px] lg:py-0"
+      :class="route.path === '/' ? 'lg:h-[72px]' : 'lg:h-[92px]'"
       :aria-label="t('landingNav.label')"
     >
       <RouterLink
@@ -57,7 +55,9 @@ watch(() => route.fullPath, () => {
         />
       </RouterLink>
 
+      <!-- On the landing page the hero's switcher replaces these links. -->
       <div
+        v-if="route.path !== '/'"
         class="hidden items-center text-[15px] font-medium lg:flex lg:gap-[40px]"
       >
         <RouterLink

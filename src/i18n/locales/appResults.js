@@ -316,6 +316,9 @@ export default {
         packsLead: 'Har bir paket bir xil narsani beradi — faqat hajmi va bittasining narxi farq qiladi.',
         howTitle: 'Tanga qanday ishlaydi?',
         plansHeading: "Ta'riflar",
+        heroTitle: 'Imtihonga tayyorgarlik uchun tanga',
+        included: 'Paketga kiradi:',
+        forever: 'Tangalar muddatsiz',
         // {ratio} is "2x"; {times} the bare number, for languages that say
         // "twice as many" in words.
         ratio: '{ratio} ko‘proq tanga',
@@ -693,6 +696,9 @@ export default {
         packsLead: 'Каждый пакет даёт одно и то же — отличаются только объём и цена за токен.',
         howTitle: 'Как работают токены?',
         plansHeading: 'Тарифы',
+        heroTitle: 'Токены для подготовки к экзамену',
+        included: 'В пакет входит:',
+        forever: 'Токены бессрочные',
         // zero | one | few | many — agrees with {times}
         ratio: 'в {times} раз больше токенов | в {times} раз больше токенов | в {times} раза больше токенов | в {times} раз больше токенов',
         how: {

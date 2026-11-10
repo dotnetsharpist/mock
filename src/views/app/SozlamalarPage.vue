@@ -16,7 +16,6 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppTopbar from '@/components/app/AppTopbar.vue'
-import AppCard from '@/components/app/AppCard.vue'
 import AppIcon from '@/components/app/AppIcon.vue'
 import CoinIcon from '@/components/app/CoinIcon.vue'
 import SkeletonBlock from '@/components/app/SkeletonBlock.vue'
@@ -216,10 +215,10 @@ async function signOut() {
 
   <main class="grid gap-4 lg:grid-cols-[320px_1fr] lg:items-start">
     <!-- ═══ Identity + balance ═══ -->
-    <AppCard>
+    <div class="rounded-[24px] bg-app-surface p-5 shadow-app-card">
       <div class="flex flex-col items-center text-center">
         <span
-          class="flex h-20 w-20 items-center justify-center rounded-2xl bg-app-ink text-[26px] font-bold uppercase text-app-surface"
+          class="flex h-20 w-20 items-center justify-center rounded-[24px] bg-app-ink text-[26px] font-medium uppercase tracking-[-0.02em] text-white"
         >
           {{ initials }}
         </span>
@@ -229,13 +228,13 @@ async function signOut() {
           <SkeletonBlock class="mt-2 h-4 w-32" />
         </template>
         <template v-else>
-          <h2 class="mt-4 text-[18px] font-bold tracking-[-0.01em] text-app-ink">
+          <h2 class="mt-4 text-[20px] font-medium tracking-[-0.02em] text-app-ink">
             {{ displayName }}
           </h2>
-          <p class="mt-1 break-all text-[13px] text-app-muted">{{ displayValue(info?.email) }}</p>
+          <p class="mt-1 break-all text-[13px] text-app-ink">{{ displayValue(info?.email) }}</p>
           <span
             class="mt-3 inline-flex rounded-full px-3 py-1 text-[11px] font-semibold"
-            :class="info?.emailConfirmed ? 'bg-app-good-bg text-app-good' : 'bg-app-tile text-app-muted'"
+            :class="info?.emailConfirmed ? 'bg-[#dce8ff] text-app-ink' : 'bg-[#ffe2ec] text-app-ink'"
           >
             {{
               info?.emailConfirmed
@@ -245,44 +244,44 @@ async function signOut() {
           </span>
         </template>
 
-        <div class="mt-5 w-full rounded-xl border border-app-border bg-app-sunken p-4">
-          <p class="text-[12px] text-app-muted">{{ t('settingsPage.balance') }}</p>
-          <p class="mt-1.5 flex items-center justify-center gap-2">
-            <CoinIcon :size="18" class="text-app-coin" />
-            <span class="text-[24px] font-bold leading-none tabular-nums text-app-ink">
+        <div class="app-iris mt-5 w-full rounded-[20px] p-5">
+          <p class="text-[13px] font-medium text-app-ink">{{ t('settingsPage.balance') }}</p>
+          <p class="mt-2 flex items-baseline justify-center gap-2">
+            <CoinIcon :size="20" class="self-center text-app-coin" />
+            <span class="text-[40px] font-normal leading-none tracking-[-0.04em] tabular-nums text-app-ink">
               {{ tangaBalance }}
             </span>
-            <span class="text-[13px] font-semibold text-app-muted">
+            <span class="text-[13px] font-medium text-app-ink">
               {{ t('settingsPage.tangaUnit', Number(tangaBalance) || 0) }}
             </span>
           </p>
           <RouterLink
             to="/tanga"
-            class="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-app-border bg-app-surface px-4 py-2 text-[13px] font-semibold text-app-ink transition-colors hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+            class="mt-4 flex w-full items-center justify-center gap-1.5 rounded-full bg-app-ink px-4 py-2.5 text-[13px] font-medium text-white transition-transform hover:scale-[1.03] motion-reduce:hover:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
           >
             {{ t('appShell.topbar.topUp') }}
             <AppIcon name="arrowRight" :size="14" />
           </RouterLink>
         </div>
       </div>
-    </AppCard>
+    </div>
 
     <div class="space-y-4">
       <!-- ═══ Profile fields ═══ -->
-      <AppCard>
+      <div class="rounded-[24px] bg-app-surface p-5 shadow-app-card">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 class="text-[16px] font-bold tracking-[-0.01em] text-app-ink">
+            <h2 class="text-[17px] font-medium tracking-[-0.02em] text-app-ink">
               {{ t('settingsPage.profileHeading') }}
             </h2>
-            <p class="mt-0.5 text-[13px] text-app-muted">
+            <p class="mt-0.5 text-[13px] text-app-ink">
               {{ t('settingsPage.profileHint') }}
             </p>
           </div>
           <button
             v-if="!isEditing"
             type="button"
-            class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-app-border bg-app-surface px-3.5 py-2 text-[13px] font-semibold text-app-ink transition-colors hover:bg-app-tile focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+            class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-app-tile px-4 py-2 text-[13px] font-medium text-app-ink transition-colors hover:bg-app-warm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
             @click="startEdit"
           >
             {{ t('settingsPage.edit') }}
@@ -291,13 +290,13 @@ async function signOut() {
 
         <p
           v-if="loadError"
-          class="mb-4 rounded-xl bg-app-bad-bg px-4 py-3 text-[13px] font-medium text-app-bad"
+          class="mb-4 rounded-[20px] bg-app-bad-bg px-4 py-3 text-[13px] font-medium text-app-bad"
         >
           {{ errorText(loadError) }}
         </p>
         <p
           v-if="saveSuccess && !isEditing"
-          class="mb-4 rounded-xl bg-app-good-bg px-4 py-3 text-[13px] font-medium text-app-good"
+          class="mb-4 rounded-[20px] bg-[#dce8ff] px-4 py-3 text-[13px] font-medium text-app-ink"
         >
           {{ t('settingsPage.saved') }}
         </p>
@@ -309,7 +308,7 @@ async function signOut() {
               :key="field.key"
               class="grid gap-1.5 py-3 first:pt-0 sm:grid-cols-[180px_1fr] sm:items-center sm:gap-4"
             >
-              <dt class="text-[13px] text-app-muted">{{ field.label }}</dt>
+              <dt class="text-[13px] text-app-ink">{{ field.label }}</dt>
               <dd class="min-w-0 text-[14px] font-semibold text-app-ink">
                 <input
                   v-if="isEditing && field.editable && field.type === 'phone'"
@@ -318,7 +317,7 @@ async function signOut() {
                   inputmode="numeric"
                   autocomplete="tel"
                   placeholder="+998 90 123 45 67"
-                  class="w-full rounded-lg border border-app-border bg-app-surface px-3 py-2 text-[14px] font-semibold text-app-ink outline-none transition-colors focus:border-app-ink"
+                  class="w-full rounded-full bg-app-tile px-4 py-2 text-[14px] font-semibold text-app-ink outline-none transition-shadow focus:bg-app-surface focus:ring-2 focus:ring-[#d9ccff]"
                   @input="onPhoneInput"
                 />
                 <input
@@ -326,7 +325,7 @@ async function signOut() {
                   v-model="form[field.key]"
                   type="text"
                   :placeholder="field.label"
-                  class="w-full rounded-lg border border-app-border bg-app-surface px-3 py-2 text-[14px] font-semibold text-app-ink outline-none transition-colors focus:border-app-ink"
+                  class="w-full rounded-full bg-app-tile px-4 py-2 text-[14px] font-semibold text-app-ink outline-none transition-shadow focus:bg-app-surface focus:ring-2 focus:ring-[#d9ccff]"
                 />
                 <span v-else class="break-words">{{ displayValue(field.value) }}</span>
               </dd>
@@ -341,7 +340,7 @@ async function signOut() {
             <button
               type="button"
               :disabled="isSaving"
-              class="rounded-lg border border-app-border bg-app-surface px-5 py-2.5 text-[13px] font-semibold text-app-ink transition-colors hover:bg-app-tile disabled:cursor-not-allowed disabled:opacity-60"
+              class="rounded-full bg-app-tile px-5 py-2.5 text-[13px] font-medium text-app-ink transition-colors hover:bg-app-warm disabled:cursor-not-allowed disabled:opacity-60"
               @click="cancelEdit"
             >
               {{ t('common.cancel') }}
@@ -349,30 +348,30 @@ async function signOut() {
             <button
               type="submit"
               :disabled="isSaving"
-              class="rounded-lg bg-app-ink px-5 py-2.5 text-[13px] font-semibold text-app-surface transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              class="rounded-full bg-app-ink px-5 py-2.5 text-[13px] font-medium text-white transition-transform hover:scale-[1.03] motion-reduce:hover:scale-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {{ isSaving ? t('settingsPage.saving') : t('settingsPage.save') }}
             </button>
           </div>
         </form>
-      </AppCard>
+      </div>
 
       <!-- ═══ Language ═══ -->
-      <AppCard>
-        <h2 class="text-[16px] font-bold tracking-[-0.01em] text-app-ink">
+      <div class="rounded-[24px] bg-app-surface p-5 shadow-app-card">
+        <h2 class="text-[17px] font-medium tracking-[-0.02em] text-app-ink">
           {{ t('common.language') }}
         </h2>
-        <p class="mt-0.5 text-[13px] text-app-muted">{{ t('settingsPage.languageHint') }}</p>
-        <div class="mt-4 flex flex-wrap gap-2">
+        <p class="mt-0.5 text-[13px] text-app-ink">{{ t('settingsPage.languageHint') }}</p>
+        <div class="mt-4 inline-flex flex-wrap gap-1 rounded-full bg-app-tile p-1">
           <button
             v-for="language in LANGUAGES"
             :key="language.value"
             type="button"
-            class="rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+            class="rounded-full px-4 py-2 text-[13px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
             :class="
               locale === language.value
-                ? 'border-app-ink bg-app-ink text-app-surface'
-                : 'border-app-border bg-app-surface text-app-ink hover:bg-app-tile'
+                ? 'bg-app-ink text-white'
+                : 'text-app-ink hover:bg-app-surface'
             "
             :aria-pressed="locale === language.value"
             @click="changeLanguage(language.value)"
@@ -380,54 +379,54 @@ async function signOut() {
             {{ language.label }}
           </button>
         </div>
-      </AppCard>
+      </div>
 
       <!-- ═══ Sign out ═══ -->
       <!-- The button sits under the text, not opposite it: this is the last card
            on the page, and the floating support button owns the bottom-right
            corner — right-aligned, it was rendered unclickable behind it. -->
-      <AppCard>
-        <h2 class="text-[16px] font-bold tracking-[-0.01em] text-app-ink">
+      <div class="rounded-[24px] bg-app-surface p-5 shadow-app-card">
+        <h2 class="text-[17px] font-medium tracking-[-0.02em] text-app-ink">
           {{ t('settingsPage.signOutHeading') }}
         </h2>
-        <p class="mt-0.5 text-[13px] text-app-muted">{{ t('settingsPage.signOutHint') }}</p>
+        <p class="mt-0.5 text-[13px] text-app-ink">{{ t('settingsPage.signOutHint') }}</p>
         <button
           type="button"
-          class="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-app-border bg-app-surface px-3.5 py-2 text-[13px] font-semibold text-app-bad transition-colors hover:bg-app-bad-bg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+          class="mt-4 inline-flex items-center gap-1.5 rounded-full bg-app-bad-bg px-4 py-2 text-[13px] font-medium text-app-bad transition-colors hover:bg-[#fcd2d0] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
           @click="isSignOutOpen = true"
         >
           <AppIcon name="logout" :size="15" />
           {{ t('appShell.topbar.signOut') }}
         </button>
-      </AppCard>
+      </div>
     </div>
 
     <Teleport to="body">
       <div v-if="isSignOutOpen" class="fixed inset-0 z-[300] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/40" @click="isSignOutOpen = false"></div>
         <div
-          class="relative w-full max-w-[380px] rounded-2xl border border-app-border bg-app-surface p-6 shadow-app-card"
+          class="relative w-full max-w-[380px] rounded-[24px] bg-app-surface p-6 shadow-app-card"
           role="dialog"
           aria-modal="true"
           aria-labelledby="signout-title"
         >
-          <h2 id="signout-title" class="text-[17px] font-bold tracking-[-0.01em] text-app-ink">
+          <h2 id="signout-title" class="text-[18px] font-medium tracking-[-0.02em] text-app-ink">
             {{ t('settingsPage.signOutConfirmTitle') }}
           </h2>
-          <p class="mt-2 text-[14px] leading-[1.6] text-app-muted">
+          <p class="mt-2 text-[14px] leading-[1.6] text-app-ink">
             {{ t('settingsPage.signOutConfirmText') }}
           </p>
           <div class="mt-5 flex flex-col gap-2.5 sm:flex-row sm:justify-end">
             <button
               type="button"
-              class="rounded-lg border border-app-border bg-app-surface px-5 py-2.5 text-[13px] font-semibold text-app-ink transition-colors hover:bg-app-tile"
+              class="rounded-full bg-app-tile px-5 py-2.5 text-[13px] font-medium text-app-ink transition-colors hover:bg-app-warm"
               @click="isSignOutOpen = false"
             >
               {{ t('common.cancel') }}
             </button>
             <button
               type="button"
-              class="rounded-lg bg-app-ink px-5 py-2.5 text-[13px] font-semibold text-app-surface transition-opacity hover:opacity-90"
+              class="rounded-full bg-app-ink px-5 py-2.5 text-[13px] font-medium text-white transition-transform hover:scale-[1.03] motion-reduce:hover:scale-100"
               @click="signOut"
             >
               {{ t('appShell.topbar.signOut') }}

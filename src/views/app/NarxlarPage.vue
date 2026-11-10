@@ -13,7 +13,6 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppTopbar from '@/components/app/AppTopbar.vue'
-import AppCard from '@/components/app/AppCard.vue'
 import AppIcon from '@/components/app/AppIcon.vue'
 import CoinIcon from '@/components/app/CoinIcon.vue'
 import PricingPaymentModal from '@/components/PricingPaymentModal.vue'
@@ -71,6 +70,14 @@ const plans = computed(() =>
   }),
 )
 
+// "35 000 so'm" → the figure big, the currency small, as the reference sets
+// "$499" against ".00 /Month". By size, not by grey.
+const splitPrice = (price) => {
+  const text = String(price || '')
+  const cut = text.search(/\s[^\d\s]+.*$/)
+  return cut > 0 ? { amount: text.slice(0, cut), unit: text.slice(cut + 1) } : { amount: text, unit: '' }
+}
+
 const selectedPlan = ref(null)
 const isPaymentOpen = ref(false)
 
@@ -103,151 +110,129 @@ const HOW_IT_WORKS = [
     @open-menu="$emit('openMenu')"
   />
 
-  <main>
-    <!-- One card holds the whole offer: the packages and the rules that govern
-         them. Splitting them into two surfaces made the rules read as an
-         unrelated footnote rather than part of what is being bought. -->
-    <!-- Below sm the outer surface drops away — the same rule Testlar follows.
-         Two nested borders cost ~40px of a 390px screen, and the plan cards
-         already group themselves. -->
-    <AppCard
-      class="max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent max-sm:p-0 max-sm:shadow-none"
-    >
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div class="min-w-0">
-          <h2 class="text-[18px] font-bold tracking-[-0.015em] text-app-ink">{{ t('paymentApp.pricing.packsTitle') }}</h2>
-          <!-- Same rule as the topbar subtitle: on a phone this sentence only
-               restates the heading above it. -->
-          <p class="mt-0.5 hidden text-[13px] text-app-muted sm:block">
-            {{ t('paymentApp.pricing.packsLead') }}
-          </p>
-        </div>
+  <!-- In the landing's language: a centred heading, the packs on one soft grey
+       tray with the popular one lifted out in white, then a pastel card for the
+       undecided. -->
+  <main class="mx-auto max-w-[1080px] pb-6">
+    <header class="mx-auto max-w-[620px] pb-8 pt-4 text-center sm:pt-8">
+      <h2 class="text-[30px] font-normal leading-[1.1] tracking-[-0.025em] text-app-ink sm:text-[44px]">
+        {{ t('paymentApp.pricing.heroTitle') }}
+      </h2>
+      <p class="mt-3 text-[15px] leading-[1.6] text-app-ink sm:text-[16px]">
+        {{ t('paymentApp.pricing.packsLead') }}
+      </p>
+    </header>
 
-        <a
-          href="#tanga-qanday-ishlaydi"
-          class="inline-flex shrink-0 items-center gap-2 rounded-lg text-[13px] font-medium text-app-muted transition-colors hover:text-app-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
+    <!-- Plans -->
+    <section aria-labelledby="plans-heading">
+      <h3 id="plans-heading" class="sr-only">{{ t('paymentApp.pricing.plansHeading') }}</h3>
+      <div class="grid grid-cols-1 gap-2 rounded-[32px] bg-[#e9e9e9] p-2 md:grid-cols-3">
+        <article
+          v-for="plan in plans"
+          :key="plan.index"
+          class="flex h-full flex-col rounded-[26px] p-6 sm:p-7"
+          :class="plan.highlighted ? 'bg-app-surface shadow-app-card' : 'bg-transparent'"
         >
-          <AppIcon name="info" :size="16" />
-          {{ t('paymentApp.pricing.howTitle') }}
-        </a>
-      </div>
-
-      <!-- Plans -->
-      <section aria-labelledby="plans-heading" class="mt-5">
-        <h3 id="plans-heading" class="sr-only">{{ t('paymentApp.pricing.plansHeading') }}</h3>
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <!-- All three cards share one surface. The popular plan used to get a
-               2px ink border, a white fill and a shadow, which made it read as a
-               different kind of thing — and the thicker border pushed its
-               features and button 1px out of line with its neighbours. The badge
-               is enough to mark it. -->
-          <article
-            v-for="plan in plans"
-            :key="plan.index"
-            class="flex h-full flex-col rounded-2xl border border-app-border bg-app-sunken p-5 transition-colors max-sm:bg-app-surface"
-          >
-            <div class="flex items-start justify-between gap-3">
-              <h4 class="text-[15px] font-bold tracking-[-0.01em] text-app-ink">
-                {{ plan.name }}
-              </h4>
-              <span
-                v-if="plan.badge"
-                class="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em]"
-                :class="
-                  plan.badge.solid
-                    ? 'bg-app-ink text-app-surface'
-                    : 'bg-app-tile text-app-muted'
-                "
-              >
-                {{ plan.badge.label }}
-              </span>
-            </div>
-
-            <p class="mt-4 text-[26px] font-bold leading-none tracking-[-0.03em] text-app-ink">
-              {{ plan.price }}
-            </p>
-
-            <div class="mt-3 flex flex-wrap items-center gap-2">
-              <span
-                class="inline-flex items-center gap-1.5 rounded-full bg-app-tile px-3 py-1 text-[13px] font-semibold text-app-ink"
-              >
-                <CoinIcon :size="14" class="text-app-coin" />
-                {{ t('common.tangaCount', plan.tokens) }}
-              </span>
-              <span
-                v-if="plan.ratio"
-                class="inline-flex items-center rounded-full bg-app-tile px-3 py-1 text-[13px] font-medium text-app-muted"
-              >
-                {{ plan.ratio }}
-              </span>
-            </div>
-
-            <!-- mb here, not mt on the button: the button uses mt-auto to sit on
-                 the card's baseline, and mt-auto would collapse that gap. -->
-            <div class="mb-6 mt-5 border-t border-app-border pt-5">
-              <ul class="space-y-2.5">
-                <li
-                  v-for="(feature, fIndex) in plan.features"
-                  :key="fIndex"
-                  class="flex items-start gap-2.5 text-[13px] leading-[1.55] text-app-ink"
-                >
-                  <AppIcon name="checkCircle" :size="16" class="mt-0.5 shrink-0 text-app-muted" />
-                  {{ feature }}
-                </li>
-              </ul>
-            </div>
-
-            <!-- mt-auto keeps the three buttons on one baseline when the plans
-                 list different numbers of features. -->
-            <button
-              type="button"
-              class="mt-auto w-full rounded-lg bg-app-ink px-4 py-3 text-[13px] font-semibold text-app-surface transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
-              @click="buy(plan)"
-            >
-              {{ t('paymentApp.buyTokens', plan.tokens) }}
-            </button>
-          </article>
-        </div>
-      </section>
-
-      <!-- How tanga works -->
-      <section
-        id="tanga-qanday-ishlaydi"
-        class="mt-4 rounded-2xl border border-app-border bg-app-sunken p-5 max-sm:bg-app-surface"
-        aria-labelledby="how-heading"
-      >
-        <h3 id="how-heading" class="text-[15px] font-bold tracking-[-0.01em] text-app-ink">
-          {{ t('paymentApp.pricing.howTitle') }}
-        </h3>
-
-        <dl class="mt-4 grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
-          <div
-            v-for="(item, index) in HOW_IT_WORKS"
-            :key="item.key"
-            class="flex items-start gap-3"
-            :class="index ? 'md:border-l md:border-app-border md:pl-6' : ''"
-          >
+          <div class="flex items-start justify-between gap-3">
+            <!-- The popular pack's mark is the landing's pastel light; the
+                 others are the plain black tile. -->
             <span
-              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-app-tile text-app-ink"
+              class="flex h-10 w-10 items-center justify-center rounded-xl"
+              :class="plan.highlighted ? 'app-iris shadow-[inset_0_0_0_1px_rgba(255,255,255,0.7)]' : 'bg-app-surface ring-1 ring-app-border'"
               aria-hidden="true"
             >
-              <AppIcon v-if="item.icon" :name="item.icon" :size="17" />
-              <span v-else class="text-[14px] font-bold">{{ item.numeral }}</span>
+              <CoinIcon :size="18" class="text-app-ink" />
             </span>
-            <div class="min-w-0">
-              <dt class="text-[14px] font-semibold text-app-ink">{{ t(`paymentApp.pricing.how.${item.key}.title`) }}</dt>
-              <dd class="mt-1 text-[12.5px] leading-[1.6] text-app-muted">
-                {{ t(`paymentApp.pricing.how.${item.key}.description`) }}
-              </dd>
-            </div>
+            <span
+              v-if="plan.badge"
+              class="inline-flex items-center gap-1.5 rounded-full border border-app-border bg-app-surface px-2.5 py-1 text-[12px] font-medium text-app-ink shadow-[0_1px_3px_rgba(17,17,17,0.08)]"
+            >
+              <AppIcon :name="plan.badge.solid ? 'flame' : 'checkCircle'" :size="13" />
+              {{ plan.badge.label }}
+            </span>
           </div>
-        </dl>
 
-        <p class="mt-5 border-t border-app-border pt-4 text-[12.5px] text-app-muted">
-          {{ t(billingNoteKey, { providers: formatProviders() }) }}.
-        </p>
-      </section>
-    </AppCard>
+          <h4 class="mt-5 text-[18px] font-medium tracking-[-0.015em] text-app-ink">{{ plan.name }}</h4>
+          <p v-if="plan.features?.[1]" class="mt-1 text-[13px] text-app-ink">{{ plan.features[1] }}</p>
+
+          <p class="mt-6 flex items-baseline gap-1.5 text-app-ink">
+            <span class="text-[40px] font-normal leading-none tracking-[-0.035em] tabular-nums sm:text-[44px]">
+              {{ splitPrice(plan.price).amount }}
+            </span>
+            <span class="text-[14px]">{{ splitPrice(plan.price).unit }}</span>
+          </p>
+
+          <div class="my-6 h-px bg-app-ink/10"></div>
+
+          <p class="text-[13px] font-medium text-app-ink">{{ t('paymentApp.pricing.included') }}</p>
+          <ul class="mb-8 mt-3 space-y-2.5">
+            <li class="flex items-center gap-2.5 text-[14px] text-app-ink">
+              <AppIcon name="check" :size="15" class="shrink-0" />
+              {{ t('common.tangaCount', plan.tokens) }}
+            </li>
+            <li v-if="plan.features?.[0]" class="flex items-center gap-2.5 text-[14px] text-app-ink">
+              <AppIcon name="check" :size="15" class="shrink-0" />
+              {{ plan.features[0] }}
+            </li>
+            <li v-if="plan.ratio" class="flex items-center gap-2.5 text-[14px] text-app-ink">
+              <AppIcon name="check" :size="15" class="shrink-0" />
+              {{ plan.ratio }}
+            </li>
+            <li class="flex items-center gap-2.5 text-[14px] text-app-ink">
+              <AppIcon name="check" :size="15" class="shrink-0" />
+              {{ t('paymentApp.pricing.forever') }}
+            </li>
+          </ul>
+
+          <!-- mt-auto keeps the three buttons on one baseline. -->
+          <button
+            type="button"
+            class="app-btn-ink mt-auto w-full rounded-full px-5 py-3.5 text-[14px] font-medium transition-transform duration-200 hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink motion-reduce:hover:scale-100"
+            @click="buy(plan)"
+          >
+            {{ t('paymentApp.buyTokens', plan.tokens) }}
+          </button>
+        </article>
+      </div>
+    </section>
+
+    <!-- How tanga works, on the landing's pastel card: the three rules as
+         frosted tiles, then how payment lands. -->
+    <section
+      id="tanga-qanday-ishlaydi"
+      class="app-iris mt-2 rounded-[32px] px-5 py-10 sm:px-8 sm:py-12"
+      aria-labelledby="how-heading"
+    >
+      <h3 id="how-heading" class="text-center text-[24px] font-normal tracking-[-0.025em] text-app-ink sm:text-[32px]">
+        {{ t('paymentApp.pricing.howTitle') }}
+      </h3>
+
+      <dl class="mt-8 grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div
+          v-for="item in HOW_IT_WORKS"
+          :key="item.key"
+          class="rounded-[24px] bg-white/70 p-6 ring-1 ring-white backdrop-blur-sm"
+        >
+          <span
+            class="flex h-10 w-10 items-center justify-center rounded-xl bg-app-surface text-app-ink"
+            aria-hidden="true"
+          >
+            <AppIcon v-if="item.icon" :name="item.icon" :size="18" />
+            <span v-else class="text-[15px] font-medium">{{ item.numeral }}</span>
+          </span>
+          <dt class="mt-5 text-[16px] font-medium tracking-[-0.01em] text-app-ink">
+            {{ t(`paymentApp.pricing.how.${item.key}.title`) }}
+          </dt>
+          <dd class="mt-1.5 text-[13.5px] leading-[1.6] text-app-ink">
+            {{ t(`paymentApp.pricing.how.${item.key}.description`) }}
+          </dd>
+        </div>
+      </dl>
+
+      <p class="mx-auto mt-6 max-w-[640px] text-center text-[13px] leading-[1.6] text-app-ink">
+        {{ t(billingNoteKey, { providers: formatProviders() }) }}.
+      </p>
+    </section>
 
     <!-- The live payment flow, reused as-is -->
     <PricingPaymentModal

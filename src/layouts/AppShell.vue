@@ -18,6 +18,8 @@ import { useAppUser } from '@/composables/useAppUser'
 import AppSidebar from '@/components/app/AppSidebar.vue'
 import AppBottomNav from '@/components/app/AppBottomNav.vue'
 import AppIcon from '@/components/app/AppIcon.vue'
+import TangaOfferDialog from '@/components/app/TangaOfferDialog.vue'
+import TangaNudge from '@/components/app/TangaNudge.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -78,47 +80,12 @@ watch(
 <template>
   <!-- No overflow-hidden here: the backdrop below is fixed, so it cannot spill,
        and clipping this element would break sticky positioning inside pages. -->
-  <div v-if="authStore.isAuthenticated" class="relative isolate min-h-screen bg-app-bg text-app-ink">
-    <!-- Backdrop. The platform's page colour is a single flat tone, so a short
-         page (four subject tiles) left two thirds of the screen visibly empty.
-         This gives that space something to hold: one warm wash bled in from the
-         top right, and two arc families at border weight. Fixed, so it stays
-         put while the content scrolls over it, and never intercepts a click. -->
-    <div class="pointer-events-none fixed inset-0 -z-10" aria-hidden="true">
-      <div
-        class="absolute -right-[10%] -top-[22%] h-[720px] w-[720px] rounded-full bg-app-warm opacity-60 blur-[120px]"
-      ></div>
-      <div
-        class="absolute -bottom-[26%] left-[14%] hidden h-[560px] w-[560px] rounded-full bg-app-tile opacity-70 blur-[130px] lg:block"
-      ></div>
-
-      <svg
-        class="absolute -right-[9%] top-[24%] hidden h-[620px] w-[620px] text-app-border lg:block"
-        viewBox="0 0 1000 1000"
-        fill="none"
-      >
-        <circle cx="500" cy="500" r="499" stroke="currentColor" stroke-width="1.6" />
-        <circle cx="500" cy="500" r="352" stroke="currentColor" stroke-width="1.6" />
-        <circle cx="500" cy="500" r="205" stroke="currentColor" stroke-width="1.6" />
-      </svg>
-
-      <svg
-        class="absolute -left-[6%] bottom-[6%] hidden h-[520px] w-[520px] text-app-border lg:block"
-        viewBox="0 0 1000 1000"
-        fill="none"
-      >
-        <circle cx="500" cy="500" r="499" stroke="currentColor" stroke-width="1.6" />
-        <circle cx="500" cy="500" r="330" stroke="currentColor" stroke-width="1.6" />
-      </svg>
-    </div>
-
-    <aside
-      class="fixed inset-y-0 left-0 z-30 hidden w-[240px] border-r border-app-border lg:block"
-    >
-      <AppSidebar :user="user" />
+  <div v-if="authStore.isAuthenticated" class="app-shell relative isolate min-h-screen bg-app-bg text-app-ink">
+    <aside class="fixed inset-y-0 left-0 z-30 hidden w-[224px] lg:block">
+      <AppSidebar />
     </aside>
 
-    <div class="lg:pl-[240px]">
+    <div class="lg:pl-[224px]">
       <!-- max-w 1600, not 1360: at 1360 a 1920 screen stranded ~190px of empty
            gutter on each side of the content while squeezing the results row's
            title column to 432px, so long test names wrapped to two lines. 1600
@@ -127,13 +94,17 @@ watch(
            title on the left to its action on the right. -->
       <!-- The extra bottom padding below lg clears the tab bar, so the last row
            of a list is never parked under it. -->
-      <div class="mx-auto max-w-[1600px] px-5 pb-[104px] sm:px-8 lg:px-10 lg:pb-16">
+      <div class="mx-auto max-w-[1600px] px-4 pb-[104px] sm:px-6 lg:pb-10">
         <RouterView :user="user" @open-menu="isDrawerOpen = true" />
       </div>
     </div>
 
     <!-- Toggle, not open: "Ko'proq" highlights while the drawer is up, so
          pressing it again has to be the way back out. -->
+    <!-- Tanga can be bought from any screen without leaving it. -->
+    <TangaOfferDialog />
+    <TangaNudge />
+
     <AppBottomNav :drawer-open="isDrawerOpen" @toggle-menu="isDrawerOpen = !isDrawerOpen" />
 
     <Teleport to="body">
@@ -152,7 +123,7 @@ watch(
           >
             <AppIcon name="close" :size="18" />
           </button>
-          <AppSidebar :user="user" @navigate="isDrawerOpen = false" />
+          <AppSidebar @navigate="isDrawerOpen = false" />
         </aside>
       </div>
     </Teleport>

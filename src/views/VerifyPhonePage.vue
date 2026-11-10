@@ -295,10 +295,10 @@ onMounted(() => {
 <template>
   <AuthLayout>
     <div v-if="step === 'phone'" class="mb-8 text-center">
-      <h1 class="text-3xl font-bold tracking-[-0.02em] text-[#1a1814]">
+      <h1 class="text-[40px] font-medium leading-[1.1] tracking-[-0.015em] text-ink">
         {{ reason === 'unverified' ? t('verify.unverifiedTitle') : t('verify.forgotTitle') }}
       </h1>
-      <p class="mt-3 text-sm leading-relaxed text-[#6b6760]">
+      <p class="mt-3 text-[16px] leading-[1.5] text-muted">
         {{ reason === 'unverified' ? t('verify.unverifiedDescription') : t('verify.forgotDescription') }}
       </p>
     </div>
@@ -306,15 +306,14 @@ onMounted(() => {
     <!-- ── Step 1: phone number ─────────────────────────────────────── -->
     <form
       v-if="step === 'phone'"
-      class="rounded-[24px] border border-[#e4e0d8] bg-white p-7 shadow-[0_18px_50px_rgba(26,24,20,0.08)] ring-1 ring-[#f0ece5]"
       @submit.prevent="sendCode"
     >
       <label class="block">
-        <span class="mb-1.5 block text-[12px] font-semibold text-[#1a1814]">
+        <span class="mb-1.5 block text-[14px] font-semibold text-ink">
           {{ t('register.phone') }}
         </span>
-        <div class="flex items-stretch overflow-hidden rounded-xl border-[1.5px] border-[#e0ddd7] bg-white transition focus-within:border-[#1a1814]">
-          <span class="flex items-center border-r border-[#e0ddd7] bg-[#f5f3ef] px-3.5 text-sm font-medium text-[#1a1814]">
+        <div class="flex items-stretch overflow-hidden rounded-xl border border-hairline-strong bg-white transition focus-within:border-ink">
+          <span class="flex items-center border-r border-hairline-strong bg-panel px-3.5 text-sm font-medium text-ink">
             +998
           </span>
           <input
@@ -324,7 +323,7 @@ onMounted(() => {
             inputmode="numeric"
             autocomplete="tel-national"
             :placeholder="t('register.phonePlaceholder')"
-            class="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm text-[#1a1814] outline-none placeholder:text-[#b8b3a9]"
+            class="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm text-ink outline-none placeholder:text-accent"
             @input="onPhoneInput"
           />
         </div>
@@ -342,7 +341,7 @@ onMounted(() => {
       <button
         v-if="showVerifyHint"
         type="button"
-        class="mt-3 inline-flex h-11 w-full items-center justify-center rounded-full border-[1.5px] border-[#1a1814] text-sm font-semibold text-[#1a1814] transition duration-200 hover:bg-[#1a1814] hover:text-white active:scale-[0.99]"
+        class="mt-3 inline-flex h-11 w-full items-center justify-center rounded-full border-[1.5px] border-ink text-sm font-semibold text-ink transition duration-200 hover:bg-ink hover:text-white active:scale-[0.99]"
         @click="switchToVerify"
       >
         {{ t('verify.goVerify') }}
@@ -351,7 +350,7 @@ onMounted(() => {
       <button
         type="submit"
         :disabled="isSending"
-        class="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#1a1814] text-sm font-semibold text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+        class="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-ink text-[15px] font-medium text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
       >
         {{ isSending ? t('verify.sending') : t('verify.sendCode') }}
       </button>
@@ -360,24 +359,24 @@ onMounted(() => {
     <!-- ── Step 2a (unverified): OTP confirmation ───────────────────── -->
     <div
       v-else-if="step === 'otp'"
-      class="rounded-[24px] border border-[#e4e0d8] bg-white p-7 text-center shadow-[0_18px_50px_rgba(26,24,20,0.08)] ring-1 ring-[#f0ece5]"
+      class="text-center"
     >
-      <div class="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[#1a1814] text-white">
+      <div class="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white">
         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <rect x="5" y="2" width="14" height="20" rx="3" />
           <path d="M9 18h6" />
         </svg>
       </div>
 
-      <h1 class="text-2xl font-bold tracking-[-0.02em] text-[#1a1814]">
+      <h1 class="text-[30px] font-medium leading-[1.15] tracking-[-0.015em] text-ink">
         {{ t('register.otpTitle') }}
       </h1>
-      <p v-if="codeChannel === 'telegram'" class="mt-2 text-sm leading-relaxed text-[#6b6760]">
+      <p v-if="codeChannel === 'telegram'" class="mt-2 text-sm leading-relaxed text-muted">
         {{ t('register.otpSentTelegram') }}
       </p>
-      <p v-else class="mt-2 text-sm leading-relaxed text-[#6b6760]">
+      <p v-else class="mt-2 text-sm leading-relaxed text-muted">
         {{ t('register.otpSentPrefix') }}
-        <b class="text-[#1a1814]">{{ fullPhoneDisplay }}</b>
+        <b class="text-ink">{{ fullPhoneDisplay }}</b>
         {{ t('register.otpSentSuffix') }}
       </p>
 
@@ -399,17 +398,17 @@ onMounted(() => {
       <button
         type="button"
         :disabled="isVerifying"
-        class="mt-6 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#1a1814] text-sm font-semibold text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+        class="mt-6 inline-flex h-12 w-full items-center justify-center rounded-full bg-ink text-[15px] font-medium text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
         @click="submitOtp"
       >
         {{ isVerifying ? t('register.otpSubmitting') : t('register.otpSubmit') }}
       </button>
 
-      <p class="mt-5 text-sm text-[#6b6760]">
+      <p class="mt-5 text-sm text-muted">
         {{ t('register.otpNotReceived') }}
         <span
           v-if="resendRemaining > 0"
-          class="font-mono-custom font-semibold text-[#1a1814]"
+          class="font-mono-custom font-semibold text-ink"
         >
           {{ resendCountdownLabel }}
         </span>
@@ -417,7 +416,7 @@ onMounted(() => {
           v-else
           type="button"
           :disabled="isResending"
-          class="font-semibold text-[#1a1814] underline underline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          class="font-semibold text-ink underline underline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           @click="resendCode"
         >
           {{ t('register.otpResend') }}
@@ -428,14 +427,14 @@ onMounted(() => {
            it — covers users it doesn't know yet, and SMS outages. -->
       <div class="mt-4">
         <TelegramCodeLink :label="t('register.getCodeViaTelegram')" />
-        <p class="mt-2 text-[12px] leading-relaxed text-[#8a857c]">
+        <p class="mt-2 text-[12px] leading-relaxed text-muted">
           {{ t('register.getCodeViaTelegramHint') }}
         </p>
       </div>
 
       <button
         type="button"
-        class="mt-2 text-[12.5px] font-medium text-[#8a857c] underline underline-offset-2 transition hover:text-[#1a1814]"
+        class="mt-2 text-[12.5px] font-medium text-muted underline underline-offset-2 transition hover:text-ink"
         @click="backToPhone"
       >
         {{ t('register.changeNumber') }}
@@ -445,25 +444,25 @@ onMounted(() => {
     <!-- ── Step 2b (forgot): code + new password ────────────────────── -->
     <form
       v-else
-      class="rounded-[24px] border border-[#e4e0d8] bg-white p-7 text-center shadow-[0_18px_50px_rgba(26,24,20,0.08)] ring-1 ring-[#f0ece5]"
+      class="text-center"
       @submit.prevent="submitReset"
     >
-      <div class="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[#1a1814] text-white">
+      <div class="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white">
         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="11" width="18" height="11" rx="2" />
           <path d="M7 11V7a5 5 0 0 1 10 0v4" />
         </svg>
       </div>
 
-      <h1 class="text-2xl font-bold tracking-[-0.02em] text-[#1a1814]">
+      <h1 class="text-[30px] font-medium leading-[1.15] tracking-[-0.015em] text-ink">
         {{ t('verify.resetTitle') }}
       </h1>
-      <p v-if="codeChannel === 'telegram'" class="mt-2 text-sm leading-relaxed text-[#6b6760]">
+      <p v-if="codeChannel === 'telegram'" class="mt-2 text-sm leading-relaxed text-muted">
         {{ t('register.otpSentTelegram') }}
       </p>
-      <p v-else class="mt-2 text-sm leading-relaxed text-[#6b6760]">
+      <p v-else class="mt-2 text-sm leading-relaxed text-muted">
         {{ t('register.otpSentPrefix') }}
-        <b class="text-[#1a1814]">{{ fullPhoneDisplay }}</b>
+        <b class="text-ink">{{ fullPhoneDisplay }}</b>
         {{ t('register.otpSentSuffix') }}
       </p>
 
@@ -477,11 +476,11 @@ onMounted(() => {
 
       <div class="mt-5 flex flex-col gap-4 text-left">
         <label class="block">
-          <span class="mb-1.5 flex items-center justify-between text-[12px] font-semibold text-[#1a1814]">
+          <span class="mb-1.5 flex items-center justify-between text-[14px] font-semibold text-ink">
             {{ t('verify.newPassword') }}
             <button
               type="button"
-              class="font-medium text-[#8a857c] transition hover:text-[#1a1814]"
+              class="font-medium text-muted transition hover:text-ink"
               @click="showPassword = !showPassword"
             >
               {{ showPassword ? t('login.hide') : t('login.show') }}
@@ -494,12 +493,12 @@ onMounted(() => {
             name="new-password"
             autocomplete="new-password"
             :placeholder="t('register.passwordPlaceholder')"
-            class="w-full rounded-xl border-[1.5px] border-[#e0ddd7] bg-white px-4 py-3 text-sm text-[#1a1814] outline-none transition placeholder:text-[#b8b3a9] focus:border-[#1a1814]"
+            class="w-full rounded-xl border border-hairline-strong bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-accent focus:border-ink"
           />
         </label>
 
         <label class="block">
-          <span class="mb-1.5 block text-[12px] font-semibold text-[#1a1814]">
+          <span class="mb-1.5 block text-[14px] font-semibold text-ink">
             {{ t('register.passwordConfirm') }}
           </span>
           <input
@@ -508,8 +507,8 @@ onMounted(() => {
             name="confirm-password"
             autocomplete="new-password"
             :placeholder="t('register.passwordConfirmPlaceholder')"
-            class="w-full rounded-xl border-[1.5px] bg-white px-4 py-3 text-sm text-[#1a1814] outline-none transition placeholder:text-[#b8b3a9] focus:border-[#1a1814]"
-            :class="newPasswordConfirm && newPasswordConfirm !== newPassword ? 'border-red-300' : 'border-[#e0ddd7]'"
+            class="w-full rounded-xl border bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-accent focus:border-ink"
+            :class="newPasswordConfirm && newPasswordConfirm !== newPassword ? 'border-red-500' : 'border-hairline-strong'"
           />
         </label>
       </div>
@@ -524,16 +523,16 @@ onMounted(() => {
       <button
         type="submit"
         :disabled="isVerifying"
-        class="mt-6 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#1a1814] text-sm font-semibold text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+        class="mt-6 inline-flex h-12 w-full items-center justify-center rounded-full bg-ink text-[15px] font-medium text-white transition duration-200 hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
       >
         {{ isVerifying ? t('register.otpSubmitting') : t('verify.resetSubmit') }}
       </button>
 
-      <p class="mt-5 text-sm text-[#6b6760]">
+      <p class="mt-5 text-sm text-muted">
         {{ t('register.otpNotReceived') }}
         <span
           v-if="resendRemaining > 0"
-          class="font-mono-custom font-semibold text-[#1a1814]"
+          class="font-mono-custom font-semibold text-ink"
         >
           {{ resendCountdownLabel }}
         </span>
@@ -541,7 +540,7 @@ onMounted(() => {
           v-else
           type="button"
           :disabled="isResending"
-          class="font-semibold text-[#1a1814] underline underline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          class="font-semibold text-ink underline underline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           @click="resendCode"
         >
           {{ t('register.otpResend') }}
@@ -552,24 +551,24 @@ onMounted(() => {
            it — covers users it doesn't know yet, and SMS outages. -->
       <div class="mt-4">
         <TelegramCodeLink :label="t('register.getCodeViaTelegram')" />
-        <p class="mt-2 text-[12px] leading-relaxed text-[#8a857c]">
+        <p class="mt-2 text-[12px] leading-relaxed text-muted">
           {{ t('register.getCodeViaTelegramHint') }}
         </p>
       </div>
 
       <button
         type="button"
-        class="mt-2 text-[12.5px] font-medium text-[#8a857c] underline underline-offset-2 transition hover:text-[#1a1814]"
+        class="mt-2 text-[12.5px] font-medium text-muted underline underline-offset-2 transition hover:text-ink"
         @click="backToPhone"
       >
         {{ t('register.changeNumber') }}
       </button>
     </form>
 
-    <p v-if="step === 'phone'" class="mt-6 text-center text-sm text-[#6b6760]">
+    <p v-if="step === 'phone'" class="mt-6 text-center text-sm text-muted">
       <router-link
         :to="{ path: '/login', query: redirectQuery }"
-        class="font-semibold text-[#1a1814] underline-offset-2 hover:underline"
+        class="font-semibold text-ink underline-offset-2 hover:underline"
       >
         {{ t('verify.backToLogin') }}
       </router-link>

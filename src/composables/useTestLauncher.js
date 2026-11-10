@@ -28,12 +28,14 @@ import { COMPLETE_PROFILE_PATH, PHONE_VERIFY_REDIRECTS_ENABLED } from '@/utils/p
 import { useProfileGate } from '@/composables/useProfileGate'
 import { useActiveAttemptGate } from '@/composables/useActiveAttemptGate'
 import { t } from '@/i18n'
+import { useTangaOffer } from '@/composables/useTangaOffer'
 
 // onAttemptFinished: the screen's own refresh, for when the gate's dialog has
 // just finished an open attempt (its row is now a result).
 export function useTestLauncher({ onAttemptFinished } = {}) {
   const route = useRoute()
   const router = useRouter()
+  const { openOffer } = useTangaOffer()
   const testStore = useTestStore()
   const balanceStore = useBalanceStore()
   const catalog = useTestCatalogStore()
@@ -177,12 +179,12 @@ export function useTestLauncher({ onAttemptFinished } = {}) {
     }
   }
 
-  const goToTopUp = async () => {
+  // Sell the tanga right here (the shell's pack picker) rather than sending
+  // the student to /tanga and away from the test they picked.
+  const goToTopUp = () => {
+    const shortBy = cost.value - balance.value
     close()
-    // /tanga, not /narxlar: this composable only runs on platform screens, where
-    // the user is signed in. /narxlar would bounce through the guard to the same
-    // place, but the marketing page is not this flow's destination.
-    await router.push('/tanga')
+    openOffer(shortBy)
   }
 
   return {

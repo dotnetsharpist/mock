@@ -129,8 +129,8 @@ defineExpose({ clear, focus: focusFirst })
       inputmode="numeric"
       autocomplete="one-time-code"
       :maxlength="length"
-      class="h-[52px] w-[42px] rounded-xl border-[1.5px] bg-white text-center text-xl font-bold text-[#1a1814] outline-none transition focus:border-[#1a1814]"
-      :class="digit ? 'border-[#1a1814]' : 'border-[#e0ddd7]'"
+      class="h-[52px] w-[42px] rounded-xl border bg-white text-center text-xl font-bold text-ink outline-none transition focus:border-ink"
+      :class="digit ? 'border-ink' : 'border-hairline-strong'"
       @input="onInput(index, $event)"
       @keydown="onKeydown(index, $event)"
     />
