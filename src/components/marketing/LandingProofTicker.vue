@@ -36,7 +36,7 @@ defineProps({
 }
 
 .ticker-dot {
-  background: linear-gradient(135deg, #e77fa8, #9a7bdc 55%, #5b8def);
+  background: linear-gradient(135deg, #4aa3ae, #2f8794 55%, #23606b);
 }
 
 @keyframes ticker-slide {

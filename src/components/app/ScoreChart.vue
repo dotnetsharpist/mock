@@ -78,9 +78,9 @@ const area = computed(() => {
         >
           <defs>
             <linearGradient :id="`iris-${uid}`" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="#ffc4d2" />
-              <stop offset="50%" stop-color="#e9cdfc" />
-              <stop offset="100%" stop-color="#c6dbff" />
+              <stop offset="0%" stop-color="#92c7cf" />
+              <stop offset="50%" stop-color="#c4e3e4" />
+              <stop offset="100%" stop-color="#aad7d9" />
             </linearGradient>
             <linearGradient :id="`fade-${uid}`" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stop-color="#fff" stop-opacity="0.95" />
@@ -114,7 +114,7 @@ const area = computed(() => {
             class="block rounded-full transition-transform group-hover:scale-125"
             :class="
               index === bestIndex
-                ? 'h-4 w-4 bg-app-ink ring-4 ring-[#f3defc]'
+                ? 'h-4 w-4 bg-app-ink ring-4 ring-[#aad7d9]'
                 : 'h-2.5 w-2.5 border-2 border-app-ink bg-app-surface'
             "
             :title="`${c.title} — ${c.value}%`"

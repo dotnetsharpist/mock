@@ -13,7 +13,7 @@
   position: absolute;
   pointer-events: none;
   border-radius: 64px;
-  background: linear-gradient(90deg, #ffc4d2 0%, #f3d0ff 38%, #c6dbff 72%, #ffd0dc 100%);
+  background: linear-gradient(90deg, #92c7cf 0%, #e5e1da 38%, #aad7d9 72%, #92c7cf 100%);
   opacity: 0.7;
   filter: blur(56px);
 }
@@ -79,8 +79,8 @@
   --color-app-good-bg: #e9f7ec;
   --color-app-bad: #dc2626;
   --color-app-bad-bg: #fee3e2;
-  --color-app-info: #5b4bd6;
-  --color-app-info-bg: #efeafc;
+  --color-app-info: #2f7f8a;
+  --color-app-info-bg: #d6ecee;
   --color-app-coin: #0b0b0b; /* the coin is ink like every other icon: no gold */
 
   /* The landing's lift: a hairline of contact plus a wide, soft fall-off. */
@@ -155,13 +155,13 @@ body:has(.app-shell) :not(h1, h2, h3, h4).font-bold {
     background-color: var(--color-app-ink);
   }
 
-  /* The landing's pastel light — pink, lilac, blue — as a surface. For the one
+  /* The landing's pastel light — turquoise into sand — as a surface. For the one
      card on a screen that sells or celebrates something; black text on it. */
   .app-iris {
     background:
-      radial-gradient(120% 140% at 0% 0%, #ffe7b8 0%, transparent 42%),
-      radial-gradient(90% 120% at 100% 100%, #c9dcff 0%, transparent 55%),
-      linear-gradient(100deg, #ffdfe8 0%, #f3defc 46%, #d6e5ff 100%);
+      radial-gradient(120% 140% at 0% 0%, #f1ebdf 0%, transparent 42%),
+      radial-gradient(90% 120% at 100% 100%, #b8dde1 0%, transparent 55%),
+      linear-gradient(100deg, #d6ecee 0%, #eef4f1 46%, #f3eee5 100%);
   }
 
   /* The same light, blurred, behind a card so it seems to glow. */
@@ -169,7 +169,7 @@ body:has(.app-shell) :not(h1, h2, h3, h4).font-bold {
     position: absolute;
     pointer-events: none;
     border-radius: 48px;
-    background: linear-gradient(90deg, #ffc4d2 0%, #f3d0ff 38%, #c6dbff 72%, #ffd0dc 100%);
+    background: linear-gradient(90deg, #92c7cf 0%, #e5e1da 38%, #aad7d9 72%, #92c7cf 100%);
     opacity: 0.6;
     filter: blur(44px);
   }

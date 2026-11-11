@@ -36,7 +36,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="root" class="relative">
+  <!-- On phones the pills wrap, so the panel spans the whole filter row (the
+       nearest positioned ancestor) instead of hanging off a pill and leaving the
+       screen; from sm up it anchors to its own pill. -->
+  <div ref="root" class="sm:relative">
     <button
       type="button"
       class="inline-flex h-10 items-center gap-2 rounded-full px-4 text-[14px] font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink"
@@ -51,8 +54,8 @@ onBeforeUnmount(() => {
     </button>
     <div
       v-if="open"
-      class="absolute top-[calc(100%+8px)] z-40 w-[min(300px,calc(100vw-2.5rem))] rounded-[20px] bg-app-surface p-3 shadow-[0_24px_48px_-20px_rgba(17,17,17,0.35)]"
-      :class="alignEnd ? 'right-0' : 'left-0'"
+      class="absolute inset-x-0 top-[calc(100%+8px)] z-40 rounded-[20px] sm:inset-x-auto sm:w-[300px] bg-app-surface p-3 shadow-[0_24px_48px_-20px_rgba(17,17,17,0.35)]"
+      :class="alignEnd ? 'sm:right-0' : 'sm:left-0'"
     >
       <slot :close="() => (open = false)" />
     </div>

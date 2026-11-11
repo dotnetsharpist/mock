@@ -234,7 +234,7 @@ async function signOut() {
           <p class="mt-1 break-all text-[13px] text-app-ink">{{ displayValue(info?.email) }}</p>
           <span
             class="mt-3 inline-flex rounded-full px-3 py-1 text-[11px] font-semibold"
-            :class="info?.emailConfirmed ? 'bg-[#dce8ff] text-app-ink' : 'bg-[#ffe2ec] text-app-ink'"
+            :class="info?.emailConfirmed ? 'bg-[#d6ecee] text-app-ink' : 'bg-[#f6e1d8] text-app-ink'"
           >
             {{
               info?.emailConfirmed
@@ -296,7 +296,7 @@ async function signOut() {
         </p>
         <p
           v-if="saveSuccess && !isEditing"
-          class="mb-4 rounded-[20px] bg-[#dce8ff] px-4 py-3 text-[13px] font-medium text-app-ink"
+          class="mb-4 rounded-[20px] bg-[#d6ecee] px-4 py-3 text-[13px] font-medium text-app-ink"
         >
           {{ t('settingsPage.saved') }}
         </p>
@@ -317,7 +317,7 @@ async function signOut() {
                   inputmode="numeric"
                   autocomplete="tel"
                   placeholder="+998 90 123 45 67"
-                  class="w-full rounded-full bg-app-tile px-4 py-2 text-[14px] font-semibold text-app-ink outline-none transition-shadow focus:bg-app-surface focus:ring-2 focus:ring-[#d9ccff]"
+                  class="w-full rounded-full bg-app-tile px-4 py-2 text-[14px] font-semibold text-app-ink outline-none transition-shadow focus:bg-app-surface focus:ring-2 focus:ring-[#aad7d9]"
                   @input="onPhoneInput"
                 />
                 <input
@@ -325,7 +325,7 @@ async function signOut() {
                   v-model="form[field.key]"
                   type="text"
                   :placeholder="field.label"
-                  class="w-full rounded-full bg-app-tile px-4 py-2 text-[14px] font-semibold text-app-ink outline-none transition-shadow focus:bg-app-surface focus:ring-2 focus:ring-[#d9ccff]"
+                  class="w-full rounded-full bg-app-tile px-4 py-2 text-[14px] font-semibold text-app-ink outline-none transition-shadow focus:bg-app-surface focus:ring-2 focus:ring-[#aad7d9]"
                 />
                 <span v-else class="break-words">{{ displayValue(field.value) }}</span>
               </dd>

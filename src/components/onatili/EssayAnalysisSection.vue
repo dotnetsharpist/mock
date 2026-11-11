@@ -351,7 +351,7 @@ const quoteMarkStyle = (error) => {
         </span>
         <span
           v-if="sample"
-          class="rounded-full bg-[#efe2ff] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-app-ink"
+          class="rounded-full bg-[#d6ecee] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-app-ink"
         >
           {{ t('essayAnalysis.sample') }}
         </span>

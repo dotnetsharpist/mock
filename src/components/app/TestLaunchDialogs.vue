@@ -124,7 +124,7 @@ const startDetails = computed(() => {
 
         <p
           v-if="mode !== 'start'"
-          class="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[#efe2ff] px-3.5 py-1.5 text-[13px] font-medium text-app-ink"
+          class="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[#d6ecee] px-3.5 py-1.5 text-[13px] font-medium text-app-ink"
         >
           {{ t('testLaunch.balance') }}
           <CoinIcon :size="14" class="text-app-ink" />

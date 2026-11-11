@@ -289,13 +289,13 @@ const topicTint = (index) => subjectTint(TOPIC_TINTS[index % TOPIC_TINTS.length]
           v-if="mode === 'write'"
           v-model="essayText"
           :placeholder="t('essayPage.placeholder')"
-          class="mt-5 min-h-[320px] w-full resize-y rounded-[20px] border border-app-border bg-app-surface p-5 text-[15px] leading-[1.75] text-app-ink outline-none transition-shadow placeholder:text-app-ink/60 focus:ring-2 focus:ring-[#d9ccff]"
+          class="mt-5 min-h-[320px] w-full resize-y rounded-[20px] border border-app-border bg-app-surface p-5 text-[15px] leading-[1.75] text-app-ink outline-none transition-shadow placeholder:text-app-ink/60 focus:ring-2 focus:ring-[#aad7d9]"
         ></textarea>
 
         <div v-else class="mt-5">
           <div
-            class="flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-[20px] border-2 border-dashed px-6 py-10 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d9ccff]"
-            :class="isDragging ? 'border-app-ink bg-[#efe2ff]' : 'border-app-ink/15 bg-app-surface hover:border-app-ink/40'"
+            class="flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-[20px] border-2 border-dashed px-6 py-10 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#aad7d9]"
+            :class="isDragging ? 'border-app-ink bg-[#d6ecee]' : 'border-app-ink/15 bg-app-surface hover:border-app-ink/40'"
             role="button"
             tabindex="0"
             @click="fileInput?.click()"

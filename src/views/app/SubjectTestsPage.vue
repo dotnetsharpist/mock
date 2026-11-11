@@ -306,7 +306,7 @@ const sortOptions = computed(() => asOptions(SORTS))
               v-model="search"
               type="search"
               :placeholder="t('testsPage.subject.searchPlaceholder')"
-              class="w-full rounded-full bg-app-surface py-3 pl-10 pr-4 text-[14px] text-app-ink shadow-app-card placeholder:text-app-ink/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d9ccff]"
+              class="w-full rounded-full bg-app-surface py-3 pl-10 pr-4 text-[14px] text-app-ink shadow-app-card placeholder:text-app-ink/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#aad7d9]"
             />
           </label>
 

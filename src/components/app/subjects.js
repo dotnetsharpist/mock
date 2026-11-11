@@ -170,15 +170,15 @@ export const ACTION_BY_STATE = {
 // One tint per subject everywhere it appears — the Testlar card, a result card's
 // mark — so colour says "which subject", never "how well".
 const TINTS = {
-  math: ['#efe2ff', '#e2dcff'],
-  motherTongue: ['#ffe2ec', '#f7dcf6'],
-  physics: ['#dce8ff', '#e6e0ff'],
-  history: ['#ffebd0', '#ffe0e8'],
-  biology: ['#f5dffb', '#dde6ff'],
-  chemistry: ['#e6e0ff', '#ffe0ee'],
-  geography: ['#dfeeff', '#efe2ff'],
-  english: ['#ffe4f0', '#e3e4ff'],
-  informatics: ['#e4e2ff', '#dcecff'],
+  math: ['#d6ecee', '#c4e3e4'],
+  motherTongue: ['#f1ebdf', '#e5e1da'],
+  physics: ['#dde8ef', '#cfdde8'],
+  history: ['#efe4d2', '#e7dccb'],
+  biology: ['#e1ecdf', '#d2e3d3'],
+  chemistry: ['#d9ecea', '#ece6db'],
+  geography: ['#d4e6e3', '#dde8ef'],
+  english: ['#ece6db', '#d6ecee'],
+  informatics: ['#dde5ec', '#c4e3e4'],
 }
 
 export function subjectTint(key) {

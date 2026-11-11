@@ -164,7 +164,7 @@ const blackButton =
 
 <style scoped>
 .community {
-  background: linear-gradient(100deg, #ffdfe8 0%, #f3defc 46%, #d6e5ff 100%);
+  background: linear-gradient(100deg, #d6ecee 0%, #eef4f1 46%, #f3eee5 100%);
   view-timeline-name: --community;
 }
 

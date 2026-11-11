@@ -65,7 +65,7 @@ const metaLine = computed(() => {
   >
     <div class="flex items-start gap-3">
       <span
-        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#efe2ff] text-app-ink"
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#d6ecee] text-app-ink"
         aria-hidden="true"
       >
         <AppIcon name="essay" :size="17" />
@@ -82,7 +82,7 @@ const metaLine = computed(() => {
            but focus reveals it too, or it would be keyboard-unreachable. -->
       <button
         type="button"
-        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-app-ink opacity-0 transition hover:bg-[#ffe2ec] focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink group-hover:opacity-100"
+        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-app-ink opacity-0 transition hover:bg-[#f6e1d8] focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-app-ink group-hover:opacity-100"
         :aria-label="t('resultUi.essay.remove', { topic: entry.topic })"
         @click.stop="emit('remove', entry.id)"
       >
@@ -96,7 +96,7 @@ const metaLine = computed(() => {
       <!-- Pastel, never red: a low band is a soft pink pill, a good one blue. -->
       <span
         class="inline-flex items-center whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-medium text-app-ink"
-        :class="{ good: 'bg-[#dce8ff]', bad: 'bg-[#ffe2ec]', neutral: 'bg-app-tile' }[tone]"
+        :class="{ good: 'bg-[#d6ecee]', bad: 'bg-[#f6e1d8]', neutral: 'bg-app-tile' }[tone]"
       >
         {{ t('resultUi.essay.score', { total: bandTotal ?? '—', max: bandMax }, bandMax) }}
       </span>
@@ -107,7 +107,7 @@ const metaLine = computed(() => {
 
     <div class="mb-5 mt-3 h-2 w-full overflow-hidden rounded-full bg-app-tile">
       <div
-        class="h-full rounded-full bg-[linear-gradient(90deg,#f4a9c6_0%,#b9a2f5_55%,#8fb2ff_100%)] transition-[width] duration-500 ease-out"
+        class="h-full rounded-full bg-[linear-gradient(90deg,#7cc0c9_0%,#4aa3ae_55%,#2f7f8a_100%)] transition-[width] duration-500 ease-out"
         :style="{ width: scorePercent + '%' }"
       ></div>
     </div>

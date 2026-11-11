@@ -1056,7 +1056,7 @@ const statCards = computed(() => {
       label: t('explanationPage.stats.incorrect'),
       value: mistakesCount.value,
       colorClass: 'text-[#0b0b0b]',
-      bgClass: 'bg-[#ffe2ec]',
+      bgClass: 'bg-[#f6e1d8]',
       percentLabel: t('explanationPage.stats.percentIncorrect', {
         value: Math.round((mistakesCount.value / total) * 100),
       }),
@@ -1738,7 +1738,7 @@ function answerBadgeClass(status) {
   }
 
   if (status === 'incorrect') {
-    return 'bg-[#ffe2ec] text-[#0b0b0b] font-semibold'
+    return 'bg-[#f6e1d8] text-[#0b0b0b] font-semibold'
   }
 
   return 'bg-[#f0f0f0] text-[#0b0b0b]'
@@ -1750,7 +1750,7 @@ function complexityBadgeClass(complexity) {
   }
 
   if (complexity === 'Medium') {
-    return 'bg-[#ffebd0] text-[#0b0b0b]'
+    return 'bg-[#f1ebdf] text-[#0b0b0b]'
   }
 
   return 'bg-rose-50 text-red-600'
@@ -1793,14 +1793,14 @@ function answerOptionClass(option) {
   }
 
   if (isSelected) {
-    return 'border-2 border-[#ec8fb0] bg-[#ffe2ec]'
+    return 'border-2 border-[#d9937f] bg-[#f6e1d8]'
   }
 
   return 'border border-[#ebebeb] bg-white'
 }
 
 function answerFeedbackClass(status) {
-  return status === 'correct' ? 'bg-[#e1f5e8] text-[#0b0b0b]' : 'bg-[#ffe2ec] text-[#0b0b0b]'
+  return status === 'correct' ? 'bg-[#e1f5e8] text-[#0b0b0b]' : 'bg-[#f6e1d8] text-[#0b0b0b]'
 }
 
 function answerFeedbackText(question) {
@@ -1821,8 +1821,8 @@ function answerFeedbackText(question) {
     <!-- Ambient background — matches the main pages -->
     <div class="math-dots pointer-events-none absolute inset-0 -z-20"></div>
     <div class="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#f3f3f3]/30 via-[#f3f3f3]/70 to-[#f3f3f3]"></div>
-    <div class="math-blob pointer-events-none absolute -left-20 top-10 -z-10 h-[360px] w-[360px] rounded-full bg-[#f3defc]/50 blur-3xl"></div>
-    <div class="math-blob pointer-events-none absolute -right-24 top-40 -z-10 h-[320px] w-[320px] rounded-full bg-[#d6e5ff]/50 blur-3xl"></div>
+    <div class="math-blob pointer-events-none absolute -left-20 top-10 -z-10 h-[360px] w-[360px] rounded-full bg-[#aad7d9]/50 blur-3xl"></div>
+    <div class="math-blob pointer-events-none absolute -right-24 top-40 -z-10 h-[320px] w-[320px] rounded-full bg-[#f3eee5]/50 blur-3xl"></div>
     <div class="math-grain pointer-events-none absolute inset-0 -z-10" aria-hidden="true"></div>
 
     <div class="relative z-10 mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 sm:pt-10 lg:px-8">
@@ -1887,9 +1887,9 @@ function answerFeedbackText(question) {
             <!-- The score ring is the page's one touch of the landing's pastel. -->
             <defs>
               <linearGradient id="score-iris" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#f4a9c6" />
-                <stop offset="55%" stop-color="#b9a2f5" />
-                <stop offset="100%" stop-color="#8fb2ff" />
+                <stop offset="0%" stop-color="#7cc0c9" />
+                <stop offset="55%" stop-color="#4aa3ae" />
+                <stop offset="100%" stop-color="#2f7f8a" />
               </linearGradient>
             </defs>
             <circle cx="55" cy="55" :r="scoreRingRadius" fill="none" stroke="#f0f0f0" stroke-width="7" />

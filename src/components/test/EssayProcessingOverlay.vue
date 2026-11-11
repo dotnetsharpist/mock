@@ -112,7 +112,7 @@ const scanCardLines = [
               ></div>
             </div>
             <div
-              class="scan-line absolute inset-x-[6%] h-[3px] rounded-full bg-[linear-gradient(90deg,#f4a9c6,#b9a2f5,#8fb2ff)]"
+              class="scan-line absolute inset-x-[6%] h-[3px] rounded-full bg-[linear-gradient(90deg,#7cc0c9,#4aa3ae,#2f7f8a)]"
               :style="{ animationDelay: `${(cardIndex - 1) * 0.5}s` }"
             ></div>
           </div>
@@ -126,7 +126,7 @@ const scanCardLines = [
         </p>
 
         <div class="relative mt-8 h-[6px] w-[280px] max-w-full overflow-hidden rounded-full bg-[#e8e8e8]">
-          <div class="bar-slide absolute inset-y-0 left-0 w-[30%] rounded-full bg-[linear-gradient(90deg,#f4a9c6,#b9a2f5,#8fb2ff)]"></div>
+          <div class="bar-slide absolute inset-y-0 left-0 w-[30%] rounded-full bg-[linear-gradient(90deg,#7cc0c9,#4aa3ae,#2f7f8a)]"></div>
         </div>
 
         <p class="absolute bottom-6 px-6 text-center text-[13px]">
@@ -169,7 +169,7 @@ const scanCardLines = [
             </span>
             <span
               v-else-if="itemIndex === checkStage"
-              class="inline-block h-6 w-6 shrink-0 animate-spin rounded-full border-[2.5px] border-[#e2dcff] border-t-[#0b0b0b] [animation-duration:0.9s]"
+              class="inline-block h-6 w-6 shrink-0 animate-spin rounded-full border-[2.5px] border-[#c4e3e4] border-t-[#0b0b0b] [animation-duration:0.9s]"
             ></span>
             <span v-else class="inline-block h-6 w-6 shrink-0 rounded-full border-2 border-dashed border-[#cfcfcf]"></span>
             {{ item }}
@@ -183,7 +183,7 @@ const scanCardLines = [
 
       <template v-else>
         <div
-          class="relative mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#ffe2ec] text-[#0b0b0b]"
+          class="relative mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#f6e1d8] text-[#0b0b0b]"
         >
           <AppIcon name="info" :size="28" />
         </div>
@@ -230,7 +230,7 @@ const scanCardLines = [
   height: 380px;
   transform: translate(-50%, -50%);
   border-radius: 999px;
-  background: linear-gradient(90deg, #ffc4d2 0%, #f3d0ff 38%, #c6dbff 72%, #ffd0dc 100%);
+  background: linear-gradient(90deg, #92c7cf 0%, #e5e1da 38%, #aad7d9 72%, #92c7cf 100%);
   opacity: 0.45;
   filter: blur(70px);
   pointer-events: none;
@@ -238,7 +238,7 @@ const scanCardLines = [
 
 /* A turning pastel ring: a conic gradient masked to a 6px band. */
 .iris-ring {
-  background: conic-gradient(from 0deg, #f4a9c6, #b9a2f5, #8fb2ff, rgba(143, 178, 255, 0) 75%);
+  background: conic-gradient(from 0deg, #7cc0c9, #4aa3ae, #2f7f8a, rgba(47, 127, 138, 0) 75%);
   -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
   mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
   animation: iris-spin 1.1s linear infinite;

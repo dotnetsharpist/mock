@@ -109,7 +109,7 @@ const takers = computed(() =>
       </span>
       <span
         v-else-if="test.state === 'progress'"
-        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#efe2ff] text-app-ink"
+        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#d6ecee] text-app-ink"
         role="img"
         :aria-label="t('appUi.testCard.inProgress')"
         :title="t('appUi.testCard.inProgress')"

@@ -151,9 +151,9 @@ onBeforeUnmount(() => {
     >
       <defs>
         <linearGradient :id="`result-${sheet.id}`" gradientUnits="userSpaceOnUse" x1="0" y1="0" :x2="GROUP * subjects.length" y2="0">
-          <stop offset="0" stop-color="#e77fa8" />
-          <stop offset="0.5" stop-color="#9a7bdc" />
-          <stop offset="1" stop-color="#5b8def" />
+          <stop offset="0" stop-color="#4aa3ae" />
+          <stop offset="0.5" stop-color="#2f8794" />
+          <stop offset="1" stop-color="#23606b" />
         </linearGradient>
       </defs>
 

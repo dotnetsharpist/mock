@@ -128,7 +128,7 @@ const continueTo = computed(() => ({
         <div class="min-w-0">
           <!-- In progress either way, so both read as info — "paused" is a
                state of an open attempt, not a warning. -->
-          <StatusBadge tone="info" class="!bg-[#efe2ff] !px-2.5 !py-0.5 !text-[11px] !text-app-ink">
+          <StatusBadge tone="info" class="!bg-[#d6ecee] !px-2.5 !py-0.5 !text-[11px] !text-app-ink">
             {{ isPaused ? t('attemptGate.paused') : t('attemptGate.running') }}
           </StatusBadge>
           <h2 class="mt-1.5 line-clamp-2 text-[16px] font-medium leading-snug tracking-[-0.02em] text-app-ink">

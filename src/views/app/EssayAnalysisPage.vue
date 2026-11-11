@@ -107,7 +107,7 @@ const BACK_TO = '/natijalar?view=essays'
     <template v-else>
       <p
         v-if="entry.uploadsDropped"
-        class="mb-4 rounded-[20px] bg-[#ffebd0] px-5 py-4 text-[13px] leading-[1.6] text-app-ink"
+        class="mb-4 rounded-[20px] bg-[#f1ebdf] px-5 py-4 text-[13px] leading-[1.6] text-app-ink"
       >
         {{ t('essayAnalysis.page.uploadsDropped') }}
       </p>

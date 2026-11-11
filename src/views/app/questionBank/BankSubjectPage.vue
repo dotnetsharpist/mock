@@ -349,7 +349,7 @@ const sessionTone = (session) =>
 
     <div v-else class="mx-auto max-w-[1000px]">
       <!-- Filter pills -->
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="relative flex flex-wrap items-center gap-2">
         <BankFilterMenu :label="difficultyLabel" icon="stats" :active="setup.difficulties.length > 0">
           <div class="flex flex-col gap-1">
             <button
@@ -483,7 +483,7 @@ const sessionTone = (session) =>
 
         <RouterLink
           :to="`/savollar-banki/${subjectKey}/statistika`"
-          class="ml-auto inline-flex h-10 items-center gap-2 rounded-full bg-app-surface px-4 text-[14px] font-medium text-app-ink shadow-app-card transition-colors hover:bg-app-sunken"
+          class="inline-flex sm:ml-auto h-10 items-center gap-2 rounded-full bg-app-surface px-4 text-[14px] font-medium text-app-ink shadow-app-card transition-colors hover:bg-app-sunken"
         >
           <AppIcon name="trend" :size="16" />
           {{ t('bank.subject.statsLink') }}

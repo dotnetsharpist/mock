@@ -61,7 +61,7 @@ const title = computed(() => props.attempt?.title || t('attemptGate.untitled'))
 
         <!-- The open attempt, so the choice is made knowing how far along it is. -->
         <div class="mt-4 rounded-[20px] bg-app-tile px-4 py-3.5 text-left">
-          <StatusBadge tone="info" class="!bg-[#efe2ff] !px-2.5 !py-0.5 !text-[11px] !text-app-ink">
+          <StatusBadge tone="info" class="!bg-[#d6ecee] !px-2.5 !py-0.5 !text-[11px] !text-app-ink">
             {{ isPaused ? t('attemptGate.paused') : t('attemptGate.running') }}
           </StatusBadge>
           <p class="mt-1.5 line-clamp-2 text-[14px] font-semibold leading-snug text-app-ink">

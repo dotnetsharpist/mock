@@ -124,7 +124,7 @@ const meta = computed(() =>
         </p>
         <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-app-tile">
           <div
-            class="h-full rounded-full bg-[linear-gradient(90deg,#f4a9c6_0%,#b9a2f5_55%,#8fb2ff_100%)] transition-[width] duration-500 ease-out"
+            class="h-full rounded-full bg-[linear-gradient(90deg,#7cc0c9_0%,#4aa3ae_55%,#2f7f8a_100%)] transition-[width] duration-500 ease-out"
             :style="{ width: `${Math.max(score.percent, score.percent > 0 ? 3 : 0)}%` }"
           ></div>
         </div>
@@ -133,7 +133,7 @@ const meta = computed(() =>
              short form of it. -->
         <p
           v-if="!isCertified"
-          class="mt-3 inline-flex rounded-full bg-[#ffe2ec] px-2.5 py-1 text-[11.5px] font-medium text-app-ink"
+          class="mt-3 inline-flex rounded-full bg-[#f6e1d8] px-2.5 py-1 text-[11.5px] font-medium text-app-ink"
         >
           {{ t('resultUi.noCertificate') }}
         </p>

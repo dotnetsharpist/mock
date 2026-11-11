@@ -23,8 +23,8 @@ const toneClass = computed(
       // Soft pastels from the landing palette, ink text: the colour carries
       // the meaning, the words stay black and readable.
       good: 'bg-[#e1f5e8] text-app-ink',
-      bad: 'bg-[#ffe2ec] text-app-ink',
-      info: 'bg-[#efe2ff] text-app-ink',
+      bad: 'bg-[#f6e1d8] text-app-ink',
+      info: 'bg-[#d6ecee] text-app-ink',
       neutral: 'bg-app-tile text-app-ink',
     })[props.tone],
 )

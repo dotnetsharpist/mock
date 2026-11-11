@@ -132,7 +132,7 @@ onBeforeUnmount(() => {
 }
 
 .how-progress {
-  background: linear-gradient(90deg, #e77fa8, #9a7bdc 55%, #5b8def);
+  background: linear-gradient(90deg, #4aa3ae, #2f8794 55%, #23606b);
   transform: scaleX(0);
   transform-origin: left;
   animation: how-fill linear forwards paused;
