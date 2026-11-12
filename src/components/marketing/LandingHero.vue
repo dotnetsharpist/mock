@@ -24,7 +24,9 @@ const { start } = usePlatformEntry()
 // the panel can fill the page width in one screen. Dashboard and essay are the
 // local dev app with staged sample data (the same "Aziz" figures as
 // bosh-sahifa.webp), test is the dev-only /biologiya/test. To retake one, keep
-// that ratio: the hero's panel is sized from it.
+// that ratio: the hero's panel is sized from it. The dashboard is laid out at
+// 2000x834 and rasterised at 1.6x (still 3200x1334) so the whole score chart
+// and calendar fit above the fold.
 const tabs = [
   {
     id: 'platform',
