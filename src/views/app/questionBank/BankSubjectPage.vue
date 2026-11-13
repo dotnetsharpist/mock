@@ -268,8 +268,15 @@ const allChosen = computed(
   () => setup.value.count === null || (available.value > 0 && setup.value.count >= available.value),
 )
 const isCountActive = (value) => (value === null ? allChosen.value : !allChosen.value && setup.value.count === value)
-const countLabel = (value) =>
-  value !== null ? String(value) : available.value > 0 ? t('bank.start.all', { n: available.value }) : t('bank.source.all')
+// The last chip is "all (N)" only when every match fits in one session; past
+// the server's cap it says so ("200 (max)") rather than claim all ~2,800.
+const countLabel = (value) => {
+  if (value !== null) return String(value)
+  if (available.value <= 0) return t('bank.source.all')
+  return (summary.value?.total ?? 0) > MAX_SESSION_QUESTIONS
+    ? t('bank.start.max', { n: MAX_SESSION_QUESTIONS })
+    : t('bank.start.all', { n: available.value })
+}
 
 // Ink when picked, grey tile otherwise — the platform's chip.
 const chip = (active) =>

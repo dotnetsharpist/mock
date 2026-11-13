@@ -136,6 +136,8 @@ export default {
         timedHint: 'Har savolga vaqt beriladi, natija oxirida chiqadi.',
         count: 'Savollar soni',
         all: 'Hammasi ({n})',
+        // Last count chip when more questions match than one session can hold.
+        max: '{n} (maksimum)',
         timePerQuestion: 'Har bir savolga vaqt',
         total: 'Jami: {time}',
         shuffle: 'Aralash tartibda',
@@ -448,6 +450,7 @@ export default {
         timedHint: 'На каждый вопрос даётся время, результат — в конце.',
         count: 'Количество вопросов',
         all: 'Все ({n})',
+        max: '{n} (максимум)',
         timePerQuestion: 'Время на каждый вопрос',
         total: 'Всего: {time}',
         shuffle: 'Вперемешку',

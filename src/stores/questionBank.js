@@ -16,8 +16,10 @@ export const emptySetup = () => ({
   type: '',
   language: '',
   mode: 'Practice',
-  // null = every question that matches (the API's own meaning of no count).
-  count: 10,
+  // null = every question that matches (the API's own meaning of no count),
+  // capped by the server at MAX_SESSION_QUESTIONS. That is the default: a
+  // student who never touches the count chips gets the whole topic, not 10.
+  count: null,
   secondsPerQuestion: 90,
   randomize: true,
 })
